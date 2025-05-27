@@ -12,6 +12,7 @@ import { AlertCircle, ArrowRight, ArrowLeft, Check, X, Eye, EyeOff } from 'lucid
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { CountrySelector } from './CountrySelector';
+import { useNavigate } from 'react-router-dom';
 
 interface RegistrationData {
   firstName: string;
@@ -49,6 +50,7 @@ export function ProgressiveRegistration({ onBack }: { onBack: () => void }) {
   const { signUp } = useAuth();
   const { toast } = useToast();
   const { t } = useTranslation();
+  const navigate = useNavigate();
 
   const totalSteps = 4;
   const progress = (currentStep / totalSteps) * 100;
@@ -57,35 +59,42 @@ export function ProgressiveRegistration({ onBack }: { onBack: () => void }) {
     const newErrors: ValidationErrors = {};
     
     switch (step) {
-      case 1: // Names
-        if (!data.firstName.trim()) newErrors.firstName = t('firstNameRequired');
-        if (!data.lastName.trim()) newErrors.lastName = t('lastNameRequired');
-        break;
+      case 1: // Names (REQUIRED)
+        if (!data.firstName.trim()) {
+          newErrors.firstName = t('firstNameRequired');
+        } else if (data.firstName.trim().length < 2) {
+          newErrors.firstName = 'First name must be at least 2 characters';
+        }
         
-      case 2: // Username & Role
-        if (!data.username.trim()) {
-          newErrors.username = t('usernameRequired');
-        } else if (data.username.length < 3) {
-          newErrors.username = t('usernameTooShort');
-        } else if (!/^[a-zA-Z0-9_]+$/.test(data.username)) {
-          newErrors.username = t('usernameInvalid');
+        if (!data.lastName.trim()) {
+          newErrors.lastName = t('lastNameRequired');
+        } else if (data.lastName.trim().length < 2) {
+          newErrors.lastName = 'Last name must be at least 2 characters';
         }
         break;
         
-      case 3: // Contact Info
+      case 2: // Username & Role (Username is OPTIONAL, Role is REQUIRED)
+        if (data.username.trim() && data.username.length < 3) {
+          newErrors.username = 'Username must be at least 3 characters if provided';
+        } else if (data.username.trim() && !/^[a-zA-Z0-9_]+$/.test(data.username)) {
+          newErrors.username = 'Username can only contain letters, numbers, and underscores';
+        }
+        break;
+        
+      case 3: // Contact Info (Email is REQUIRED, others OPTIONAL)
         if (!data.email.trim()) {
           newErrors.email = t('emailRequired');
         } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
           newErrors.email = t('emailInvalid');
         }
-        if (!data.country) newErrors.country = t('countryRequired');
+        // Country and phone are optional
         break;
         
-      case 4: // Password
+      case 4: // Password (REQUIRED)
         if (!data.password) {
           newErrors.password = t('passwordRequired');
         } else if (!validatePassword(data.password)) {
-          newErrors.password = t('passwordRequirements');
+          newErrors.password = 'Password must meet all requirements';
         }
         break;
     }
@@ -112,10 +121,13 @@ export function ProgressiveRegistration({ onBack }: { onBack: () => void }) {
         username_to_check: username
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error checking username:', error);
+        return;
+      }
       
       if (!available) {
-        setErrors(prev => ({ ...prev, username: t('usernameNotAvailable') }));
+        setErrors(prev => ({ ...prev, username: 'Username is already taken' }));
       } else {
         setErrors(prev => {
           const newErrors = { ...prev };
@@ -149,36 +161,60 @@ export function ProgressiveRegistration({ onBack }: { onBack: () => void }) {
   };
 
   const handleSubmit = async () => {
+    console.log('Starting registration with data:', {
+      email: data.email,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      username: data.username,
+      role: data.role,
+      country: data.country,
+      countryCode: data.countryCode,
+      phone: data.phone
+    });
+
     setIsLoading(true);
     
     try {
-      const { error } = await signUp(data.email, data.password, {
-        first_name: data.firstName,
-        last_name: data.lastName,
-        username: data.username,
-        phone: data.phone,
-        country_code: data.countryCode,
-        country: data.country,
-        role: data.role
-      });
+      // Prepare user metadata
+      const userData = {
+        first_name: data.firstName.trim(),
+        last_name: data.lastName.trim(),
+        role: data.role,
+        phone: data.phone.trim() || null,
+        country: data.country || null,
+        country_code: data.countryCode || null,
+        username: data.username.trim() || null
+      };
+
+      console.log('Calling signUp with userData:', userData);
+
+      const { data: authData, error } = await signUp(data.email.trim(), data.password, userData);
       
       if (error) {
+        console.error('Registration error:', error);
         toast({
-          title: t('registrationFailed'),
+          title: 'Registration Failed',
           description: error.message,
           variant: 'destructive'
         });
-      } else {
-        toast({
-          title: t('registrationSuccess'),
-          description: t('checkEmailVerification')
-        });
+        return;
       }
+
+      console.log('Registration successful:', authData);
+
+      toast({
+        title: 'Account Created Successfully!',
+        description: 'Welcome! You can now access your account.',
+      });
+
+      // Navigate to dashboard immediately
+      navigate('/dashboard');
+      
     } catch (error) {
       console.error('Registration error:', error);
       toast({
-        title: t('registrationFailed'),
-        description: t('somethingWentWrong'),
+        title: 'Registration Failed',
+        description: 'Something went wrong. Please try again.',
         variant: 'destructive'
       });
     } finally {
@@ -200,7 +236,7 @@ export function ProgressiveRegistration({ onBack }: { onBack: () => void }) {
                 {t('letsGetStarted')}
               </h2>
               <p className="text-gray-600 dark:text-gray-300">
-                {t('tellUsYourName')}
+                Tell us your name
               </p>
             </div>
             
@@ -213,7 +249,7 @@ export function ProgressiveRegistration({ onBack }: { onBack: () => void }) {
                 value={data.firstName}
                 onChange={(e) => setData(prev => ({ ...prev, firstName: e.target.value }))}
                 className="h-12 rounded-xl border-2 focus:border-emerald-500 dark:border-gray-600"
-                placeholder={t('enterFirstName')}
+                placeholder="Enter your first name"
               />
               {errors.firstName && (
                 <p className="text-red-500 text-sm mt-1 flex items-center">
@@ -232,7 +268,7 @@ export function ProgressiveRegistration({ onBack }: { onBack: () => void }) {
                 value={data.lastName}
                 onChange={(e) => setData(prev => ({ ...prev, lastName: e.target.value }))}
                 className="h-12 rounded-xl border-2 focus:border-emerald-500 dark:border-gray-600"
-                placeholder={t('enterLastName')}
+                placeholder="Enter your last name"
               />
               {errors.lastName && (
                 <p className="text-red-500 text-sm mt-1 flex items-center">
@@ -240,6 +276,12 @@ export function ProgressiveRegistration({ onBack }: { onBack: () => void }) {
                   {errors.lastName}
                 </p>
               )}
+            </div>
+
+            <div className="bg-blue-50 dark:bg-blue-950 p-3 rounded-lg">
+              <p className="text-sm text-blue-800 dark:text-blue-200">
+                <span className="text-red-500">*</span> Required fields
+              </p>
             </div>
           </div>
         );
@@ -249,16 +291,16 @@ export function ProgressiveRegistration({ onBack }: { onBack: () => void }) {
           <div className="space-y-4">
             <div className="text-center mb-6">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                {t('createUsername')}
+                Username & Role
               </h2>
               <p className="text-gray-600 dark:text-gray-300">
-                {t('usernameWillBeUsed')}
+                Choose your username and account type
               </p>
             </div>
             
             <div>
               <Label htmlFor="username" className="text-gray-700 dark:text-gray-300">
-                {t('username')} <span className="text-red-500">*</span>
+                Username <span className="text-gray-400">(Optional)</span>
               </Label>
               <div className="relative">
                 <Input
@@ -272,7 +314,7 @@ export function ProgressiveRegistration({ onBack }: { onBack: () => void }) {
                     }
                   }}
                   className="h-12 rounded-xl border-2 focus:border-emerald-500 dark:border-gray-600 pr-10"
-                  placeholder={t('enterUsername')}
+                  placeholder="Choose a username (optional)"
                 />
                 {usernameChecking && (
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
@@ -293,7 +335,7 @@ export function ProgressiveRegistration({ onBack }: { onBack: () => void }) {
                 </p>
               )}
               <p className="text-gray-500 text-sm mt-1">
-                {t('usernameRequirements')}
+                Only letters, numbers, and underscores allowed
               </p>
             </div>
             
@@ -319,10 +361,10 @@ export function ProgressiveRegistration({ onBack }: { onBack: () => void }) {
           <div className="space-y-4">
             <div className="text-center mb-6">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                {t('contactInformation')}
+                Contact Information
               </h2>
               <p className="text-gray-600 dark:text-gray-300">
-                {t('howCanWeReachYou')}
+                How can we reach you?
               </p>
             </div>
             
@@ -336,7 +378,7 @@ export function ProgressiveRegistration({ onBack }: { onBack: () => void }) {
                 value={data.email}
                 onChange={(e) => setData(prev => ({ ...prev, email: e.target.value }))}
                 className="h-12 rounded-xl border-2 focus:border-emerald-500 dark:border-gray-600"
-                placeholder={t('enterEmail')}
+                placeholder="Enter your email address"
               />
               {errors.email && (
                 <p className="text-red-500 text-sm mt-1 flex items-center">
@@ -348,23 +390,17 @@ export function ProgressiveRegistration({ onBack }: { onBack: () => void }) {
             
             <div>
               <Label className="text-gray-700 dark:text-gray-300">
-                {t('country')} <span className="text-red-500">*</span>
+                Country <span className="text-gray-400">(Optional)</span>
               </Label>
               <CountrySelector
                 onSelect={handleCountrySelect}
                 selectedCountry={data.country}
               />
-              {errors.country && (
-                <p className="text-red-500 text-sm mt-1 flex items-center">
-                  <AlertCircle className="w-4 h-4 mr-1" />
-                  {errors.country}
-                </p>
-              )}
             </div>
             
             <div>
               <Label htmlFor="phone" className="text-gray-700 dark:text-gray-300">
-                {t('phone')} <span className="text-gray-400">({t('optional')})</span>
+                Phone <span className="text-gray-400">(Optional)</span>
               </Label>
               <div className="flex space-x-2">
                 <Input
@@ -383,6 +419,12 @@ export function ProgressiveRegistration({ onBack }: { onBack: () => void }) {
                 />
               </div>
             </div>
+
+            <div className="bg-blue-50 dark:bg-blue-950 p-3 rounded-lg">
+              <p className="text-sm text-blue-800 dark:text-blue-200">
+                <span className="text-red-500">*</span> Required • Others are optional
+              </p>
+            </div>
           </div>
         );
         
@@ -391,16 +433,16 @@ export function ProgressiveRegistration({ onBack }: { onBack: () => void }) {
           <div className="space-y-4">
             <div className="text-center mb-6">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                {t('secureYourAccount')}
+                Secure Your Account
               </h2>
               <p className="text-gray-600 dark:text-gray-300">
-                {t('createStrongPassword')}
+                Create a strong password
               </p>
             </div>
             
             <div>
               <Label htmlFor="password" className="text-gray-700 dark:text-gray-300">
-                {t('password')} <span className="text-red-500">*</span>
+                Password <span className="text-red-500">*</span>
               </Label>
               <div className="relative">
                 <Input
@@ -409,7 +451,7 @@ export function ProgressiveRegistration({ onBack }: { onBack: () => void }) {
                   value={data.password}
                   onChange={(e) => setData(prev => ({ ...prev, password: e.target.value }))}
                   className="h-12 rounded-xl border-2 focus:border-emerald-500 dark:border-gray-600 pr-10"
-                  placeholder={t('enterPassword')}
+                  placeholder="Create a strong password"
                 />
                 <button
                   type="button"
@@ -434,7 +476,7 @@ export function ProgressiveRegistration({ onBack }: { onBack: () => void }) {
                     <X className="w-4 h-4 text-gray-400 mr-2" />
                   )}
                   <span className={data.password.length >= 8 ? 'text-green-600' : 'text-gray-500'}>
-                    {t('atLeast8Characters')}
+                    At least 8 characters
                   </span>
                 </div>
                 <div className="flex items-center text-sm">
@@ -444,7 +486,7 @@ export function ProgressiveRegistration({ onBack }: { onBack: () => void }) {
                     <X className="w-4 h-4 text-gray-400 mr-2" />
                   )}
                   <span className={/[A-Z]/.test(data.password) ? 'text-green-600' : 'text-gray-500'}>
-                    {t('oneUppercaseLetter')}
+                    One uppercase letter
                   </span>
                 </div>
                 <div className="flex items-center text-sm">
@@ -454,7 +496,7 @@ export function ProgressiveRegistration({ onBack }: { onBack: () => void }) {
                     <X className="w-4 h-4 text-gray-400 mr-2" />
                   )}
                   <span className={/[0-9]/.test(data.password) ? 'text-green-600' : 'text-gray-500'}>
-                    {t('oneNumber')}
+                    One number
                   </span>
                 </div>
                 <div className="flex items-center text-sm">
@@ -464,7 +506,7 @@ export function ProgressiveRegistration({ onBack }: { onBack: () => void }) {
                     <X className="w-4 h-4 text-gray-400 mr-2" />
                   )}
                   <span className={/[!@#$%^&*(),.?":{}|<>]/.test(data.password) ? 'text-green-600' : 'text-gray-500'}>
-                    {t('oneSpecialCharacter')}
+                    One special character
                   </span>
                 </div>
               </div>
@@ -482,7 +524,7 @@ export function ProgressiveRegistration({ onBack }: { onBack: () => void }) {
       <div className="mb-6">
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm text-gray-600 dark:text-gray-300">
-            {t('step')} {currentStep} {t('of')} {totalSteps}
+            Step {currentStep} of {totalSteps}
           </span>
           <span className="text-sm text-gray-600 dark:text-gray-300">
             {Math.round(progress)}%
@@ -502,7 +544,7 @@ export function ProgressiveRegistration({ onBack }: { onBack: () => void }) {
               className="flex-1 h-12 rounded-xl border-2 border-gray-300 dark:border-gray-600"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
-              {t('back')}
+              Back
             </Button>
             
             <Button
@@ -511,10 +553,10 @@ export function ProgressiveRegistration({ onBack }: { onBack: () => void }) {
               className="flex-1 h-12 rounded-xl bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-800"
             >
               {currentStep === totalSteps ? (
-                isLoading ? t('creatingAccount') : t('createAccount')
+                isLoading ? 'Creating Account...' : 'Create Account'
               ) : (
                 <>
-                  {t('next')}
+                  Next
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </>
               )}
