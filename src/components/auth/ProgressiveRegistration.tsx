@@ -1,0 +1,527 @@
+
+import { useState } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import { useTranslation } from '@/hooks/useTranslation';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { AlertCircle, ArrowRight, ArrowLeft, Check, X, Eye, EyeOff } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { CountrySelector } from './CountrySelector';
+
+interface RegistrationData {
+  firstName: string;
+  lastName: string;
+  username: string;
+  email: string;
+  phone: string;
+  countryCode: string;
+  country: string;
+  role: 'patient' | 'doctor';
+  password: string;
+}
+
+interface ValidationErrors {
+  [key: string]: string;
+}
+
+export function ProgressiveRegistration({ onBack }: { onBack: () => void }) {
+  const [currentStep, setCurrentStep] = useState(1);
+  const [data, setData] = useState<RegistrationData>({
+    firstName: '',
+    lastName: '',
+    username: '',
+    email: '',
+    phone: '',
+    countryCode: '',
+    country: '',
+    role: 'patient',
+    password: ''
+  });
+  const [errors, setErrors] = useState<ValidationErrors>({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [usernameChecking, setUsernameChecking] = useState(false);
+  const { signUp } = useAuth();
+  const { toast } = useToast();
+  const { t } = useTranslation();
+
+  const totalSteps = 4;
+  const progress = (currentStep / totalSteps) * 100;
+
+  const validateStep = (step: number): boolean => {
+    const newErrors: ValidationErrors = {};
+    
+    switch (step) {
+      case 1: // Names
+        if (!data.firstName.trim()) newErrors.firstName = t('firstNameRequired');
+        if (!data.lastName.trim()) newErrors.lastName = t('lastNameRequired');
+        break;
+        
+      case 2: // Username & Role
+        if (!data.username.trim()) {
+          newErrors.username = t('usernameRequired');
+        } else if (data.username.length < 3) {
+          newErrors.username = t('usernameTooShort');
+        } else if (!/^[a-zA-Z0-9_]+$/.test(data.username)) {
+          newErrors.username = t('usernameInvalid');
+        }
+        break;
+        
+      case 3: // Contact Info
+        if (!data.email.trim()) {
+          newErrors.email = t('emailRequired');
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+          newErrors.email = t('emailInvalid');
+        }
+        if (!data.country) newErrors.country = t('countryRequired');
+        break;
+        
+      case 4: // Password
+        if (!data.password) {
+          newErrors.password = t('passwordRequired');
+        } else if (!validatePassword(data.password)) {
+          newErrors.password = t('passwordRequirements');
+        }
+        break;
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const validatePassword = (password: string): boolean => {
+    return (
+      password.length >= 8 &&
+      /[A-Z]/.test(password) &&
+      /[0-9]/.test(password) &&
+      /[!@#$%^&*(),.?":{}|<>]/.test(password)
+    );
+  };
+
+  const checkUsernameAvailability = async (username: string) => {
+    if (username.length < 3) return;
+    
+    setUsernameChecking(true);
+    try {
+      const { data: available, error } = await supabase.rpc('check_username_available', {
+        username_to_check: username
+      });
+      
+      if (error) throw error;
+      
+      if (!available) {
+        setErrors(prev => ({ ...prev, username: t('usernameNotAvailable') }));
+      } else {
+        setErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors.username;
+          return newErrors;
+        });
+      }
+    } catch (error) {
+      console.error('Error checking username:', error);
+    } finally {
+      setUsernameChecking(false);
+    }
+  };
+
+  const handleNext = () => {
+    if (validateStep(currentStep)) {
+      if (currentStep < totalSteps) {
+        setCurrentStep(currentStep + 1);
+      } else {
+        handleSubmit();
+      }
+    }
+  };
+
+  const handleBack = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    } else {
+      onBack();
+    }
+  };
+
+  const handleSubmit = async () => {
+    setIsLoading(true);
+    
+    try {
+      const { error } = await signUp(data.email, data.password, {
+        first_name: data.firstName,
+        last_name: data.lastName,
+        username: data.username,
+        phone: data.phone,
+        country_code: data.countryCode,
+        country: data.country,
+        role: data.role
+      });
+      
+      if (error) {
+        toast({
+          title: t('registrationFailed'),
+          description: error.message,
+          variant: 'destructive'
+        });
+      } else {
+        toast({
+          title: t('registrationSuccess'),
+          description: t('checkEmailVerification')
+        });
+      }
+    } catch (error) {
+      console.error('Registration error:', error);
+      toast({
+        title: t('registrationFailed'),
+        description: t('somethingWentWrong'),
+        variant: 'destructive'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCountrySelect = (country: string, countryCode: string) => {
+    setData(prev => ({ ...prev, country, countryCode }));
+  };
+
+  const renderStep = () => {
+    switch (currentStep) {
+      case 1:
+        return (
+          <div className="space-y-4">
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                {t('letsGetStarted')}
+              </h2>
+              <p className="text-gray-600 dark:text-gray-300">
+                {t('tellUsYourName')}
+              </p>
+            </div>
+            
+            <div>
+              <Label htmlFor="firstName" className="text-gray-700 dark:text-gray-300">
+                {t('firstName')} <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="firstName"
+                value={data.firstName}
+                onChange={(e) => setData(prev => ({ ...prev, firstName: e.target.value }))}
+                className="h-12 rounded-xl border-2 focus:border-emerald-500 dark:border-gray-600"
+                placeholder={t('enterFirstName')}
+              />
+              {errors.firstName && (
+                <p className="text-red-500 text-sm mt-1 flex items-center">
+                  <AlertCircle className="w-4 h-4 mr-1" />
+                  {errors.firstName}
+                </p>
+              )}
+            </div>
+            
+            <div>
+              <Label htmlFor="lastName" className="text-gray-700 dark:text-gray-300">
+                {t('lastName')} <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="lastName"
+                value={data.lastName}
+                onChange={(e) => setData(prev => ({ ...prev, lastName: e.target.value }))}
+                className="h-12 rounded-xl border-2 focus:border-emerald-500 dark:border-gray-600"
+                placeholder={t('enterLastName')}
+              />
+              {errors.lastName && (
+                <p className="text-red-500 text-sm mt-1 flex items-center">
+                  <AlertCircle className="w-4 h-4 mr-1" />
+                  {errors.lastName}
+                </p>
+              )}
+            </div>
+          </div>
+        );
+        
+      case 2:
+        return (
+          <div className="space-y-4">
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                {t('createUsername')}
+              </h2>
+              <p className="text-gray-600 dark:text-gray-300">
+                {t('usernameWillBeUsed')}
+              </p>
+            </div>
+            
+            <div>
+              <Label htmlFor="username" className="text-gray-700 dark:text-gray-300">
+                {t('username')} <span className="text-red-500">*</span>
+              </Label>
+              <div className="relative">
+                <Input
+                  id="username"
+                  value={data.username}
+                  onChange={(e) => {
+                    const username = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
+                    setData(prev => ({ ...prev, username }));
+                    if (username.length >= 3) {
+                      checkUsernameAvailability(username);
+                    }
+                  }}
+                  className="h-12 rounded-xl border-2 focus:border-emerald-500 dark:border-gray-600 pr-10"
+                  placeholder={t('enterUsername')}
+                />
+                {usernameChecking && (
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                )}
+                {data.username.length >= 3 && !usernameChecking && !errors.username && (
+                  <Check className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-green-500" />
+                )}
+                {errors.username && (
+                  <X className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-red-500" />
+                )}
+              </div>
+              {errors.username && (
+                <p className="text-red-500 text-sm mt-1 flex items-center">
+                  <AlertCircle className="w-4 h-4 mr-1" />
+                  {errors.username}
+                </p>
+              )}
+              <p className="text-gray-500 text-sm mt-1">
+                {t('usernameRequirements')}
+              </p>
+            </div>
+            
+            <div>
+              <Label htmlFor="role" className="text-gray-700 dark:text-gray-300">
+                {t('role')} <span className="text-red-500">*</span>
+              </Label>
+              <Select value={data.role} onValueChange={(value: 'patient' | 'doctor') => setData(prev => ({ ...prev, role: value }))}>
+                <SelectTrigger className="h-12 rounded-xl border-2 focus:border-emerald-500 dark:border-gray-600">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="patient">{t('patient')}</SelectItem>
+                  <SelectItem value="doctor">{t('doctor')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        );
+        
+      case 3:
+        return (
+          <div className="space-y-4">
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                {t('contactInformation')}
+              </h2>
+              <p className="text-gray-600 dark:text-gray-300">
+                {t('howCanWeReachYou')}
+              </p>
+            </div>
+            
+            <div>
+              <Label htmlFor="email" className="text-gray-700 dark:text-gray-300">
+                {t('email')} <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                value={data.email}
+                onChange={(e) => setData(prev => ({ ...prev, email: e.target.value }))}
+                className="h-12 rounded-xl border-2 focus:border-emerald-500 dark:border-gray-600"
+                placeholder={t('enterEmail')}
+              />
+              {errors.email && (
+                <p className="text-red-500 text-sm mt-1 flex items-center">
+                  <AlertCircle className="w-4 h-4 mr-1" />
+                  {errors.email}
+                </p>
+              )}
+            </div>
+            
+            <div>
+              <Label className="text-gray-700 dark:text-gray-300">
+                {t('country')} <span className="text-red-500">*</span>
+              </Label>
+              <CountrySelector
+                onSelect={handleCountrySelect}
+                selectedCountry={data.country}
+              />
+              {errors.country && (
+                <p className="text-red-500 text-sm mt-1 flex items-center">
+                  <AlertCircle className="w-4 h-4 mr-1" />
+                  {errors.country}
+                </p>
+              )}
+            </div>
+            
+            <div>
+              <Label htmlFor="phone" className="text-gray-700 dark:text-gray-300">
+                {t('phone')} <span className="text-gray-400">({t('optional')})</span>
+              </Label>
+              <div className="flex space-x-2">
+                <Input
+                  value={data.countryCode}
+                  readOnly
+                  className="w-20 h-12 rounded-xl border-2 bg-gray-100 dark:bg-gray-700 text-center"
+                  placeholder="+000"
+                />
+                <Input
+                  id="phone"
+                  type="tel"
+                  value={data.phone}
+                  onChange={(e) => setData(prev => ({ ...prev, phone: e.target.value.replace(/\D/g, '') }))}
+                  className="flex-1 h-12 rounded-xl border-2 focus:border-emerald-500 dark:border-gray-600"
+                  placeholder="123 456 789"
+                />
+              </div>
+            </div>
+          </div>
+        );
+        
+      case 4:
+        return (
+          <div className="space-y-4">
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                {t('secureYourAccount')}
+              </h2>
+              <p className="text-gray-600 dark:text-gray-300">
+                {t('createStrongPassword')}
+              </p>
+            </div>
+            
+            <div>
+              <Label htmlFor="password" className="text-gray-700 dark:text-gray-300">
+                {t('password')} <span className="text-red-500">*</span>
+              </Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={data.password}
+                  onChange={(e) => setData(prev => ({ ...prev, password: e.target.value }))}
+                  className="h-12 rounded-xl border-2 focus:border-emerald-500 dark:border-gray-600 pr-10"
+                  placeholder={t('enterPassword')}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              {errors.password && (
+                <p className="text-red-500 text-sm mt-1 flex items-center">
+                  <AlertCircle className="w-4 h-4 mr-1" />
+                  {errors.password}
+                </p>
+              )}
+              
+              <div className="mt-3 space-y-2">
+                <div className="flex items-center text-sm">
+                  {data.password.length >= 8 ? (
+                    <Check className="w-4 h-4 text-green-500 mr-2" />
+                  ) : (
+                    <X className="w-4 h-4 text-gray-400 mr-2" />
+                  )}
+                  <span className={data.password.length >= 8 ? 'text-green-600' : 'text-gray-500'}>
+                    {t('atLeast8Characters')}
+                  </span>
+                </div>
+                <div className="flex items-center text-sm">
+                  {/[A-Z]/.test(data.password) ? (
+                    <Check className="w-4 h-4 text-green-500 mr-2" />
+                  ) : (
+                    <X className="w-4 h-4 text-gray-400 mr-2" />
+                  )}
+                  <span className={/[A-Z]/.test(data.password) ? 'text-green-600' : 'text-gray-500'}>
+                    {t('oneUppercaseLetter')}
+                  </span>
+                </div>
+                <div className="flex items-center text-sm">
+                  {/[0-9]/.test(data.password) ? (
+                    <Check className="w-4 h-4 text-green-500 mr-2" />
+                  ) : (
+                    <X className="w-4 h-4 text-gray-400 mr-2" />
+                  )}
+                  <span className={/[0-9]/.test(data.password) ? 'text-green-600' : 'text-gray-500'}>
+                    {t('oneNumber')}
+                  </span>
+                </div>
+                <div className="flex items-center text-sm">
+                  {/[!@#$%^&*(),.?":{}|<>]/.test(data.password) ? (
+                    <Check className="w-4 h-4 text-green-500 mr-2" />
+                  ) : (
+                    <X className="w-4 h-4 text-gray-400 mr-2" />
+                  )}
+                  <span className={/[!@#$%^&*(),.?":{}|<>]/.test(data.password) ? 'text-green-600' : 'text-gray-500'}>
+                    {t('oneSpecialCharacter')}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+        
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="w-full max-w-md mx-auto">
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm text-gray-600 dark:text-gray-300">
+            {t('step')} {currentStep} {t('of')} {totalSteps}
+          </span>
+          <span className="text-sm text-gray-600 dark:text-gray-300">
+            {Math.round(progress)}%
+          </span>
+        </div>
+        <Progress value={progress} className="h-2" />
+      </div>
+
+      <Card className="border-0 shadow-2xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
+        <CardContent className="p-6">
+          {renderStep()}
+          
+          <div className="flex space-x-3 mt-8">
+            <Button
+              variant="outline"
+              onClick={handleBack}
+              className="flex-1 h-12 rounded-xl border-2 border-gray-300 dark:border-gray-600"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              {t('back')}
+            </Button>
+            
+            <Button
+              onClick={handleNext}
+              disabled={isLoading || usernameChecking}
+              className="flex-1 h-12 rounded-xl bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-800"
+            >
+              {currentStep === totalSteps ? (
+                isLoading ? t('creatingAccount') : t('createAccount')
+              ) : (
+                <>
+                  {t('next')}
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </>
+              )}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

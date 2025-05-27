@@ -344,6 +344,8 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          country: string | null
+          country_code: string | null
           created_at: string | null
           email: string
           first_name: string | null
@@ -352,9 +354,12 @@ export type Database = {
           phone: string | null
           role: Database["public"]["Enums"]["user_role"]
           updated_at: string | null
+          username: string | null
         }
         Insert: {
           avatar_url?: string | null
+          country?: string | null
+          country_code?: string | null
           created_at?: string | null
           email: string
           first_name?: string | null
@@ -363,9 +368,12 @@ export type Database = {
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string | null
+          username?: string | null
         }
         Update: {
           avatar_url?: string | null
+          country?: string | null
+          country_code?: string | null
           created_at?: string | null
           email?: string
           first_name?: string | null
@@ -374,6 +382,7 @@ export type Database = {
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string | null
+          username?: string | null
         }
         Relationships: []
       }
@@ -458,7 +467,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      check_username_available: {
+        Args: { username_to_check: string }
+        Returns: boolean
+      }
     }
     Enums: {
       user_role: "patient" | "doctor" | "admin"
