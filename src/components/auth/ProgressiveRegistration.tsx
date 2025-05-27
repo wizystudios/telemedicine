@@ -10,7 +10,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { AlertCircle, ArrowRight, ArrowLeft, Check, X, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { CountrySelector } from './CountrySelector';
 import { useNavigate } from 'react-router-dom';
 
@@ -46,13 +45,12 @@ export function ProgressiveRegistration({ onBack }: { onBack: () => void }) {
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [usernameChecking, setUsernameChecking] = useState(false);
   const { signUp } = useAuth();
   const { toast } = useToast();
   const { t } = useTranslation();
   const navigate = useNavigate();
 
-  const totalSteps = 4;
+  const totalSteps = 3; // Reduced to 3 steps: Names, Email+Password, Optional Info
   const progress = (currentStep / totalSteps) * 100;
 
   const validateStep = (step: number): boolean => {
@@ -73,29 +71,21 @@ export function ProgressiveRegistration({ onBack }: { onBack: () => void }) {
         }
         break;
         
-      case 2: // Username & Role (Username is OPTIONAL, Role is REQUIRED)
-        if (data.username.trim() && data.username.length < 3) {
-          newErrors.username = 'Username must be at least 3 characters if provided';
-        } else if (data.username.trim() && !/^[a-zA-Z0-9_]+$/.test(data.username)) {
-          newErrors.username = 'Username can only contain letters, numbers, and underscores';
-        }
-        break;
-        
-      case 3: // Contact Info (Email is REQUIRED, others OPTIONAL)
+      case 2: // Email & Password (REQUIRED)
         if (!data.email.trim()) {
           newErrors.email = t('emailRequired');
         } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
           newErrors.email = t('emailInvalid');
         }
-        // Country and phone are optional
-        break;
         
-      case 4: // Password (REQUIRED)
         if (!data.password) {
           newErrors.password = t('passwordRequired');
         } else if (!validatePassword(data.password)) {
           newErrors.password = 'Password must meet all requirements';
         }
+        break;
+        
+      case 3: // Optional fields - no validation required
         break;
     }
     
@@ -110,36 +100,6 @@ export function ProgressiveRegistration({ onBack }: { onBack: () => void }) {
       /[0-9]/.test(password) &&
       /[!@#$%^&*(),.?":{}|<>]/.test(password)
     );
-  };
-
-  const checkUsernameAvailability = async (username: string) => {
-    if (username.length < 3) return;
-    
-    setUsernameChecking(true);
-    try {
-      const { data: available, error } = await supabase.rpc('check_username_available', {
-        username_to_check: username
-      });
-      
-      if (error) {
-        console.error('Error checking username:', error);
-        return;
-      }
-      
-      if (!available) {
-        setErrors(prev => ({ ...prev, username: 'Username is already taken' }));
-      } else {
-        setErrors(prev => {
-          const newErrors = { ...prev };
-          delete newErrors.username;
-          return newErrors;
-        });
-      }
-    } catch (error) {
-      console.error('Error checking username:', error);
-    } finally {
-      setUsernameChecking(false);
-    }
   };
 
   const handleNext = () => {
@@ -165,26 +125,36 @@ export function ProgressiveRegistration({ onBack }: { onBack: () => void }) {
       email: data.email,
       firstName: data.firstName,
       lastName: data.lastName,
-      username: data.username,
+      username: data.username || null,
       role: data.role,
-      country: data.country,
-      countryCode: data.countryCode,
-      phone: data.phone
+      country: data.country || null,
+      countryCode: data.countryCode || null,
+      phone: data.phone || null
     });
 
     setIsLoading(true);
     
     try {
-      // Prepare user metadata
-      const userData = {
+      // Prepare user metadata - only include non-empty optional fields
+      const userData: any = {
         first_name: data.firstName.trim(),
         last_name: data.lastName.trim(),
-        role: data.role,
-        phone: data.phone.trim() || null,
-        country: data.country || null,
-        country_code: data.countryCode || null,
-        username: data.username.trim() || null
+        role: data.role
       };
+
+      // Only add optional fields if they have values
+      if (data.username?.trim()) {
+        userData.username = data.username.trim();
+      }
+      if (data.phone?.trim()) {
+        userData.phone = data.phone.trim();
+      }
+      if (data.country?.trim()) {
+        userData.country = data.country.trim();
+      }
+      if (data.countryCode?.trim()) {
+        userData.country_code = data.countryCode.trim();
+      }
 
       console.log('Calling signUp with userData:', userData);
 
@@ -194,7 +164,7 @@ export function ProgressiveRegistration({ onBack }: { onBack: () => void }) {
         console.error('Registration error:', error);
         toast({
           title: 'Registration Failed',
-          description: error.message,
+          description: error.message || 'Something went wrong during registration',
           variant: 'destructive'
         });
         return;
@@ -210,11 +180,11 @@ export function ProgressiveRegistration({ onBack }: { onBack: () => void }) {
       // Navigate to dashboard immediately
       navigate('/dashboard');
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Registration error:', error);
       toast({
         title: 'Registration Failed',
-        description: 'Something went wrong. Please try again.',
+        description: error.message || 'Something went wrong. Please try again.',
         variant: 'destructive'
       });
     } finally {
@@ -291,80 +261,10 @@ export function ProgressiveRegistration({ onBack }: { onBack: () => void }) {
           <div className="space-y-4">
             <div className="text-center mb-6">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                Username & Role
+                Account Details
               </h2>
               <p className="text-gray-600 dark:text-gray-300">
-                Choose your username and account type
-              </p>
-            </div>
-            
-            <div>
-              <Label htmlFor="username" className="text-gray-700 dark:text-gray-300">
-                Username <span className="text-gray-400">(Optional)</span>
-              </Label>
-              <div className="relative">
-                <Input
-                  id="username"
-                  value={data.username}
-                  onChange={(e) => {
-                    const username = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
-                    setData(prev => ({ ...prev, username }));
-                    if (username.length >= 3) {
-                      checkUsernameAvailability(username);
-                    }
-                  }}
-                  className="h-12 rounded-xl border-2 focus:border-emerald-500 dark:border-gray-600 pr-10"
-                  placeholder="Choose a username (optional)"
-                />
-                {usernameChecking && (
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                    <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
-                  </div>
-                )}
-                {data.username.length >= 3 && !usernameChecking && !errors.username && (
-                  <Check className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-green-500" />
-                )}
-                {errors.username && (
-                  <X className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-red-500" />
-                )}
-              </div>
-              {errors.username && (
-                <p className="text-red-500 text-sm mt-1 flex items-center">
-                  <AlertCircle className="w-4 h-4 mr-1" />
-                  {errors.username}
-                </p>
-              )}
-              <p className="text-gray-500 text-sm mt-1">
-                Only letters, numbers, and underscores allowed
-              </p>
-            </div>
-            
-            <div>
-              <Label htmlFor="role" className="text-gray-700 dark:text-gray-300">
-                {t('role')} <span className="text-red-500">*</span>
-              </Label>
-              <Select value={data.role} onValueChange={(value: 'patient' | 'doctor') => setData(prev => ({ ...prev, role: value }))}>
-                <SelectTrigger className="h-12 rounded-xl border-2 focus:border-emerald-500 dark:border-gray-600">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="patient">{t('patient')}</SelectItem>
-                  <SelectItem value="doctor">{t('doctor')}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        );
-        
-      case 3:
-        return (
-          <div className="space-y-4">
-            <div className="text-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                Contact Information
-              </h2>
-              <p className="text-gray-600 dark:text-gray-300">
-                How can we reach you?
+                Your email and password
               </p>
             </div>
             
@@ -386,58 +286,6 @@ export function ProgressiveRegistration({ onBack }: { onBack: () => void }) {
                   {errors.email}
                 </p>
               )}
-            </div>
-            
-            <div>
-              <Label className="text-gray-700 dark:text-gray-300">
-                Country <span className="text-gray-400">(Optional)</span>
-              </Label>
-              <CountrySelector
-                onSelect={handleCountrySelect}
-                selectedCountry={data.country}
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="phone" className="text-gray-700 dark:text-gray-300">
-                Phone <span className="text-gray-400">(Optional)</span>
-              </Label>
-              <div className="flex space-x-2">
-                <Input
-                  value={data.countryCode}
-                  readOnly
-                  className="w-20 h-12 rounded-xl border-2 bg-gray-100 dark:bg-gray-700 text-center"
-                  placeholder="+000"
-                />
-                <Input
-                  id="phone"
-                  type="tel"
-                  value={data.phone}
-                  onChange={(e) => setData(prev => ({ ...prev, phone: e.target.value.replace(/\D/g, '') }))}
-                  className="flex-1 h-12 rounded-xl border-2 focus:border-emerald-500 dark:border-gray-600"
-                  placeholder="123 456 789"
-                />
-              </div>
-            </div>
-
-            <div className="bg-blue-50 dark:bg-blue-950 p-3 rounded-lg">
-              <p className="text-sm text-blue-800 dark:text-blue-200">
-                <span className="text-red-500">*</span> Required • Others are optional
-              </p>
-            </div>
-          </div>
-        );
-        
-      case 4:
-        return (
-          <div className="space-y-4">
-            <div className="text-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                Secure Your Account
-              </h2>
-              <p className="text-gray-600 dark:text-gray-300">
-                Create a strong password
-              </p>
             </div>
             
             <div>
@@ -510,6 +358,98 @@ export function ProgressiveRegistration({ onBack }: { onBack: () => void }) {
                   </span>
                 </div>
               </div>
+
+              <div className="bg-blue-50 dark:bg-blue-950 p-3 rounded-lg mt-4">
+                <p className="text-sm text-blue-800 dark:text-blue-200">
+                  <span className="text-red-500">*</span> Required fields
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+        
+      case 3:
+        return (
+          <div className="space-y-4">
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                Additional Information
+              </h2>
+              <p className="text-gray-600 dark:text-gray-300">
+                Optional details (you can skip these)
+              </p>
+            </div>
+            
+            <div>
+              <Label htmlFor="username" className="text-gray-700 dark:text-gray-300">
+                Username <span className="text-gray-400">(Optional)</span>
+              </Label>
+              <Input
+                id="username"
+                value={data.username}
+                onChange={(e) => {
+                  const username = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
+                  setData(prev => ({ ...prev, username }));
+                }}
+                className="h-12 rounded-xl border-2 focus:border-emerald-500 dark:border-gray-600"
+                placeholder="Choose a username (optional)"
+              />
+              <p className="text-gray-500 text-sm mt-1">
+                Only letters, numbers, and underscores allowed
+              </p>
+            </div>
+            
+            <div>
+              <Label htmlFor="role" className="text-gray-700 dark:text-gray-300">
+                {t('role')} <span className="text-red-500">*</span>
+              </Label>
+              <Select value={data.role} onValueChange={(value: 'patient' | 'doctor') => setData(prev => ({ ...prev, role: value }))}>
+                <SelectTrigger className="h-12 rounded-xl border-2 focus:border-emerald-500 dark:border-gray-600">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="patient">{t('patient')}</SelectItem>
+                  <SelectItem value="doctor">{t('doctor')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label className="text-gray-700 dark:text-gray-300">
+                Country <span className="text-gray-400">(Optional)</span>
+              </Label>
+              <CountrySelector
+                onSelect={handleCountrySelect}
+                selectedCountry={data.country}
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="phone" className="text-gray-700 dark:text-gray-300">
+                Phone <span className="text-gray-400">(Optional)</span>
+              </Label>
+              <div className="flex space-x-2">
+                <Input
+                  value={data.countryCode}
+                  readOnly
+                  className="w-20 h-12 rounded-xl border-2 bg-gray-100 dark:bg-gray-700 text-center"
+                  placeholder="+000"
+                />
+                <Input
+                  id="phone"
+                  type="tel"
+                  value={data.phone}
+                  onChange={(e) => setData(prev => ({ ...prev, phone: e.target.value.replace(/\D/g, '') }))}
+                  className="flex-1 h-12 rounded-xl border-2 focus:border-emerald-500 dark:border-gray-600"
+                  placeholder="123 456 789"
+                />
+              </div>
+            </div>
+
+            <div className="bg-green-50 dark:bg-green-950 p-3 rounded-lg">
+              <p className="text-sm text-green-800 dark:text-green-200">
+                ✓ All required information complete! These additional details are optional.
+              </p>
             </div>
           </div>
         );
@@ -549,7 +489,7 @@ export function ProgressiveRegistration({ onBack }: { onBack: () => void }) {
             
             <Button
               onClick={handleNext}
-              disabled={isLoading || usernameChecking}
+              disabled={isLoading}
               className="flex-1 h-12 rounded-xl bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-800"
             >
               {currentStep === totalSteps ? (

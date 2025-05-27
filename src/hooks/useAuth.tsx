@@ -45,11 +45,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log('signUp called with:', { email, userData });
     
     try {
+      // Clean the userData to ensure proper mapping
+      const cleanUserData = {
+        first_name: userData.first_name || '',
+        last_name: userData.last_name || '',
+        role: userData.role || 'patient'
+      };
+
+      // Only add optional fields if they exist and are not empty
+      if (userData.username) {
+        cleanUserData.username = userData.username;
+      }
+      if (userData.phone) {
+        cleanUserData.phone = userData.phone;
+      }
+      if (userData.country) {
+        cleanUserData.country = userData.country;
+      }
+      if (userData.country_code) {
+        cleanUserData.country_code = userData.country_code;
+      }
+
+      console.log('Cleaned user data:', cleanUserData);
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: userData
+          data: cleanUserData
         }
       });
       
@@ -60,9 +83,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { data: null, error };
       }
 
-      // If signup is successful and user is confirmed immediately
-      if (data.user && !data.user.email_confirmed_at) {
-        console.log('User created but email not confirmed');
+      // If signup is successful
+      if (data.user) {
+        console.log('User created successfully:', data.user.id);
       }
 
       return { data, error: null };
