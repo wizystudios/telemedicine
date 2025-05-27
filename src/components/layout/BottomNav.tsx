@@ -1,6 +1,7 @@
 
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useTranslation } from '@/hooks/useTranslation';
 import { Home, Calendar, MessageCircle, User, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -8,19 +9,20 @@ export function BottomNav() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const { t } = useTranslation();
 
   if (!user) return null;
 
   const navItems = [
-    { icon: Home, label: 'Home', path: '/dashboard' },
-    { icon: Calendar, label: 'Appointments', path: '/appointments' },
-    { icon: MessageCircle, label: 'Messages', path: '/messages' },
-    { icon: Users, label: 'Doctors', path: '/doctors' },
-    { icon: User, label: 'Profile', path: '/profile' },
+    { icon: Home, label: t('home'), path: '/dashboard' },
+    { icon: Calendar, label: t('appointments'), path: '/appointments' },
+    { icon: MessageCircle, label: t('messages'), path: '/messages' },
+    { icon: Users, label: t('doctors'), path: '/doctors' },
+    { icon: User, label: t('profile'), path: '/profile' },
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2 md:hidden">
+    <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-4 py-2 md:hidden">
       <div className="flex justify-around">
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -33,8 +35,8 @@ export function BottomNav() {
               className={cn(
                 "flex flex-col items-center py-2 px-3 rounded-lg transition-colors",
                 isActive 
-                  ? "text-blue-600 bg-blue-50" 
-                  : "text-gray-600 hover:text-blue-600"
+                  ? "text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-950" 
+                  : "text-gray-600 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400"
               )}
             >
               <Icon className="w-5 h-5" />
