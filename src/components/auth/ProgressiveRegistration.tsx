@@ -50,7 +50,7 @@ export function ProgressiveRegistration({ onBack }: { onBack: () => void }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
-  const totalSteps = 3; // Reduced to 3 steps: Names, Email+Password, Optional Info
+  const totalSteps = 3;
   const progress = (currentStep / totalSteps) * 100;
 
   const validateStep = (step: number): boolean => {

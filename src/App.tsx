@@ -9,6 +9,8 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { Navbar } from "@/components/layout/Navbar";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { LoadingScreen } from "@/components/LoadingScreen";
+import { WelcomePages } from "@/components/welcome/WelcomePages";
+import { useState, useEffect } from "react";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import DoctorsList from "./pages/DoctorsList";
@@ -32,9 +34,28 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 function AppContent() {
   const { user, loading } = useAuth();
+  const [showWelcome, setShowWelcome] = useState(false);
+  
+  useEffect(() => {
+    // Check if user has seen welcome pages before
+    const hasSeenWelcome = localStorage.getItem('hasSeenWelcome');
+    if (!hasSeenWelcome && !user) {
+      setShowWelcome(true);
+    }
+  }, [user]);
+
+  const handleWelcomeComplete = () => {
+    localStorage.setItem('hasSeenWelcome', 'true');
+    setShowWelcome(false);
+  };
   
   if (loading) {
     return <LoadingScreen />;
+  }
+
+  // Show welcome pages if user hasn't seen them and isn't logged in
+  if (showWelcome && !user) {
+    return <WelcomePages onComplete={handleWelcomeComplete} />;
   }
   
   return (
