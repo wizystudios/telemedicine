@@ -45,8 +45,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log('signUp called with:', { email, userData });
     
     try {
-      // Clean the userData to ensure proper mapping
-      const cleanUserData = {
+      // Prepare user metadata with proper typing
+      const cleanUserData: {
+        first_name: string;
+        last_name: string;
+        role: string;
+        username?: string;
+        phone?: string;
+        country?: string;
+        country_code?: string;
+      } = {
         first_name: userData.first_name || '',
         last_name: userData.last_name || '',
         role: userData.role || 'patient'
