@@ -11,7 +11,7 @@ import { Video, AlertCircle, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { LanguageSelector } from '@/components/auth/LanguageSelector';
 import { ThemeToggle } from '@/components/auth/ThemeToggle';
-import { ProgressiveRegistration } from '@/components/auth/ProgressiveRegistration';
+import { SimpleRegistration } from '@/components/auth/SimpleRegistration';
 
 export default function Auth() {
   const [isLoading, setIsLoading] = useState(false);
@@ -32,19 +32,22 @@ export default function Auth() {
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
 
+    console.log('Attempting sign in for:', email);
+
     const { error } = await signIn(email, password);
     
     if (error) {
+      console.error('Sign in error:', error);
       setError(error.message);
       toast({
-        title: t('signIn'),
+        title: 'Sign In Failed',
         description: error.message,
         variant: 'destructive'
       });
     } else {
       toast({
-        title: t('welcomeBack'),
-        description: t('signedInSuccess'),
+        title: 'Welcome Back!',
+        description: 'You have been signed in successfully.',
       });
       navigate('/dashboard');
     }
@@ -77,10 +80,10 @@ export default function Auth() {
           {/* Welcome text */}
           <div className="text-center mb-12 max-w-md animate-fade-in">
             <h1 className="text-5xl font-bold text-gray-900 dark:text-white mb-4">
-              {t('appName')}
+              TeleHealth
             </h1>
             <p className="text-xl text-gray-600 dark:text-gray-300">
-              {t('subtitle')}
+              Connect with doctors from home
             </p>
           </div>
 
@@ -90,7 +93,7 @@ export default function Auth() {
               onClick={() => setCurrentStep('signin')}
               className="w-full h-14 text-lg bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-800 rounded-xl shadow-lg transform transition-all hover:scale-105"
             >
-              {t('signIn')}
+              Sign In
               <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
             
@@ -99,7 +102,7 @@ export default function Auth() {
               variant="outline"
               className="w-full h-14 text-lg border-2 border-emerald-600 text-emerald-600 hover:bg-emerald-50 dark:border-emerald-400 dark:text-emerald-400 dark:hover:bg-emerald-950 rounded-xl shadow-lg transform transition-all hover:scale-105"
             >
-              {t('createAccount')}
+              Create Account
               <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
           </div>
@@ -108,7 +111,7 @@ export default function Auth() {
         {/* Footer */}
         <div className="text-center pb-8">
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            {t('poweredBy')}
+            Secure • Private • Professional
           </p>
         </div>
       </div>
@@ -125,7 +128,7 @@ export default function Auth() {
             onClick={() => setCurrentStep('welcome')}
             className="text-gray-600 dark:text-gray-300"
           >
-            ← {t('back')}
+            ← Back
           </Button>
           <div className="flex items-center space-x-2">
             <LanguageSelector />
@@ -133,9 +136,9 @@ export default function Auth() {
           </div>
         </div>
 
-        {/* Progressive Registration */}
+        {/* Registration */}
         <div className="flex-1 flex items-center justify-center px-4">
-          <ProgressiveRegistration onBack={() => setCurrentStep('welcome')} />
+          <SimpleRegistration onBack={() => setCurrentStep('welcome')} />
         </div>
       </div>
     );
@@ -150,7 +153,7 @@ export default function Auth() {
           onClick={() => setCurrentStep('welcome')}
           className="text-gray-600 dark:text-gray-300"
         >
-          ← {t('back')}
+          ← Back
         </Button>
         <div className="flex items-center space-x-2">
           <LanguageSelector />
@@ -165,9 +168,9 @@ export default function Auth() {
             <CardHeader className="text-center pb-2">
               <div className="flex items-center justify-center space-x-2 mb-4">
                 <Video className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
-                <span className="text-2xl font-bold text-gray-900 dark:text-white">{t('appName')}</span>
+                <span className="text-2xl font-bold text-gray-900 dark:text-white">TeleHealth</span>
               </div>
-              <CardTitle className="text-xl">{t('signIn')}</CardTitle>
+              <CardTitle className="text-xl">Sign In</CardTitle>
             </CardHeader>
             
             <CardContent>
@@ -175,7 +178,7 @@ export default function Auth() {
                 <div className="space-y-4">
                   <div>
                     <Label htmlFor="email" className="text-gray-700 dark:text-gray-300">
-                      {t('email')}
+                      Email
                     </Label>
                     <Input 
                       id="email" 
@@ -183,12 +186,12 @@ export default function Auth() {
                       type="email" 
                       required 
                       className="h-12 rounded-xl border-2 focus:border-emerald-500 dark:border-gray-600"
-                      placeholder={t('enterEmail')}
+                      placeholder="Enter your email"
                     />
                   </div>
                   <div>
                     <Label htmlFor="password" className="text-gray-700 dark:text-gray-300">
-                      {t('password')}
+                      Password
                     </Label>
                     <div className="relative">
                       <Input 
@@ -197,7 +200,7 @@ export default function Auth() {
                         type={showPassword ? 'text' : 'password'}
                         required 
                         className="h-12 rounded-xl border-2 focus:border-emerald-500 dark:border-gray-600 pr-10"
-                        placeholder={t('enterPassword')}
+                        placeholder="Enter your password"
                       />
                       <button
                         type="button"
@@ -222,7 +225,7 @@ export default function Auth() {
                   disabled={isLoading}
                   className="w-full h-12 text-lg bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-800 rounded-xl"
                 >
-                  {isLoading ? t('signingIn') : t('signIn')}
+                  {isLoading ? 'Signing In...' : 'Sign In'}
                 </Button>
               </form>
             </CardContent>
