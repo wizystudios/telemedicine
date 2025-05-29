@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -8,6 +7,34 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar, Clock, Users, FileText, Video, Star, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
+
+// Define types for our enhanced appointment data
+interface AppointmentWithDoctor {
+  id: string;
+  appointment_date: string;
+  status: string;
+  consultation_type: string;
+  doctor_id: string | null;
+  patient_id: string | null;
+  doctor_profile?: {
+    first_name: string | null;
+    last_name: string | null;
+  } | null;
+  specialty_name?: string | null;
+}
+
+interface AppointmentWithPatient {
+  id: string;
+  appointment_date: string;
+  status: string;
+  consultation_type: string;
+  doctor_id: string | null;
+  patient_id: string | null;
+  patient_profile?: {
+    first_name: string | null;
+    last_name: string | null;
+  } | null;
+}
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -32,16 +59,10 @@ export default function Dashboard() {
   // Fetch upcoming appointments for patients
   const { data: upcomingAppointments } = useQuery({
     queryKey: ['appointments', 'upcoming', user?.id],
-    queryFn: async () => {
+    queryFn: async (): Promise<AppointmentWithDoctor[]> => {
       const { data, error } = await supabase
         .from('appointments')
-        .select(`
-          *,
-          doctor_profiles!appointments_doctor_id_fkey(
-            user_id,
-            specialties(name)
-          )
-        `)
+        .select('*')
         .eq('patient_id', user?.id)
         .gte('appointment_date', new Date().toISOString())
         .order('appointment_date', { ascending: true })
@@ -52,22 +73,45 @@ export default function Dashboard() {
         return [];
       }
       
-      // Get doctor profiles separately
+      // Get doctor profiles and specialties separately
       const appointmentsWithDoctors = await Promise.all(
-        (data || []).map(async (appointment) => {
+        (data || []).map(async (appointment): Promise<AppointmentWithDoctor> => {
+          let doctorProfile = null;
+          let specialtyName = null;
+          
           if (appointment.doctor_id) {
-            const { data: doctorProfile } = await supabase
+            // Get doctor profile
+            const { data: doctorData } = await supabase
               .from('profiles')
               .select('first_name, last_name')
               .eq('id', appointment.doctor_id)
               .single();
             
-            return {
-              ...appointment,
-              doctor_profile: doctorProfile
-            };
+            doctorProfile = doctorData;
+            
+            // Get doctor's specialty
+            const { data: doctorProfileData } = await supabase
+              .from('doctor_profiles')
+              .select('specialty_id')
+              .eq('user_id', appointment.doctor_id)
+              .single();
+            
+            if (doctorProfileData?.specialty_id) {
+              const { data: specialtyData } = await supabase
+                .from('specialties')
+                .select('name')
+                .eq('id', doctorProfileData.specialty_id)
+                .single();
+              
+              specialtyName = specialtyData?.name;
+            }
           }
-          return appointment;
+          
+          return {
+            ...appointment,
+            doctor_profile: doctorProfile,
+            specialty_name: specialtyName
+          };
         })
       );
       
@@ -79,7 +123,7 @@ export default function Dashboard() {
   // Fetch recent appointments for doctors
   const { data: recentAppointments } = useQuery({
     queryKey: ['appointments', 'recent', user?.id],
-    queryFn: async () => {
+    queryFn: async (): Promise<AppointmentWithPatient[]> => {
       const { data, error } = await supabase
         .from('appointments')
         .select('*')
@@ -94,20 +138,23 @@ export default function Dashboard() {
       
       // Get patient profiles separately
       const appointmentsWithPatients = await Promise.all(
-        (data || []).map(async (appointment) => {
+        (data || []).map(async (appointment): Promise<AppointmentWithPatient> => {
+          let patientProfile = null;
+          
           if (appointment.patient_id) {
-            const { data: patientProfile } = await supabase
+            const { data: patientData } = await supabase
               .from('profiles')
               .select('first_name, last_name')
               .eq('id', appointment.patient_id)
               .single();
             
-            return {
-              ...appointment,
-              patient_profile: patientProfile
-            };
+            patientProfile = patientData;
           }
-          return appointment;
+          
+          return {
+            ...appointment,
+            patient_profile: patientProfile
+          };
         })
       );
       
@@ -245,7 +292,7 @@ export default function Dashboard() {
                         Dr. {appointment.doctor_profile?.first_name || 'Doctor'} {appointment.doctor_profile?.last_name || ''}
                       </h4>
                       <p className="text-sm text-gray-600">
-                        {appointment.doctor_profiles?.specialties?.name || 'General Practice'}
+                        {appointment.specialty_name || 'General Practice'}
                       </p>
                       <p className="text-sm text-gray-500">
                         {format(new Date(appointment.appointment_date), 'MMM dd, yyyy at h:mm a')}
