@@ -64,14 +64,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setLoading(true);
       
-      // Prepare clean user metadata
-      const cleanUserData = {
+      // Prepare clean user metadata with proper typing
+      const cleanUserData: Record<string, any> = {
         first_name: userData.first_name?.trim() || '',
         last_name: userData.last_name?.trim() || '',
         role: userData.role || 'patient'
       };
 
-      // Only add optional fields if they exist
+      // Only add optional fields if they exist and are not empty
       if (userData.username?.trim()) {
         cleanUserData.username = userData.username.trim();
       }
