@@ -14,6 +14,7 @@ import { useState, useEffect } from "react";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import DoctorsList from "./pages/DoctorsList";
+import BookAppointment from "./pages/BookAppointment";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
