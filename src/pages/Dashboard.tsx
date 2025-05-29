@@ -29,7 +29,7 @@ export default function Dashboard() {
     enabled: !!user?.id
   });
 
-  // Fetch upcoming appointments
+  // Fetch upcoming appointments for patients
   const { data: upcomingAppointments } = useQuery({
     queryKey: ['appointments', 'upcoming', user?.id],
     queryFn: async () => {
@@ -37,8 +37,8 @@ export default function Dashboard() {
         .from('appointments')
         .select(`
           *,
-          doctor_profiles!inner(
-            profiles!inner(first_name, last_name),
+          doctor_profiles!appointments_doctor_id_fkey(
+            user_id,
             specialties(name)
           )
         `)
@@ -47,8 +47,31 @@ export default function Dashboard() {
         .order('appointment_date', { ascending: true })
         .limit(5);
       
-      if (error) throw error;
-      return data;
+      if (error) {
+        console.error('Error fetching upcoming appointments:', error);
+        return [];
+      }
+      
+      // Get doctor profiles separately
+      const appointmentsWithDoctors = await Promise.all(
+        (data || []).map(async (appointment) => {
+          if (appointment.doctor_id) {
+            const { data: doctorProfile } = await supabase
+              .from('profiles')
+              .select('first_name, last_name')
+              .eq('id', appointment.doctor_id)
+              .single();
+            
+            return {
+              ...appointment,
+              doctor_profile: doctorProfile
+            };
+          }
+          return appointment;
+        })
+      );
+      
+      return appointmentsWithDoctors;
     },
     enabled: !!user?.id && profile?.role === 'patient'
   });
@@ -59,16 +82,36 @@ export default function Dashboard() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('appointments')
-        .select(`
-          *,
-          profiles!inner(first_name, last_name)
-        `)
+        .select('*')
         .eq('doctor_id', user?.id)
         .order('appointment_date', { ascending: false })
         .limit(5);
       
-      if (error) throw error;
-      return data;
+      if (error) {
+        console.error('Error fetching recent appointments:', error);
+        return [];
+      }
+      
+      // Get patient profiles separately
+      const appointmentsWithPatients = await Promise.all(
+        (data || []).map(async (appointment) => {
+          if (appointment.patient_id) {
+            const { data: patientProfile } = await supabase
+              .from('profiles')
+              .select('first_name, last_name')
+              .eq('id', appointment.patient_id)
+              .single();
+            
+            return {
+              ...appointment,
+              patient_profile: patientProfile
+            };
+          }
+          return appointment;
+        })
+      );
+      
+      return appointmentsWithPatients;
     },
     enabled: !!user?.id && profile?.role === 'doctor'
   });
@@ -199,10 +242,10 @@ export default function Dashboard() {
                     </div>
                     <div>
                       <h4 className="font-medium">
-                        Dr. {appointment.doctor_profiles?.profiles?.first_name} {appointment.doctor_profiles?.profiles?.last_name}
+                        Dr. {appointment.doctor_profile?.first_name || 'Doctor'} {appointment.doctor_profile?.last_name || ''}
                       </h4>
                       <p className="text-sm text-gray-600">
-                        {appointment.doctor_profiles?.specialties?.name}
+                        {appointment.doctor_profiles?.specialties?.name || 'General Practice'}
                       </p>
                       <p className="text-sm text-gray-500">
                         {format(new Date(appointment.appointment_date), 'MMM dd, yyyy at h:mm a')}
@@ -322,7 +365,7 @@ export default function Dashboard() {
                     </div>
                     <div>
                       <h4 className="font-medium">
-                        {appointment.profiles?.first_name} {appointment.profiles?.last_name}
+                        {appointment.patient_profile?.first_name || 'Patient'} {appointment.patient_profile?.last_name || ''}
                       </h4>
                       <p className="text-sm text-gray-500">
                         {format(new Date(appointment.appointment_date), 'MMM dd, yyyy at h:mm a')}
