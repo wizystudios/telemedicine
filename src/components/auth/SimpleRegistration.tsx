@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -74,44 +73,60 @@ export function SimpleRegistration({ onBack }: { onBack: () => void }) {
       return;
     }
     
-    console.log('Starting registration...');
+    console.log('Starting registration with basic data...');
     setIsLoading(true);
+    setErrors({});
     
     try {
+      // Keep it simple - only send required fields
       const userData = {
         first_name: data.firstName.trim(),
         last_name: data.lastName.trim(),
         role: data.role
       };
 
-      console.log('Calling signUp with:', { email: data.email, userData });
+      console.log('Calling signUp with minimal data:', { email: data.email, userData });
       
-      const { data: authData, error } = await signUp(data.email, data.password, userData);
+      const result = await signUp(data.email.trim(), data.password, userData);
       
-      if (error) {
-        console.error('Registration failed:', error);
+      console.log('SignUp result:', result);
+      
+      if (result.error) {
+        console.error('Registration failed with error:', result.error);
+        
+        // Handle specific error cases
+        let errorMessage = result.error.message || 'Registration failed';
+        
+        if (errorMessage.includes('already registered')) {
+          errorMessage = 'This email is already registered. Try signing in instead.';
+        } else if (errorMessage.includes('invalid email')) {
+          errorMessage = 'Please enter a valid email address.';
+        } else if (errorMessage.includes('password')) {
+          errorMessage = 'Password must be at least 8 characters with uppercase, number, and special character.';
+        }
+        
         toast({
           title: 'Registration Failed',
-          description: error.message || 'Failed to create account. Please try again.',
+          description: errorMessage,
           variant: 'destructive'
         });
         return;
       }
 
-      console.log('Registration successful:', authData);
+      console.log('Registration successful!');
       
       toast({
-        title: 'Account Created!',
-        description: 'Welcome! You can now access your account.',
+        title: 'Welcome to TeleHealth!',
+        description: 'Your account has been created successfully.',
       });
 
-      // Navigate to dashboard
+      // Navigate to dashboard on success
       navigate('/dashboard');
       
     } catch (error: any) {
-      console.error('Registration error:', error);
+      console.error('Registration exception:', error);
       toast({
-        title: 'Registration Failed',
+        title: 'Registration Error',
         description: 'Something went wrong. Please try again.',
         variant: 'destructive'
       });
@@ -277,6 +292,7 @@ export function SimpleRegistration({ onBack }: { onBack: () => void }) {
                 variant="outline"
                 onClick={onBack}
                 className="flex-1 h-12 rounded-xl border-2"
+                disabled={isLoading}
               >
                 Back
               </Button>

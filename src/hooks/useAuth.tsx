@@ -64,31 +64,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setLoading(true);
       
-      // Prepare clean user metadata with proper typing
+      // Clean and validate input data
+      const cleanEmail = email.trim().toLowerCase();
+      
+      if (!cleanEmail || !password) {
+        return { data: null, error: { message: 'Email and password are required' } };
+      }
+
+      // Prepare minimal user metadata 
       const cleanUserData: Record<string, any> = {
         first_name: userData.first_name?.trim() || '',
         last_name: userData.last_name?.trim() || '',
         role: userData.role || 'patient'
       };
 
-      // Only add optional fields if they exist and are not empty
-      if (userData.username?.trim()) {
-        cleanUserData.username = userData.username.trim();
-      }
-      if (userData.phone?.trim()) {
-        cleanUserData.phone = userData.phone.trim();
-      }
-      if (userData.country?.trim()) {
-        cleanUserData.country = userData.country.trim();
-      }
-      if (userData.country_code?.trim()) {
-        cleanUserData.country_code = userData.country_code.trim();
-      }
-
-      console.log('Attempting signup with cleaned data:', cleanUserData);
+      console.log('Attempting signup with clean data:', { email: cleanEmail, userData: cleanUserData });
 
       const { data, error } = await supabase.auth.signUp({
-        email: email.trim(),
+        email: cleanEmail,
         password,
         options: {
           data: cleanUserData
@@ -98,22 +91,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('Signup response:', { data, error });
       
       if (error) {
-        console.error('Signup error details:', error);
+        console.error('Signup error:', error);
         return { data: null, error };
       }
 
-      if (data.user && data.session) {
-        console.log('Signup successful with immediate session');
-        setSession(data.session);
-        setUser(data.user);
-      } else if (data.user && !data.session) {
-        console.log('Signup successful, waiting for email confirmation');
+      if (data.user) {
+        console.log('Signup successful for user:', data.user.id);
+        
+        if (data.session) {
+          console.log('User has active session, setting state');
+          setSession(data.session);
+          setUser(data.user);
+        } else {
+          console.log('User created but no session (email confirmation required)');
+        }
       }
 
       return { data, error: null };
-    } catch (err) {
+    } catch (err: any) {
       console.error('Signup exception:', err);
-      return { data: null, error: { message: 'Signup failed. Please try again.' } };
+      return { 
+        data: null, 
+        error: { message: err.message || 'Registration failed. Please try again.' } 
+      };
     } finally {
       setLoading(false);
     }
@@ -143,7 +143,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       return { data, error: null };
-    } catch (err) {
+    } catch (err: any) {
       console.error('SignIn exception:', err);
       return { data: null, error: { message: 'Sign in failed. Please try again.' } };
     } finally {
