@@ -14,6 +14,9 @@ import { useState, useEffect } from "react";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import DoctorsList from "./pages/DoctorsList";
+import Appointments from "./pages/Appointments";
+import Messages from "./pages/Messages";
+import Profile from "./pages/Profile";
 import BookAppointment from "./pages/BookAppointment";
 import NotFound from "./pages/NotFound";
 
@@ -77,10 +80,34 @@ function AppContent() {
             } 
           />
           <Route 
+            path="/appointments" 
+            element={
+              <ProtectedRoute>
+                <Appointments />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/messages" 
+            element={
+              <ProtectedRoute>
+                <Messages />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
             path="/doctors" 
             element={
               <ProtectedRoute>
                 <DoctorsList />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/profile" 
+            element={
+              <ProtectedRoute>
+                <Profile />
               </ProtectedRoute>
             } 
           />
