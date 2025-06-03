@@ -16,20 +16,20 @@ export function WelcomePages({ onComplete }: WelcomePagesProps) {
   const pages = [
     {
       icon: <Video className="w-16 h-16 text-emerald-600 dark:text-emerald-400" />,
-      title: "Welcome to TeleHealth",
-      description: "Connect with certified doctors from the comfort of your home. Get professional medical consultations through secure video calls.",
+      title: t('welcomeToTeleMed'),
+      description: t('connectWithDoctorsDescription'),
       gradient: "from-emerald-400 to-teal-500"
     },
     {
       icon: <Users className="w-16 h-16 text-blue-600 dark:text-blue-400" />,
-      title: "Expert Medical Care",
-      description: "Access a network of experienced healthcare professionals across various specialties. Book appointments that fit your schedule.",
+      title: t('expertMedicalCare'),
+      description: t('accessNetworkDescription'),
       gradient: "from-blue-400 to-indigo-500"
     },
     {
       icon: <Shield className="w-16 h-16 text-purple-600 dark:text-purple-400" />,
-      title: "Secure & Private",
-      description: "Your health information is protected with enterprise-grade security. HIPAA compliant platform you can trust.",
+      title: t('secureAndPrivate'),
+      description: t('healthInfoProtectedDescription'),
       gradient: "from-purple-400 to-pink-500"
     }
   ];
@@ -61,7 +61,7 @@ export function WelcomePages({ onComplete }: WelcomePagesProps) {
           onClick={handleSkip}
           className="text-gray-600 dark:text-gray-300 hover:text-emerald-600"
         >
-          Skip
+          {t('skip')}
         </Button>
       </div>
 
@@ -108,14 +108,14 @@ export function WelcomePages({ onComplete }: WelcomePagesProps) {
                 className="flex-1 h-12 rounded-xl border-2"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                Back
+                {t('back')}
               </Button>
               
               <Button
                 onClick={handleNext}
                 className="flex-1 h-12 rounded-xl bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-800"
               >
-                {currentPage === pages.length - 1 ? 'Get Started' : 'Next'}
+                {currentPage === pages.length - 1 ? t('getStarted') : t('next')}
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </div>

@@ -1,10 +1,10 @@
-
 import { useTheme } from '@/contexts/ThemeContext';
 
 const translations = {
   en: {
     // App branding
     appName: 'TeleMed',
+    subtitle: 'Healthcare at your fingertips',
     poweredBy: 'Powered by KN Technology',
     
     // Loading
@@ -13,7 +13,12 @@ const translations = {
     
     // Auth
     welcome: 'Welcome to TeleMed',
-    subtitle: 'Healthcare at your fingertips',
+    welcomeToTeleMed: 'Welcome to TeleMed',
+    connectWithDoctorsDescription: 'Connect with certified doctors from the comfort of your home. Get professional medical consultations through secure video calls.',
+    expertMedicalCare: 'Expert Medical Care',
+    accessNetworkDescription: 'Access a network of experienced healthcare professionals across various specialties. Book appointments that fit your schedule.',
+    secureAndPrivate: 'Secure & Private',
+    healthInfoProtectedDescription: 'Your health information is protected with enterprise-grade security. HIPAA compliant platform you can trust.',
     signIn: 'Sign In',
     signUp: 'Sign Up',
     createAccount: 'Create Account',
@@ -31,58 +36,10 @@ const translations = {
     signedInSuccess: "You've been successfully signed in.",
     accountCreated: 'Account created!',
     checkEmail: 'Please check your email to verify your account.',
-    
-    // Progressive Registration
-    letsGetStarted: "Let's get started",
-    tellUsYourName: 'Tell us your name',
-    createUsername: 'Create username',
-    usernameWillBeUsed: 'This will be used in your profile',
-    contactInformation: 'Contact Information',
-    howCanWeReachYou: 'How can we reach you?',
-    secureYourAccount: 'Secure your account',
-    createStrongPassword: 'Create a strong password',
-    step: 'Step',
-    of: 'of',
-    
-    // Form validation
-    firstNameRequired: 'First name is required',
-    lastNameRequired: 'Last name is required',
-    usernameRequired: 'Username is required',
-    usernameTooShort: 'Username must be at least 3 characters',
-    usernameInvalid: 'Username can only contain letters, numbers, and underscores',
-    usernameNotAvailable: 'Username is not available',
-    usernameRequirements: 'Only letters, numbers, and underscores allowed',
-    emailRequired: 'Email is required',
-    emailInvalid: 'Please enter a valid email',
-    countryRequired: 'Country is required',
-    passwordRequired: 'Password is required',
-    passwordRequirements: 'Password must meet all requirements',
-    
-    // Password requirements
-    atLeast8Characters: 'At least 8 characters',
-    oneUppercaseLetter: 'One uppercase letter',
-    oneNumber: 'One number',
-    oneSpecialCharacter: 'One special character',
-    
-    // General form
-    username: 'Username',
-    country: 'Country',
-    optional: 'optional',
-    required: 'required',
-    enterFirstName: 'Enter your first name',
-    enterLastName: 'Enter your last name',
-    enterUsername: 'Enter username',
-    enterEmail: 'Enter your email',
-    enterPassword: 'Enter your password',
-    selectCountry: 'Select your country',
-    searchCountry: 'Search countries...',
-    noCountriesFound: 'No countries found',
-    
-    // Messages
-    registrationSuccess: 'Registration successful!',
-    registrationFailed: 'Registration failed',
-    checkEmailVerification: 'Please check your email to verify your account',
-    somethingWentWrong: 'Something went wrong. Please try again.',
+    signInFailed: 'Sign In Failed',
+    securePrivateProfessional: 'Secure • Private • Professional',
+    getStarted: 'Get Started',
+    skip: 'Skip',
     
     // Navigation
     home: 'Home',
@@ -97,6 +54,8 @@ const translations = {
     theme: 'Theme',
     light: 'Light',
     dark: 'Dark',
+    onlineStatus: 'Online Status',
+    logout: 'Log out',
     
     // Dashboard
     dashboard: 'Dashboard',
@@ -110,6 +69,24 @@ const translations = {
     editProfile: 'Edit Profile',
     saveChanges: 'Save Changes',
     uploadPhoto: 'Upload Photo',
+    profileUpdated: 'Profile Updated',
+    profileUpdatedSuccess: 'Your profile has been updated successfully.',
+    medicalInfoComingSoon: 'Medical information section coming soon.',
+    saving: 'Saving...',
+    error: 'Error',
+    
+    // Messages
+    noConversations: 'No conversations yet',
+    bookAppointmentToStart: 'Start a conversation by booking an appointment',
+    typeMessage: 'Type your message...',
+    communicateWithProviders: 'Communicate with your healthcare providers',
+    
+    // Form fields
+    enterFirstName: 'Enter your first name',
+    enterLastName: 'Enter your last name',
+    enterEmail: 'Enter your email',
+    enterPassword: 'Enter your password',
+    selectCountry: 'Select your country',
     
     // Common
     save: 'Save',
@@ -122,6 +99,7 @@ const translations = {
   sw: {
     // App branding
     appName: 'TeleMed',
+    subtitle: 'Huduma za afya mkononi mwako',
     poweredBy: 'Imeundwa na KN Technology',
     
     // Loading
@@ -130,7 +108,12 @@ const translations = {
     
     // Auth
     welcome: 'Karibu TeleMed',
-    subtitle: 'Huduma za afya mkononi mwako',
+    welcomeToTeleMed: 'Karibu TeleMed',
+    connectWithDoctorsDescription: 'Unganisha na madaktari waliosajiliwa kutoka utulivu wa nyumbani kwako. Pata ushauri wa kimatibabu kupitia mazungumzo ya video salama.',
+    expertMedicalCare: 'Huduma za Kimatibabu za Kitaalamu',
+    accessNetworkDescription: 'Pata mtandao wa wataalamu wa afya wenye uzoefu katika maeneo mbalimbali. Oda miadi inayofaa ratiba yako.',
+    secureAndPrivate: 'Salama na ya Kibinafsi',
+    healthInfoProtectedDescription: 'Maelezo yako ya afya yanalindwa na usalama wa kiwango cha juu. Jukwaa linalofuata HIPAA ambalo unaweza kuliamini.',
     signIn: 'Ingia',
     signUp: 'Jisajili',
     createAccount: 'Tengeneza Akaunti',
@@ -148,6 +131,10 @@ const translations = {
     signedInSuccess: 'Umeingia kikamilifu.',
     accountCreated: 'Akaunti imeundwa!',
     checkEmail: 'Tafadhali angalia barua pepe yako ili kuthibitisha akaunti yako.',
+    signInFailed: 'Kuingia Kumeshindikana',
+    securePrivateProfessional: 'Salama • Kibinafsi • Kitaalamu',
+    getStarted: 'Anza',
+    skip: 'Ruka',
     
     // Navigation
     home: 'Nyumbani',
@@ -162,6 +149,8 @@ const translations = {
     theme: 'Mandhari',
     light: 'Mwanga',
     dark: 'Giza',
+    onlineStatus: 'Hali ya Mtandaoni',
+    logout: 'Toka',
     
     // Profile
     personalInfo: 'Maelezo ya Kibinafsi',
@@ -169,6 +158,24 @@ const translations = {
     editProfile: 'Hariri Wasifu',
     saveChanges: 'Hifadhi Mabadiliko',
     uploadPhoto: 'Pakia Picha',
+    profileUpdated: 'Wasifu Umesasishwa',
+    profileUpdatedSuccess: 'Wasifu wako umesasishwa kikamilifu.',
+    medicalInfoComingSoon: 'Sehemu ya maelezo ya kimatibabu inakuja hivi karibuni.',
+    saving: 'Inahifadhi...',
+    error: 'Hitilafu',
+    
+    // Messages
+    noConversations: 'Hakuna mazungumzo bado',
+    bookAppointmentToStart: 'Anza mazungumzo kwa kuoda miadi',
+    typeMessage: 'Andika ujumbe wako...',
+    communicateWithProviders: 'Wasiliana na watoa huduma za afya',
+    
+    // Form fields
+    enterFirstName: 'Ingiza jina lako la kwanza',
+    enterLastName: 'Ingiza jina lako la mwisho',
+    enterEmail: 'Ingiza barua pepe yako',
+    enterPassword: 'Ingiza nywila yako',
+    selectCountry: 'Chagua nchi yako',
     
     // Common
     save: 'Hifadhi',
@@ -180,6 +187,7 @@ const translations = {
   },
   fr: {
     appName: 'TeleMed',
+    subtitle: 'Soins de santé à portée de main',
     home: 'Accueil',
     appointments: 'Rendez-vous',
     messages: 'Messages',
@@ -197,9 +205,17 @@ const translations = {
     uploadPhoto: 'Télécharger photo',
     save: 'Sauvegarder',
     cancel: 'Annuler',
+    back: 'Retour',
+    next: 'Suivant',
+    loading: 'Chargement...',
+    signIn: 'Se connecter',
+    createAccount: 'Créer un compte',
+    getStarted: 'Commencer',
+    skip: 'Passer',
   },
   zh: {
     appName: 'TeleMed',
+    subtitle: '触手可及的医疗保健',
     home: '首页',
     appointments: '预约',
     messages: '消息',
@@ -217,9 +233,17 @@ const translations = {
     uploadPhoto: '上传照片',
     save: '保存',
     cancel: '取消',
+    back: '返回',
+    next: '下一步',
+    loading: '加载中...',
+    signIn: '登录',
+    createAccount: '创建账户',
+    getStarted: '开始',
+    skip: '跳过',
   },
   ko: {
     appName: 'TeleMed',
+    subtitle: '손끝에서 만나는 헬스케어',
     home: '홈',
     appointments: '예약',
     messages: '메시지',
@@ -237,9 +261,17 @@ const translations = {
     uploadPhoto: '사진 업로드',
     save: '저장',
     cancel: '취소',
+    back: '뒤로',
+    next: '다음',
+    loading: '로딩 중...',
+    signIn: '로그인',
+    createAccount: '계정 만들기',
+    getStarted: '시작하기',
+    skip: '건너뛰기',
   },
   es: {
     appName: 'TeleMed',
+    subtitle: 'Atención médica al alcance de tus manos',
     home: 'Inicio',
     appointments: 'Citas',
     messages: 'Mensajes',
@@ -257,9 +289,17 @@ const translations = {
     uploadPhoto: 'Subir foto',
     save: 'Guardar',
     cancel: 'Cancelar',
+    back: 'Atrás',
+    next: 'Siguiente',
+    loading: 'Cargando...',
+    signIn: 'Iniciar sesión',
+    createAccount: 'Crear cuenta',
+    getStarted: 'Comenzar',
+    skip: 'Omitir',
   },
   de: {
     appName: 'TeleMed',
+    subtitle: 'Gesundheitsversorgung in Ihren Händen',
     home: 'Startseite',
     appointments: 'Termine',
     messages: 'Nachrichten',
@@ -277,9 +317,17 @@ const translations = {
     uploadPhoto: 'Foto hochladen',
     save: 'Speichern',
     cancel: 'Abbrechen',
+    back: 'Zurück',
+    next: 'Weiter',
+    loading: 'Wird geladen...',
+    signIn: 'Anmelden',
+    createAccount: 'Konto erstellen',
+    getStarted: 'Loslegen',
+    skip: 'Überspringen',
   },
   ar: {
     appName: 'تطبيب عن بعد',
+    subtitle: 'الرعاية الصحية في متناول يديك',
     home: 'الرئيسية',
     appointments: 'المواعيد',
     messages: 'الرسائل',
@@ -297,9 +345,17 @@ const translations = {
     uploadPhoto: 'رفع صورة',
     save: 'حفظ',
     cancel: 'إلغاء',
+    back: 'العودة',
+    next: 'التالي',
+    loading: 'جاري التحميل...',
+    signIn: 'تسجيل الدخول',
+    createAccount: 'إنشاء حساب',
+    getStarted: 'البدء',
+    skip: 'تخطي',
   },
   pt: {
     appName: 'TeleMed',
+    subtitle: 'Cuidados de saúde ao seu alcance',
     home: 'Início',
     appointments: 'Consultas',
     messages: 'Mensagens',
@@ -317,9 +373,17 @@ const translations = {
     uploadPhoto: 'Carregar foto',
     save: 'Salvar',
     cancel: 'Cancelar',
+    back: 'Voltar',
+    next: 'Próximo',
+    loading: 'Carregando...',
+    signIn: 'Entrar',
+    createAccount: 'Criar conta',
+    getStarted: 'Começar',
+    skip: 'Pular',
   },
   ru: {
     appName: 'TeleMed',
+    subtitle: 'Здравоохранение у вас под рукой',
     home: 'Главная',
     appointments: 'Записи',
     messages: 'Сообщения',
@@ -337,6 +401,13 @@ const translations = {
     uploadPhoto: 'Загрузить фото',
     save: 'Сохранить',
     cancel: 'Отмена',
+    back: 'Назад',
+    next: 'Далее',
+    loading: 'Загрузка...',
+    signIn: 'Войти',
+    createAccount: 'Создать аккаунт',
+    getStarted: 'Начать',
+    skip: 'Пропустить',
   }
 };
 

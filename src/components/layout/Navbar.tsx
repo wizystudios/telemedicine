@@ -9,13 +9,15 @@ import {
   DropdownMenu, 
   DropdownMenuContent, 
   DropdownMenuItem, 
-  DropdownMenuTrigger
+  DropdownMenuTrigger,
+  DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Heart, LogOut, Settings, User, Activity } from 'lucide-react';
+import { Heart, LogOut, Settings, User, Activity, Bell } from 'lucide-react';
 import { ThemeToggle } from '@/components/auth/ThemeToggle';
 import { useEffect, useState } from 'react';
+import { NotificationsList } from '@/components/NotificationsList';
 
 export function Navbar() {
   const { user, signOut } = useAuth();
@@ -72,6 +74,19 @@ export function Navbar() {
           <div className="flex items-center space-x-4">
             <ThemeToggle />
             
+            {/* Notifications */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="relative">
+                  <Bell className="w-5 h-5" />
+                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-80">
+                <NotificationsList />
+              </DropdownMenuContent>
+            </DropdownMenu>
+            
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-10 w-10 rounded-full">
@@ -87,14 +102,17 @@ export function Navbar() {
                 </Button>
               </DropdownMenuTrigger>
               
-              <DropdownMenuContent className="w-80" align="end" forceMount>
-                <div className="flex items-center justify-start gap-2 p-2">
-                  <div className="flex flex-col space-y-1 leading-none">
+              <DropdownMenuContent className="w-64" align="end">
+                <div className="flex items-center space-x-3 p-3">
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={user.user_metadata?.avatar_url} />
+                    <AvatarFallback>
+                      {user.user_metadata?.first_name?.[0] || user.email?.[0]?.toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col">
                     <p className="font-medium text-sm">
                       {user.user_metadata?.first_name} {user.user_metadata?.last_name}
-                    </p>
-                    <p className="w-[200px] truncate text-xs text-muted-foreground">
-                      {user.email}
                     </p>
                     <Badge variant="secondary" className="w-fit text-xs">
                       {user.role === 'doctor' ? t('doctor') : t('patient')}
@@ -102,17 +120,22 @@ export function Navbar() {
                   </div>
                 </div>
                 
+                <DropdownMenuSeparator />
+                
                 {user.role === 'doctor' && (
-                  <div className="flex items-center justify-between p-2">
-                    <div className="flex items-center space-x-2">
-                      <Activity className="w-4 h-4" />
-                      <span className="text-sm">Online Status</span>
+                  <>
+                    <div className="flex items-center justify-between p-3">
+                      <div className="flex items-center space-x-2">
+                        <Activity className="w-4 h-4" />
+                        <span className="text-sm">{t('onlineStatus')}</span>
+                      </div>
+                      <Switch
+                        checked={isOnline}
+                        onCheckedChange={toggleOnlineStatus}
+                      />
                     </div>
-                    <Switch
-                      checked={isOnline}
-                      onCheckedChange={toggleOnlineStatus}
-                    />
-                  </div>
+                    <DropdownMenuSeparator />
+                  </>
                 )}
                 
                 <DropdownMenuItem asChild>
@@ -129,9 +152,11 @@ export function Navbar() {
                   </Link>
                 </DropdownMenuItem>
                 
+                <DropdownMenuSeparator />
+                
                 <DropdownMenuItem onClick={handleSignOut} className="text-red-600 dark:text-red-400">
                   <LogOut className="mr-2 h-4 w-4" />
-                  <span>Log out</span>
+                  <span>{t('logout')}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
