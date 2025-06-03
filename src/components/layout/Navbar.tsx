@@ -2,14 +2,14 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
+import { useTranslation } from '@/hooks/useTranslation';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
   DropdownMenuItem, 
-  DropdownMenuTrigger,
-  DropdownMenuSeparator
+  DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
@@ -20,6 +20,7 @@ import { useEffect, useState } from 'react';
 export function Navbar() {
   const { user, signOut } = useAuth();
   const { updateOnlineStatus } = useOnlineStatus();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [isOnline, setIsOnline] = useState(false);
 
@@ -65,7 +66,7 @@ export function Navbar() {
             <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center">
               <Heart className="w-5 h-5 text-white" />
             </div>
-            <span className="text-xl font-bold text-gray-900 dark:text-white">TeleHealth</span>
+            <span className="text-xl font-bold text-gray-900 dark:text-white">{t('appName')}</span>
           </Link>
 
           <div className="flex items-center space-x-4">
@@ -96,44 +97,37 @@ export function Navbar() {
                       {user.email}
                     </p>
                     <Badge variant="secondary" className="w-fit text-xs">
-                      {user.role === 'doctor' ? 'Doctor' : 'Patient'}
+                      {user.role === 'doctor' ? t('doctor') : t('patient')}
                     </Badge>
                   </div>
                 </div>
                 
-                <DropdownMenuSeparator />
-                
                 {user.role === 'doctor' && (
-                  <>
-                    <div className="flex items-center justify-between p-2">
-                      <div className="flex items-center space-x-2">
-                        <Activity className="w-4 h-4" />
-                        <span className="text-sm">Online Status</span>
-                      </div>
-                      <Switch
-                        checked={isOnline}
-                        onCheckedChange={toggleOnlineStatus}
-                      />
+                  <div className="flex items-center justify-between p-2">
+                    <div className="flex items-center space-x-2">
+                      <Activity className="w-4 h-4" />
+                      <span className="text-sm">Online Status</span>
                     </div>
-                    <DropdownMenuSeparator />
-                  </>
+                    <Switch
+                      checked={isOnline}
+                      onCheckedChange={toggleOnlineStatus}
+                    />
+                  </div>
                 )}
                 
                 <DropdownMenuItem asChild>
                   <Link to="/profile" className="flex items-center">
                     <User className="mr-2 h-4 w-4" />
-                    <span>Profile</span>
+                    <span>{t('profile')}</span>
                   </Link>
                 </DropdownMenuItem>
                 
                 <DropdownMenuItem asChild>
                   <Link to="/profile" className="flex items-center">
                     <Settings className="mr-2 h-4 w-4" />
-                    <span>Settings</span>
+                    <span>{t('settings')}</span>
                   </Link>
                 </DropdownMenuItem>
-                
-                <DropdownMenuSeparator />
                 
                 <DropdownMenuItem onClick={handleSignOut} className="text-red-600 dark:text-red-400">
                   <LogOut className="mr-2 h-4 w-4" />

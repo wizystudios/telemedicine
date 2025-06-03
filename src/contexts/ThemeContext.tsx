@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
 type Theme = 'light' | 'dark';
-type Language = 'en' | 'sw';
+type Language = 'sw' | 'en' | 'fr' | 'zh' | 'ko' | 'es' | 'de' | 'ar' | 'pt' | 'ru';
 
 interface ThemeContextType {
   theme: Theme;
@@ -21,7 +21,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   
   const [language, setLanguageState] = useState<Language>(() => {
     const stored = localStorage.getItem('language');
-    return (stored as Language) || 'en';
+    return (stored as Language) || 'sw'; // Default to Swahili
   });
 
   useEffect(() => {
