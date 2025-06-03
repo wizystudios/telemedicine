@@ -88,14 +88,76 @@ export type Database = {
           },
         ]
       }
+      call_sessions: {
+        Row: {
+          call_type: string
+          created_at: string
+          doctor_id: string
+          duration_minutes: number | null
+          ended_at: string | null
+          id: string
+          notes: string | null
+          patient_id: string
+          room_id: string | null
+          started_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          call_type: string
+          created_at?: string
+          doctor_id: string
+          duration_minutes?: number | null
+          ended_at?: string | null
+          id?: string
+          notes?: string | null
+          patient_id: string
+          room_id?: string | null
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          call_type?: string
+          created_at?: string
+          doctor_id?: string
+          duration_minutes?: number | null
+          ended_at?: string | null
+          id?: string
+          notes?: string | null
+          patient_id?: string
+          room_id?: string | null
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "call_sessions_doctor_id_fkey"
+            columns: ["doctor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "call_sessions_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_messages: {
         Row: {
           appointment_id: string | null
           created_at: string | null
           file_url: string | null
           id: string
+          is_read: boolean
           message: string
           message_type: string | null
+          read_at: string | null
           sender_id: string | null
         }
         Insert: {
@@ -103,8 +165,10 @@ export type Database = {
           created_at?: string | null
           file_url?: string | null
           id?: string
+          is_read?: boolean
           message: string
           message_type?: string | null
+          read_at?: string | null
           sender_id?: string | null
         }
         Update: {
@@ -112,8 +176,10 @@ export type Database = {
           created_at?: string | null
           file_url?: string | null
           id?: string
+          is_read?: boolean
           message?: string
           message_type?: string | null
+          read_at?: string | null
           sender_id?: string | null
         }
         Relationships: [
@@ -164,6 +230,91 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "doctor_availability_doctor_id_fkey"
+            columns: ["doctor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      doctor_online_status: {
+        Row: {
+          created_at: string
+          doctor_id: string
+          id: string
+          is_online: boolean
+          last_seen: string
+          status_message: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          doctor_id: string
+          id?: string
+          is_online?: boolean
+          last_seen?: string
+          status_message?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          doctor_id?: string
+          id?: string
+          is_online?: boolean
+          last_seen?: string
+          status_message?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doctor_online_status_doctor_id_fkey"
+            columns: ["doctor_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      doctor_posts: {
+        Row: {
+          content: string
+          created_at: string
+          doctor_id: string
+          id: string
+          is_published: boolean
+          likes_count: number
+          tags: string[] | null
+          title: string
+          updated_at: string
+          views_count: number
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          doctor_id: string
+          id?: string
+          is_published?: boolean
+          likes_count?: number
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+          views_count?: number
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          doctor_id?: string
+          id?: string
+          is_published?: boolean
+          likes_count?: number
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+          views_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doctor_posts_doctor_id_fkey"
             columns: ["doctor_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -235,6 +386,50 @@ export type Database = {
             foreignKeyName: "doctor_profiles_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_settings: {
+        Row: {
+          appointment_reminders: boolean
+          call_notifications: boolean
+          created_at: string
+          email_notifications: boolean
+          id: string
+          message_notifications: boolean
+          push_notifications: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          appointment_reminders?: boolean
+          call_notifications?: boolean
+          created_at?: string
+          email_notifications?: boolean
+          id?: string
+          message_notifications?: boolean
+          push_notifications?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          appointment_reminders?: boolean
+          call_notifications?: boolean
+          created_at?: string
+          email_notifications?: boolean
+          id?: string
+          message_notifications?: boolean
+          push_notifications?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_settings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -341,6 +536,42 @@ export type Database = {
           },
         ]
       }
+      post_likes: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "doctor_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -438,6 +669,42 @@ export type Database = {
           },
         ]
       }
+      saved_doctors: {
+        Row: {
+          created_at: string
+          doctor_id: string
+          id: string
+          patient_id: string
+        }
+        Insert: {
+          created_at?: string
+          doctor_id: string
+          id?: string
+          patient_id: string
+        }
+        Update: {
+          created_at?: string
+          doctor_id?: string
+          id?: string
+          patient_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_doctors_doctor_id_fkey"
+            columns: ["doctor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "saved_doctors_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       specialties: {
         Row: {
           created_at: string | null
@@ -470,6 +737,14 @@ export type Database = {
       check_username_available: {
         Args: { username_to_check: string }
         Returns: boolean
+      }
+      increment_post_views: {
+        Args: { post_id_param: string }
+        Returns: undefined
+      }
+      update_doctor_online_status: {
+        Args: { is_online_param: boolean; status_message_param?: string }
+        Returns: undefined
       }
     }
     Enums: {
