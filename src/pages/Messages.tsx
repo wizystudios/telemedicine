@@ -10,6 +10,28 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { MessageCircle, Send, Plus, Phone, Video } from 'lucide-react';
 import { format } from 'date-fns';
 
+interface ConversationData {
+  appointment: {
+    id: string;
+    patient_id: string;
+    doctor_id: string;
+    patient_profile: {
+      first_name: string;
+      last_name: string;
+      avatar_url?: string;
+    };
+    doctor_profile: {
+      first_name: string;
+      last_name: string;
+      avatar_url?: string;
+    };
+  };
+  messages: any[];
+  lastMessage: string;
+  lastMessageTime: string;
+  unreadCount: number;
+}
+
 export default function Messages() {
   const { user } = useAuth();
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
@@ -52,7 +74,7 @@ export default function Messages() {
         return acc;
       }, {});
       
-      return Object.values(grouped || {});
+      return Object.values(grouped || {}) as ConversationData[];
     },
     enabled: !!user?.id
   });
@@ -130,7 +152,7 @@ export default function Messages() {
             <CardContent className="p-0">
               {conversations && conversations.length > 0 ? (
                 <div className="space-y-0">
-                  {conversations.map((chat: any) => {
+                  {conversations.map((chat) => {
                     const otherUser = chat.appointment?.patient_id === user?.id 
                       ? chat.appointment?.doctor_profile 
                       : chat.appointment?.patient_profile;
@@ -183,11 +205,11 @@ export default function Messages() {
                 <CardHeader className="border-b">
                   <div className="flex items-center justify-between">
                     <CardTitle>
-                      {conversations?.find((c: any) => c.appointment?.id === selectedChat)?.appointment?.patient_id === user?.id 
-                        ? conversations?.find((c: any) => c.appointment?.id === selectedChat)?.appointment?.doctor_profile?.first_name + ' ' +
-                          conversations?.find((c: any) => c.appointment?.id === selectedChat)?.appointment?.doctor_profile?.last_name
-                        : conversations?.find((c: any) => c.appointment?.id === selectedChat)?.appointment?.patient_profile?.first_name + ' ' +
-                          conversations?.find((c: any) => c.appointment?.id === selectedChat)?.appointment?.patient_profile?.last_name}
+                      {conversations?.find((c) => c.appointment?.id === selectedChat)?.appointment?.patient_id === user?.id 
+                        ? conversations?.find((c) => c.appointment?.id === selectedChat)?.appointment?.doctor_profile?.first_name + ' ' +
+                          conversations?.find((c) => c.appointment?.id === selectedChat)?.appointment?.doctor_profile?.last_name
+                        : conversations?.find((c) => c.appointment?.id === selectedChat)?.appointment?.patient_profile?.first_name + ' ' +
+                          conversations?.find((c) => c.appointment?.id === selectedChat)?.appointment?.patient_profile?.last_name}
                     </CardTitle>
                     <div className="flex space-x-2">
                       <Button variant="outline" size="sm">
