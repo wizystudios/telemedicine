@@ -10,7 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { User, Edit, Save, Camera } from 'lucide-react';
+import { User, Edit, Save, Camera, MapPin, Phone, Mail } from 'lucide-react';
 
 export default function Profile() {
   const { user } = useAuth();
@@ -18,12 +18,14 @@ export default function Profile() {
   const [profile, setProfile] = useState<any>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
     email: '',
     phone: '',
-    country: ''
+    country: '',
+    username: ''
   });
 
   useEffect(() => {
@@ -34,29 +36,36 @@ export default function Profile() {
 
   const fetchProfile = async () => {
     try {
+      setLoading(true);
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user?.id)
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Profile fetch error:', error);
+        throw error;
+      }
       
       setProfile(data);
       setFormData({
         first_name: data.first_name || '',
         last_name: data.last_name || '',
-        email: data.email || '',
+        email: data.email || user?.email || '',
         phone: data.phone || '',
-        country: data.country || ''
+        country: data.country || '',
+        username: data.username || ''
       });
     } catch (error: any) {
       console.error('Error fetching profile:', error);
       toast({
         title: 'Error',
-        description: 'Failed to load profile data',
+        description: 'Failed to load profile data. Please try again.',
         variant: 'destructive'
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -65,7 +74,10 @@ export default function Profile() {
     try {
       const { error } = await supabase
         .from('profiles')
-        .update(formData)
+        .update({
+          ...formData,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', user?.id);
       
       if (error) throw error;
@@ -80,7 +92,7 @@ export default function Profile() {
       console.error('Error updating profile:', error);
       toast({
         title: 'Error',
-        description: 'Failed to update profile',
+        description: 'Failed to update profile. Please try again.',
         variant: 'destructive'
       });
     } finally {
@@ -88,7 +100,7 @@ export default function Profile() {
     }
   };
 
-  if (!profile) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
         <div className="max-w-4xl mx-auto">
@@ -101,16 +113,37 @@ export default function Profile() {
     );
   }
 
+  if (!profile) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center py-8">
+            <User className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+              Profile Not Found
+            </h3>
+            <p className="text-gray-600 dark:text-gray-300 mb-4">
+              Unable to load your profile information.
+            </p>
+            <Button onClick={fetchProfile} variant="outline">
+              Retry
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 pb-20">
       <div className="max-w-4xl mx-auto">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Profile</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Profile</h1>
           <p className="text-gray-600 dark:text-gray-300">Manage your account settings and preferences</p>
         </div>
 
         <Tabs defaultValue="personal" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3">
             <TabsTrigger value="personal">Personal Info</TabsTrigger>
             <TabsTrigger value="medical">Medical Info</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
@@ -119,25 +152,43 @@ export default function Profile() {
           <TabsContent value="personal">
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <div className="flex items-center space-x-4">
-                    <Avatar className="h-20 w-20">
-                      <AvatarImage src={profile.avatar_url} />
-                      <AvatarFallback className="text-lg">
-                        {profile.first_name?.[0]}{profile.last_name?.[0]}
-                      </AvatarFallback>
-                    </Avatar>
+                    <div className="relative">
+                      <Avatar className="h-16 w-16 sm:h-20 sm:w-20">
+                        <AvatarImage src={profile.avatar_url} />
+                        <AvatarFallback className="text-lg bg-emerald-100 text-emerald-700 font-semibold">
+                          {profile.first_name?.[0] || 'U'}{profile.last_name?.[0] || ''}
+                        </AvatarFallback>
+                      </Avatar>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full p-0"
+                      >
+                        <Camera className="w-4 h-4" />
+                      </Button>
+                    </div>
                     <div>
-                      <CardTitle>{profile.first_name} {profile.last_name}</CardTitle>
-                      <Badge variant="secondary" className="mt-1">
-                        {profile.role}
-                      </Badge>
+                      <CardTitle className="text-lg sm:text-xl">
+                        {profile.first_name || 'User'} {profile.last_name || ''}
+                      </CardTitle>
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-1">
+                        <Badge variant="secondary" className="w-fit">
+                          {profile.role || 'patient'}
+                        </Badge>
+                        <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                          <Mail className="w-4 h-4 mr-1" />
+                          {profile.email}
+                        </div>
+                      </div>
                     </div>
                   </div>
                   <Button
                     variant={isEditing ? "default" : "outline"}
                     onClick={() => isEditing ? handleSaveProfile() : setIsEditing(true)}
                     disabled={isLoading}
+                    className="w-full sm:w-auto"
                   >
                     {isEditing ? <Save className="w-4 h-4 mr-2" /> : <Edit className="w-4 h-4 mr-2" />}
                     {isEditing ? 'Save Changes' : 'Edit Profile'}
@@ -153,6 +204,7 @@ export default function Profile() {
                       value={formData.first_name}
                       onChange={(e) => setFormData(prev => ({ ...prev, first_name: e.target.value }))}
                       disabled={!isEditing}
+                      placeholder="Enter first name"
                     />
                   </div>
                   <div>
@@ -162,6 +214,17 @@ export default function Profile() {
                       value={formData.last_name}
                       onChange={(e) => setFormData(prev => ({ ...prev, last_name: e.target.value }))}
                       disabled={!isEditing}
+                      placeholder="Enter last name"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="username">Username</Label>
+                    <Input
+                      id="username"
+                      value={formData.username}
+                      onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
+                      disabled={!isEditing}
+                      placeholder="Enter username"
                     />
                   </div>
                   <div>
@@ -172,6 +235,7 @@ export default function Profile() {
                       value={formData.email}
                       onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                       disabled={!isEditing}
+                      placeholder="Enter email"
                     />
                   </div>
                   <div>
@@ -195,6 +259,27 @@ export default function Profile() {
                     />
                   </div>
                 </div>
+                
+                {/* Contact Information Display */}
+                {!isEditing && (
+                  <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <h4 className="font-medium text-gray-900 dark:text-white mb-3">Contact Information</h4>
+                    <div className="space-y-2">
+                      {profile.phone && (
+                        <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
+                          <Phone className="w-4 h-4 mr-2" />
+                          {profile.phone}
+                        </div>
+                      )}
+                      {profile.country && (
+                        <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
+                          <MapPin className="w-4 h-4 mr-2" />
+                          {profile.country}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
