@@ -2,7 +2,7 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from '@/hooks/useTranslation';
-import { Home, Calendar, MessageCircle, User, Users, Stethoscope, Clock, FileText } from 'lucide-react';
+import { Home, Calendar, MessageCircle, User, Users, Stethoscope } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function BottomNav() {

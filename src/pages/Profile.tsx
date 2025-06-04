@@ -13,9 +13,9 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { User, Heart, Settings, Globe, Moon, Sun } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { User, Heart, Settings, Globe, Moon, Sun, Stethoscope, GraduationCap, Building, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { LanguageSelector } from '@/components/auth/LanguageSelector';
 
 const languages = [
   { code: 'sw', name: 'Kiswahili', flag: '🇹🇿' },
@@ -30,6 +30,19 @@ const languages = [
   { code: 'ru', name: 'Русский', flag: '🇷🇺' },
 ];
 
+const countries = [
+  { code: 'TZ', name: 'Tanzania', flag: '🇹🇿' },
+  { code: 'KE', name: 'Kenya', flag: '🇰🇪' },
+  { code: 'UG', name: 'Uganda', flag: '🇺🇬' },
+  { code: 'RW', name: 'Rwanda', flag: '🇷🇼' },
+  { code: 'BI', name: 'Burundi', flag: '🇧🇮' },
+  { code: 'US', name: 'United States', flag: '🇺🇸' },
+  { code: 'UK', name: 'United Kingdom', flag: '🇬🇧' },
+  { code: 'CA', name: 'Canada', flag: '🇨🇦' },
+  { code: 'AU', name: 'Australia', flag: '🇦🇺' },
+  { code: 'DE', name: 'Germany', flag: '🇩🇪' },
+];
+
 export default function Profile() {
   const { user } = useAuth();
   const { t } = useTranslation();
@@ -37,12 +50,27 @@ export default function Profile() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
+  const userRole = user?.user_metadata?.role || 'patient';
+
   const [profileData, setProfileData] = useState({
     first_name: user?.user_metadata?.first_name || '',
     last_name: user?.user_metadata?.last_name || '',
     phone: user?.user_metadata?.phone || '',
     country: user?.user_metadata?.country || '',
-    avatar_url: user?.user_metadata?.avatar_url || ''
+    avatar_url: user?.user_metadata?.avatar_url || '',
+    // Doctor specific fields
+    education: user?.user_metadata?.education || '',
+    experience_years: user?.user_metadata?.experience_years || '',
+    hospital: user?.user_metadata?.hospital || '',
+    bio: user?.user_metadata?.bio || '',
+    consultation_fee: user?.user_metadata?.consultation_fee || '',
+    specialization: user?.user_metadata?.specialization || '',
+    // Patient specific fields
+    date_of_birth: user?.user_metadata?.date_of_birth || '',
+    gender: user?.user_metadata?.gender || '',
+    blood_type: user?.user_metadata?.blood_type || '',
+    emergency_contact_name: user?.user_metadata?.emergency_contact_name || '',
+    emergency_contact_phone: user?.user_metadata?.emergency_contact_phone || '',
   });
 
   const handleSaveProfile = async () => {
@@ -83,9 +111,9 @@ export default function Profile() {
               <User className="w-4 h-4" />
               <span className="hidden sm:block">{t('personalInfo')}</span>
             </TabsTrigger>
-            <TabsTrigger value="medical" className="flex items-center space-x-2">
-              <Heart className="w-4 h-4" />
-              <span className="hidden sm:block">{t('medicalInfo')}</span>
+            <TabsTrigger value="professional" className="flex items-center space-x-2">
+              {userRole === 'doctor' ? <Stethoscope className="w-4 h-4" /> : <Heart className="w-4 h-4" />}
+              <span className="hidden sm:block">{userRole === 'doctor' ? 'Professional' : t('medicalInfo')}</span>
             </TabsTrigger>
             <TabsTrigger value="settings" className="flex items-center space-x-2">
               <Settings className="w-4 h-4" />
@@ -109,8 +137,8 @@ export default function Profile() {
                       {profileData.first_name?.[0]}{profileData.last_name?.[0]}
                     </AvatarFallback>
                   </Avatar>
-                  <Badge variant="secondary">
-                    {user?.user_metadata?.role === 'doctor' ? t('doctor') : t('patient')}
+                  <Badge variant="secondary" className="capitalize">
+                    {userRole === 'doctor' ? '🩺 Doctor' : '👤 Patient'}
                   </Badge>
                 </div>
 
@@ -134,6 +162,15 @@ export default function Profile() {
                     />
                   </div>
                   <div>
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      value={user?.email || ''}
+                      disabled
+                      className="bg-gray-100 cursor-not-allowed"
+                    />
+                  </div>
+                  <div>
                     <Label htmlFor="phone">{t('phone')}</Label>
                     <Input
                       id="phone"
@@ -143,13 +180,20 @@ export default function Profile() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="country">{t('country')}</Label>
-                    <Input
-                      id="country"
-                      value={profileData.country}
-                      onChange={(e) => setProfileData({...profileData, country: e.target.value})}
-                      placeholder={t('selectCountry')}
-                    />
+                    <Label htmlFor="country">Country</Label>
+                    <Select value={profileData.country} onValueChange={(value) => setProfileData({...profileData, country: value})}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select country" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {countries.map((country) => (
+                          <SelectItem key={country.code} value={country.name}>
+                            <span className="mr-2">{country.flag}</span>
+                            {country.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 
@@ -160,18 +204,145 @@ export default function Profile() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="medical">
+          <TabsContent value="professional">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
-                  <Heart className="w-5 h-5" />
-                  <span>{t('medicalInfo')}</span>
+                  {userRole === 'doctor' ? <Stethoscope className="w-5 h-5" /> : <Heart className="w-5 h-5" />}
+                  <span>{userRole === 'doctor' ? 'Professional Information' : t('medicalInfo')}</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="text-gray-600 dark:text-gray-300 text-center py-8">
-                  {t('medicalInfoComingSoon')}
-                </p>
+              <CardContent className="space-y-6">
+                {userRole === 'doctor' ? (
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="specialization">Specialization</Label>
+                        <Input
+                          id="specialization"
+                          value={profileData.specialization}
+                          onChange={(e) => setProfileData({...profileData, specialization: e.target.value})}
+                          placeholder="e.g., Cardiology, Pediatrics"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="experience_years">Years of Experience</Label>
+                        <Input
+                          id="experience_years"
+                          type="number"
+                          value={profileData.experience_years}
+                          onChange={(e) => setProfileData({...profileData, experience_years: e.target.value})}
+                          placeholder="5"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="education">Education</Label>
+                        <Input
+                          id="education"
+                          value={profileData.education}
+                          onChange={(e) => setProfileData({...profileData, education: e.target.value})}
+                          placeholder="Medical School, Degree"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="hospital">Hospital/Clinic</Label>
+                        <Input
+                          id="hospital"
+                          value={profileData.hospital}
+                          onChange={(e) => setProfileData({...profileData, hospital: e.target.value})}
+                          placeholder="Hospital or Clinic Name"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="consultation_fee">Consultation Fee ($)</Label>
+                        <Input
+                          id="consultation_fee"
+                          type="number"
+                          value={profileData.consultation_fee}
+                          onChange={(e) => setProfileData({...profileData, consultation_fee: e.target.value})}
+                          placeholder="50"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="bio">Biography</Label>
+                      <Textarea
+                        id="bio"
+                        value={profileData.bio}
+                        onChange={(e) => setProfileData({...profileData, bio: e.target.value})}
+                        placeholder="Tell patients about your experience and approach to medicine..."
+                        rows={4}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="date_of_birth">Date of Birth</Label>
+                        <Input
+                          id="date_of_birth"
+                          type="date"
+                          value={profileData.date_of_birth}
+                          onChange={(e) => setProfileData({...profileData, date_of_birth: e.target.value})}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="gender">Gender</Label>
+                        <Select value={profileData.gender} onValueChange={(value) => setProfileData({...profileData, gender: value})}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select gender" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="male">Male</SelectItem>
+                            <SelectItem value="female">Female</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="blood_type">Blood Type</Label>
+                        <Select value={profileData.blood_type} onValueChange={(value) => setProfileData({...profileData, blood_type: value})}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select blood type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="A+">A+</SelectItem>
+                            <SelectItem value="A-">A-</SelectItem>
+                            <SelectItem value="B+">B+</SelectItem>
+                            <SelectItem value="B-">B-</SelectItem>
+                            <SelectItem value="AB+">AB+</SelectItem>
+                            <SelectItem value="AB-">AB-</SelectItem>
+                            <SelectItem value="O+">O+</SelectItem>
+                            <SelectItem value="O-">O-</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="emergency_contact_name">Emergency Contact Name</Label>
+                        <Input
+                          id="emergency_contact_name"
+                          value={profileData.emergency_contact_name}
+                          onChange={(e) => setProfileData({...profileData, emergency_contact_name: e.target.value})}
+                          placeholder="Full Name"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="emergency_contact_phone">Emergency Contact Phone</Label>
+                        <Input
+                          id="emergency_contact_phone"
+                          value={profileData.emergency_contact_phone}
+                          onChange={(e) => setProfileData({...profileData, emergency_contact_phone: e.target.value})}
+                          placeholder="+255 123 456 789"
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                <Button onClick={handleSaveProfile} disabled={isLoading} className="w-full">
+                  {isLoading ? t('saving') : t('saveChanges')}
+                </Button>
               </CardContent>
             </Card>
           </TabsContent>

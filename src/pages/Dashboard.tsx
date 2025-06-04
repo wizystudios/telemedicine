@@ -5,10 +5,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { NotificationsList } from '@/components/NotificationsList';
 import { CallInterface } from '@/components/CallInterface';
-import { useNavigate } from 'react-router-dom';
 import { 
   Calendar, 
   MessageCircle, 
@@ -16,21 +14,12 @@ import {
   Heart,
   Clock,
   Activity,
-  TrendingUp,
-  Stethoscope,
   FileText,
-  DollarSign,
-  Settings,
-  CheckCircle,
-  XCircle,
-  AlertCircle,
-  Video,
-  UserCheck
+  CheckCircle
 } from 'lucide-react';
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const navigate = useNavigate();
   
   console.log('Dashboard - Current user:', user);
   console.log('Dashboard - User role:', user?.user_metadata?.role);
@@ -202,41 +191,6 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
-
-      {/* Doctor Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <Button 
-          onClick={() => navigate('/appointments')}
-          className="h-20 flex flex-col items-center justify-center space-y-2 bg-blue-600 hover:bg-blue-700"
-        >
-          <Calendar className="w-6 h-6" />
-          <span className="text-sm">My Appointments</span>
-        </Button>
-        
-        <Button 
-          onClick={() => navigate('/messages')}
-          className="h-20 flex flex-col items-center justify-center space-y-2 bg-green-600 hover:bg-green-700"
-        >
-          <MessageCircle className="w-6 h-6" />
-          <span className="text-sm">Patient Messages</span>
-        </Button>
-        
-        <Button 
-          onClick={() => navigate('/profile')}
-          className="h-20 flex flex-col items-center justify-center space-y-2 bg-purple-600 hover:bg-purple-700"
-        >
-          <Stethoscope className="w-6 h-6" />
-          <span className="text-sm">My Profile</span>
-        </Button>
-        
-        <Button 
-          onClick={() => navigate('/profile')}
-          className="h-20 flex flex-col items-center justify-center space-y-2 bg-orange-600 hover:bg-orange-700"
-        >
-          <Clock className="w-6 h-6" />
-          <span className="text-sm">Set Availability</span>
-        </Button>
-      </div>
     </>
   );
 
@@ -289,41 +243,6 @@ export default function Dashboard() {
             <p className="text-xs text-muted-foreground">Available</p>
           </CardContent>
         </Card>
-      </div>
-
-      {/* Patient Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <Button 
-          onClick={() => navigate('/doctors')}
-          className="h-20 flex flex-col items-center justify-center space-y-2 bg-blue-600 hover:bg-blue-700"
-        >
-          <UserCheck className="w-6 h-6" />
-          <span className="text-sm">Book Appointment</span>
-        </Button>
-        
-        <Button 
-          onClick={() => navigate('/appointments')}
-          className="h-20 flex flex-col items-center justify-center space-y-2 bg-green-600 hover:bg-green-700"
-        >
-          <Calendar className="w-6 h-6" />
-          <span className="text-sm">My Appointments</span>
-        </Button>
-        
-        <Button 
-          onClick={() => navigate('/messages')}
-          className="h-20 flex flex-col items-center justify-center space-y-2 bg-purple-600 hover:bg-purple-700"
-        >
-          <MessageCircle className="w-6 h-6" />
-          <span className="text-sm">Messages</span>
-        </Button>
-        
-        <Button 
-          onClick={() => navigate('/profile')}
-          className="h-20 flex flex-col items-center justify-center space-y-2 bg-orange-600 hover:bg-orange-700"
-        >
-          <Settings className="w-6 h-6" />
-          <span className="text-sm">My Profile</span>
-        </Button>
       </div>
     </>
   );
