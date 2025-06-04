@@ -71,14 +71,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { data: null, error: { message: 'Email and password are required' } };
       }
 
-      // Prepare minimal user metadata 
+      // CRITICAL: Properly prepare user metadata with role
       const cleanUserData: Record<string, any> = {
         first_name: userData.first_name?.trim() || '',
         last_name: userData.last_name?.trim() || '',
-        role: userData.role || 'patient'
+        role: userData.role || 'patient' // Ensure role is properly set
       };
 
+      // Add optional fields if they exist
+      if (userData.username?.trim()) {
+        cleanUserData.username = userData.username.trim();
+      }
+      if (userData.phone?.trim()) {
+        cleanUserData.phone = userData.phone.trim();
+      }
+      if (userData.country?.trim()) {
+        cleanUserData.country = userData.country.trim();
+      }
+      if (userData.country_code?.trim()) {
+        cleanUserData.country_code = userData.country_code.trim();
+      }
+
       console.log('Attempting signup with clean data:', { email: cleanEmail, userData: cleanUserData });
+      console.log('ROLE BEING PASSED TO SUPABASE:', cleanUserData.role);
 
       const { data, error } = await supabase.auth.signUp({
         email: cleanEmail,
@@ -89,6 +104,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       
       console.log('Signup response:', { data, error });
+      console.log('User metadata after signup:', data?.user?.user_metadata);
       
       if (error) {
         console.error('Signup error:', error);
@@ -97,6 +113,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (data.user) {
         console.log('Signup successful for user:', data.user.id);
+        console.log('User role in metadata:', data.user.user_metadata?.role);
         
         if (data.session) {
           console.log('User has active session, setting state');

@@ -59,13 +59,13 @@ export function ProgressiveRegistration({ onBack }: { onBack: () => void }) {
     switch (step) {
       case 1: // Names (REQUIRED)
         if (!data.firstName.trim()) {
-          newErrors.firstName = t('firstNameRequired');
+          newErrors.firstName = 'First name is required';
         } else if (data.firstName.trim().length < 2) {
           newErrors.firstName = 'First name must be at least 2 characters';
         }
         
         if (!data.lastName.trim()) {
-          newErrors.lastName = t('lastNameRequired');
+          newErrors.lastName = 'Last name is required';
         } else if (data.lastName.trim().length < 2) {
           newErrors.lastName = 'Last name must be at least 2 characters';
         }
@@ -73,13 +73,13 @@ export function ProgressiveRegistration({ onBack }: { onBack: () => void }) {
         
       case 2: // Email & Password (REQUIRED)
         if (!data.email.trim()) {
-          newErrors.email = t('emailRequired');
+          newErrors.email = 'Email is required';
         } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
-          newErrors.email = t('emailInvalid');
+          newErrors.email = 'Invalid email format';
         }
         
         if (!data.password) {
-          newErrors.password = t('passwordRequired');
+          newErrors.password = 'Password is required';
         } else if (!validatePassword(data.password)) {
           newErrors.password = 'Password must meet all requirements';
         }
@@ -121,25 +121,16 @@ export function ProgressiveRegistration({ onBack }: { onBack: () => void }) {
   };
 
   const handleSubmit = async () => {
-    console.log('Starting registration with data:', {
-      email: data.email,
-      firstName: data.firstName,
-      lastName: data.lastName,
-      username: data.username || null,
-      role: data.role,
-      country: data.country || null,
-      countryCode: data.countryCode || null,
-      phone: data.phone || null
-    });
+    console.log('Starting progressive registration with role:', data.role);
 
     setIsLoading(true);
     
     try {
-      // Prepare user metadata - only include non-empty optional fields
+      // CRITICAL: Ensure role is properly set
       const userData: any = {
         first_name: data.firstName.trim(),
         last_name: data.lastName.trim(),
-        role: data.role
+        role: data.role // This is crucial!
       };
 
       // Only add optional fields if they have values
@@ -157,6 +148,7 @@ export function ProgressiveRegistration({ onBack }: { onBack: () => void }) {
       }
 
       console.log('Calling signUp with userData:', userData);
+      console.log('Role being registered:', data.role);
 
       const { data: authData, error } = await signUp(data.email.trim(), data.password, userData);
       
@@ -170,14 +162,13 @@ export function ProgressiveRegistration({ onBack }: { onBack: () => void }) {
         return;
       }
 
-      console.log('Registration successful:', authData);
+      console.log('Registration successful with role:', data.role);
 
       toast({
         title: 'Account Created Successfully!',
-        description: 'Welcome! You can now access your account.',
+        description: `Welcome! Your ${data.role} account is ready.`,
       });
 
-      // Navigate to dashboard immediately
       navigate('/dashboard');
       
     } catch (error: any) {
@@ -203,7 +194,7 @@ export function ProgressiveRegistration({ onBack }: { onBack: () => void }) {
           <div className="space-y-4">
             <div className="text-center mb-6">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                {t('letsGetStarted')}
+                Let's Get Started
               </h2>
               <p className="text-gray-600 dark:text-gray-300">
                 Tell us your name
@@ -212,7 +203,7 @@ export function ProgressiveRegistration({ onBack }: { onBack: () => void }) {
             
             <div>
               <Label htmlFor="firstName" className="text-gray-700 dark:text-gray-300">
-                {t('firstName')} <span className="text-red-500">*</span>
+                First Name <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="firstName"
@@ -231,7 +222,7 @@ export function ProgressiveRegistration({ onBack }: { onBack: () => void }) {
             
             <div>
               <Label htmlFor="lastName" className="text-gray-700 dark:text-gray-300">
-                {t('lastName')} <span className="text-red-500">*</span>
+                Last Name <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="lastName"
@@ -270,7 +261,7 @@ export function ProgressiveRegistration({ onBack }: { onBack: () => void }) {
             
             <div>
               <Label htmlFor="email" className="text-gray-700 dark:text-gray-300">
-                {t('email')} <span className="text-red-500">*</span>
+                Email <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="email"
@@ -401,17 +392,26 @@ export function ProgressiveRegistration({ onBack }: { onBack: () => void }) {
             
             <div>
               <Label htmlFor="role" className="text-gray-700 dark:text-gray-300">
-                {t('role')} <span className="text-red-500">*</span>
+                I am a <span className="text-red-500">*</span>
               </Label>
-              <Select value={data.role} onValueChange={(value: 'patient' | 'doctor') => setData(prev => ({ ...prev, role: value }))}>
+              <Select 
+                value={data.role} 
+                onValueChange={(value: 'patient' | 'doctor') => {
+                  console.log('Progressive registration role selected:', value);
+                  setData(prev => ({ ...prev, role: value }));
+                }}
+              >
                 <SelectTrigger className="h-12 rounded-xl border-2 focus:border-emerald-500 dark:border-gray-600">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="patient">{t('patient')}</SelectItem>
-                  <SelectItem value="doctor">{t('doctor')}</SelectItem>
+                  <SelectItem value="patient">Patient</SelectItem>
+                  <SelectItem value="doctor">Doctor</SelectItem>
                 </SelectContent>
               </Select>
+              <p className="text-sm text-gray-600 mt-1">
+                Current selection: <span className="font-semibold text-emerald-600">{data.role}</span>
+              </p>
             </div>
             
             <div>
@@ -493,7 +493,7 @@ export function ProgressiveRegistration({ onBack }: { onBack: () => void }) {
               className="flex-1 h-12 rounded-xl bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-800"
             >
               {currentStep === totalSteps ? (
-                isLoading ? 'Creating Account...' : 'Create Account'
+                isLoading ? 'Creating Account...' : `Create ${data.role} Account`
               ) : (
                 <>
                   Next

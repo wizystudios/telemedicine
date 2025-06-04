@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -73,19 +74,20 @@ export function SimpleRegistration({ onBack }: { onBack: () => void }) {
       return;
     }
     
-    console.log('Starting registration with basic data...');
+    console.log('Starting registration with role:', data.role);
     setIsLoading(true);
     setErrors({});
     
     try {
-      // Keep it simple - only send required fields
+      // CRITICAL: Ensure role is properly set
       const userData = {
         first_name: data.firstName.trim(),
         last_name: data.lastName.trim(),
-        role: data.role
+        role: data.role // Make sure this is passed correctly
       };
 
-      console.log('Calling signUp with minimal data:', { email: data.email, userData });
+      console.log('Calling signUp with userData:', userData);
+      console.log('Selected role:', data.role);
       
       const result = await signUp(data.email.trim(), data.password, userData);
       
@@ -94,7 +96,6 @@ export function SimpleRegistration({ onBack }: { onBack: () => void }) {
       if (result.error) {
         console.error('Registration failed with error:', result.error);
         
-        // Handle specific error cases
         let errorMessage = result.error.message || 'Registration failed';
         
         if (errorMessage.includes('already registered')) {
@@ -113,14 +114,13 @@ export function SimpleRegistration({ onBack }: { onBack: () => void }) {
         return;
       }
 
-      console.log('Registration successful!');
+      console.log('Registration successful! Role should be:', data.role);
       
       toast({
-        title: 'Welcome to TeleHealth!',
-        description: 'Your account has been created successfully.',
+        title: 'Welcome to TeleMed!',
+        description: `Your ${data.role} account has been created successfully.`,
       });
 
-      // Navigate to dashboard on success
       navigate('/dashboard');
       
     } catch (error: any) {
@@ -143,7 +143,7 @@ export function SimpleRegistration({ onBack }: { onBack: () => void }) {
             Create Account
           </CardTitle>
           <p className="text-gray-600 dark:text-gray-300">
-            Join TeleHealth today
+            Join TeleMed today
           </p>
         </CardHeader>
         
@@ -205,7 +205,13 @@ export function SimpleRegistration({ onBack }: { onBack: () => void }) {
             
             <div>
               <Label htmlFor="role">I am a *</Label>
-              <Select value={data.role} onValueChange={(value: 'patient' | 'doctor') => setData(prev => ({ ...prev, role: value }))}>
+              <Select 
+                value={data.role} 
+                onValueChange={(value: 'patient' | 'doctor') => {
+                  console.log('Role selected:', value);
+                  setData(prev => ({ ...prev, role: value }));
+                }}
+              >
                 <SelectTrigger className="h-12 rounded-xl border-2 focus:border-emerald-500">
                   <SelectValue />
                 </SelectTrigger>
@@ -214,6 +220,9 @@ export function SimpleRegistration({ onBack }: { onBack: () => void }) {
                   <SelectItem value="doctor">Doctor</SelectItem>
                 </SelectContent>
               </Select>
+              <p className="text-sm text-gray-600 mt-1">
+                Current selection: <span className="font-semibold text-emerald-600">{data.role}</span>
+              </p>
             </div>
             
             <div>
@@ -302,7 +311,7 @@ export function SimpleRegistration({ onBack }: { onBack: () => void }) {
                 disabled={isLoading}
                 className="flex-1 h-12 rounded-xl bg-emerald-600 hover:bg-emerald-700"
               >
-                {isLoading ? 'Creating Account...' : 'Create Account'}
+                {isLoading ? 'Creating Account...' : `Create ${data.role} Account`}
               </Button>
             </div>
           </form>
