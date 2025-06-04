@@ -2,7 +2,7 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from '@/hooks/useTranslation';
-import { Home, Calendar, MessageCircle, User, Users } from 'lucide-react';
+import { Home, Calendar, MessageCircle, User, Users, Stethoscope, Clock, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function BottomNav() {
@@ -13,13 +13,32 @@ export function BottomNav() {
 
   if (!user) return null;
 
-  const navItems = [
-    { icon: Home, label: t('home'), path: '/dashboard' },
-    { icon: Calendar, label: t('appointments'), path: '/appointments' },
-    { icon: MessageCircle, label: t('messages'), path: '/messages' },
-    { icon: Users, label: t('doctors'), path: '/doctors' },
-    { icon: User, label: t('profile'), path: '/profile' },
-  ];
+  const userRole = user?.user_metadata?.role || 'patient';
+
+  // Different navigation items based on role
+  const getNavItems = () => {
+    const baseItems = [
+      { icon: Home, label: t('home'), path: '/dashboard' },
+      { icon: Calendar, label: t('appointments'), path: '/appointments' },
+      { icon: MessageCircle, label: t('messages'), path: '/messages' },
+    ];
+
+    if (userRole === 'doctor') {
+      return [
+        ...baseItems,
+        { icon: Stethoscope, label: 'Patients', path: '/patients' },
+        { icon: User, label: t('profile'), path: '/profile' },
+      ];
+    } else {
+      return [
+        ...baseItems,
+        { icon: Users, label: t('doctors'), path: '/doctors' },
+        { icon: User, label: t('profile'), path: '/profile' },
+      ];
+    }
+  };
+
+  const navItems = getNavItems();
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-4 py-2 md:hidden">

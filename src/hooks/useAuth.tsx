@@ -26,6 +26,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth state changed:', event, session?.user?.id);
+        console.log('User metadata:', session?.user?.user_metadata);
+        console.log('User role from metadata:', session?.user?.user_metadata?.role);
+        
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
@@ -40,6 +43,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.error('Error getting session:', error);
         } else {
           console.log('Initial session check:', session?.user?.id);
+          console.log('Initial user metadata:', session?.user?.user_metadata);
+          console.log('Initial user role:', session?.user?.user_metadata?.role);
           setSession(session);
           setUser(session?.user ?? null);
         }
@@ -60,6 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (email: string, password: string, userData: any) => {
     console.log('signUp called with:', { email, userData });
+    console.log('CRITICAL: Role being passed:', userData.role);
     
     try {
       setLoading(true);
@@ -71,11 +77,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { data: null, error: { message: 'Email and password are required' } };
       }
 
-      // CRITICAL: Properly prepare user metadata with role
+      // CRITICAL: Properly prepare user metadata with role as the FIRST priority
       const cleanUserData: Record<string, any> = {
+        role: userData.role || 'patient', // Role MUST be first
         first_name: userData.first_name?.trim() || '',
-        last_name: userData.last_name?.trim() || '',
-        role: userData.role || 'patient' // Ensure role is properly set
+        last_name: userData.last_name?.trim() || ''
       };
 
       // Add optional fields if they exist
@@ -92,8 +98,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         cleanUserData.country_code = userData.country_code.trim();
       }
 
-      console.log('Attempting signup with clean data:', { email: cleanEmail, userData: cleanUserData });
-      console.log('ROLE BEING PASSED TO SUPABASE:', cleanUserData.role);
+      console.log('FINAL userData being sent to Supabase:', cleanUserData);
+      console.log('CONFIRMING ROLE FIELD:', cleanUserData.role);
 
       const { data, error } = await supabase.auth.signUp({
         email: cleanEmail,
@@ -105,6 +111,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       console.log('Signup response:', { data, error });
       console.log('User metadata after signup:', data?.user?.user_metadata);
+      console.log('ROLE IN RESPONSE:', data?.user?.user_metadata?.role);
       
       if (error) {
         console.error('Signup error:', error);
@@ -114,6 +121,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (data.user) {
         console.log('Signup successful for user:', data.user.id);
         console.log('User role in metadata:', data.user.user_metadata?.role);
+        console.log('VERIFYING ROLE WAS SAVED:', data.user.user_metadata?.role);
         
         if (data.session) {
           console.log('User has active session, setting state');
