@@ -12,7 +12,9 @@ export function useOnlineStatus() {
 
     // Fetch initial online doctors
     const fetchOnlineDoctors = async () => {
-      const { data } = await supabase
+      console.log('Fetching online doctors...');
+      
+      const { data, error } = await supabase
         .from('doctor_online_status')
         .select(`
           *,
@@ -21,12 +23,21 @@ export function useOnlineStatus() {
             first_name,
             last_name,
             avatar_url,
-            role
+            role,
+            email,
+            phone,
+            country
           )
         `)
         .eq('is_online', true);
       
-      setOnlineDoctors(data || []);
+      if (error) {
+        console.error('Error fetching online doctors:', error);
+        setOnlineDoctors([]);
+      } else {
+        console.log('Online doctors fetched:', data?.length || 0);
+        setOnlineDoctors(data || []);
+      }
     };
 
     fetchOnlineDoctors();
@@ -41,7 +52,8 @@ export function useOnlineStatus() {
           schema: 'public',
           table: 'doctor_online_status'
         },
-        () => {
+        (payload) => {
+          console.log('Online status change:', payload);
           fetchOnlineDoctors();
         }
       )
@@ -53,11 +65,38 @@ export function useOnlineStatus() {
   }, [user]);
 
   const updateOnlineStatus = async (isOnline: boolean, statusMessage?: string) => {
-    if (user?.id) {
-      await supabase.rpc('update_doctor_online_status', {
+    if (!user?.id) {
+      console.error('No user ID available for updating online status');
+      return;
+    }
+
+    console.log('Updating online status:', { isOnline, statusMessage, userId: user.id });
+
+    try {
+      // First check if user is actually a doctor
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError || profile?.role !== 'doctor') {
+        console.error('User is not a doctor, cannot update online status');
+        return;
+      }
+
+      const { data, error } = await supabase.rpc('update_doctor_online_status', {
         is_online_param: isOnline,
         status_message_param: statusMessage
       });
+
+      if (error) {
+        console.error('Error updating online status:', error);
+      } else {
+        console.log('Online status updated successfully');
+      }
+    } catch (error) {
+      console.error('Exception updating online status:', error);
     }
   };
 

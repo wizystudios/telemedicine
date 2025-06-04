@@ -14,6 +14,7 @@ import { useState, useEffect } from "react";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import DoctorsList from "./pages/DoctorsList";
+import Patients from "./pages/Patients";
 import Appointments from "./pages/Appointments";
 import Messages from "./pages/Messages";
 import Profile from "./pages/Profile";
@@ -100,6 +101,14 @@ function AppContent() {
             element={
               <ProtectedRoute>
                 <DoctorsList />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/patients" 
+            element={
+              <ProtectedRoute>
+                <Patients />
               </ProtectedRoute>
             } 
           />
