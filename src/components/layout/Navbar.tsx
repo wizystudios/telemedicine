@@ -26,9 +26,12 @@ export function Navbar() {
   const navigate = useNavigate();
   const [isOnline, setIsOnline] = useState(false);
 
+  // Get user role from both user_metadata and direct role property
+  const userRole = user?.user_metadata?.role || user?.role || 'patient';
+
   // Set doctor online when they login
   useEffect(() => {
-    if (user?.role === 'doctor') {
+    if (userRole === 'doctor') {
       updateOnlineStatus(true);
       setIsOnline(true);
       
@@ -43,10 +46,10 @@ export function Navbar() {
         updateOnlineStatus(false);
       };
     }
-  }, [user, updateOnlineStatus]);
+  }, [userRole, updateOnlineStatus]);
 
   const handleSignOut = async () => {
-    if (user?.role === 'doctor') {
+    if (userRole === 'doctor') {
       await updateOnlineStatus(false);
     }
     await signOut();
@@ -96,7 +99,7 @@ export function Navbar() {
                       {user.user_metadata?.first_name?.[0] || user.email?.[0]?.toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
-                  {user.role === 'doctor' && isOnline && (
+                  {userRole === 'doctor' && isOnline && (
                     <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
                   )}
                 </Button>
@@ -115,14 +118,14 @@ export function Navbar() {
                       {user.user_metadata?.first_name} {user.user_metadata?.last_name}
                     </p>
                     <Badge variant="secondary" className="w-fit text-xs">
-                      {user.role === 'doctor' ? t('doctor') : t('patient')}
+                      {userRole === 'doctor' ? t('doctor') : t('patient')}
                     </Badge>
                   </div>
                 </div>
                 
                 <DropdownMenuSeparator />
                 
-                {user.role === 'doctor' && (
+                {userRole === 'doctor' && (
                   <>
                     <div className="flex items-center justify-between p-3">
                       <div className="flex items-center space-x-2">

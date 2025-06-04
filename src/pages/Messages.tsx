@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+
+import { useState, useEffect, useRef } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -10,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { MessageCircle, Send, Phone, Video, ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
 
 interface ConversationData {
   appointment: {
@@ -37,8 +39,16 @@ interface ConversationData {
 export default function Messages() {
   const { user } = useAuth();
   const { t } = useTranslation();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [message, setMessage] = useState('');
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Scroll to bottom when new messages arrive
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   // Fetch chat conversations
   const { data: conversations, isLoading } = useQuery({
@@ -70,8 +80,12 @@ export default function Messages() {
             messages: [],
             lastMessage: msg.message,
             lastMessageTime: msg.created_at,
-            unreadCount: 0
+            unreadCount: msg.sender_id !== user?.id && !msg.is_read ? 1 : 0
           };
+        } else {
+          if (msg.sender_id !== user?.id && !msg.is_read) {
+            acc[appointmentId].unreadCount++;
+          }
         }
         acc[appointmentId].messages.push(msg);
         return acc;
@@ -98,10 +112,59 @@ export default function Messages() {
         .order('created_at', { ascending: true });
       
       if (error) throw error;
+      
+      // Mark messages as read
+      await supabase
+        .from('chat_messages')
+        .update({ is_read: true, read_at: new Date().toISOString() })
+        .eq('appointment_id', selectedChat)
+        .neq('sender_id', user?.id);
+      
       return data || [];
     },
     enabled: !!selectedChat
   });
+
+  // Set up real-time subscription for messages
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const channel = supabase
+      .channel('chat-messages')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'chat_messages'
+        },
+        (payload) => {
+          console.log('New message received:', payload);
+          queryClient.invalidateQueries({ queryKey: ['conversations'] });
+          if (selectedChat) {
+            queryClient.invalidateQueries({ queryKey: ['chat-messages', selectedChat] });
+          }
+          
+          // Show toast notification for new messages
+          if (payload.new.sender_id !== user.id) {
+            toast({
+              title: 'New Message',
+              description: 'You have received a new message',
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, selectedChat, queryClient, toast]);
+
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    scrollToBottom();
+  }, [chatMessages]);
 
   const sendMessage = async () => {
     if (!message.trim() || !selectedChat) return;
@@ -118,8 +181,30 @@ export default function Messages() {
       
       if (error) throw error;
       setMessage('');
+      
+      // Create notification for the recipient
+      const currentConversation = conversations?.find((c) => c.appointment?.id === selectedChat);
+      const recipientId = currentConversation?.appointment?.patient_id === user?.id 
+        ? currentConversation?.appointment?.doctor_id 
+        : currentConversation?.appointment?.patient_id;
+
+      if (recipientId) {
+        await supabase
+          .from('notifications')
+          .insert({
+            user_id: recipientId,
+            title: 'New Message',
+            message: `You have received a new message: ${message.trim().substring(0, 50)}${message.trim().length > 50 ? '...' : ''}`,
+            type: 'message'
+          });
+      }
     } catch (error) {
       console.error('Error sending message:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to send message. Please try again.',
+        variant: 'destructive'
+      });
     }
   };
 
@@ -195,13 +280,21 @@ export default function Messages() {
                       : 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
                   }`}>
                     <p className="text-sm">{msg.message}</p>
-                    <span className={`text-xs ${isOwn ? 'text-emerald-100' : 'text-gray-500'}`}>
-                      {format(new Date(msg.created_at), 'h:mm a')}
-                    </span>
+                    <div className="flex items-center justify-between mt-1">
+                      <span className={`text-xs ${isOwn ? 'text-emerald-100' : 'text-gray-500'}`}>
+                        {format(new Date(msg.created_at), 'h:mm a')}
+                      </span>
+                      {isOwn && (
+                        <span className={`text-xs ${isOwn ? 'text-emerald-100' : 'text-gray-500'}`}>
+                          {msg.is_read ? '✓✓' : '✓'}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
             })}
+            <div ref={messagesEndRef} />
           </div>
           
           {/* Message Input */}
@@ -261,9 +354,16 @@ export default function Messages() {
                             <h4 className="font-medium text-gray-900 dark:text-white truncate">
                               {otherUser?.first_name} {otherUser?.last_name}
                             </h4>
-                            <span className="text-xs text-gray-500">
-                              {format(new Date(chat.lastMessageTime), 'MMM dd')}
-                            </span>
+                            <div className="flex items-center space-x-2">
+                              <span className="text-xs text-gray-500">
+                                {format(new Date(chat.lastMessageTime), 'MMM dd')}
+                              </span>
+                              {chat.unreadCount > 0 && (
+                                <Badge variant="default" className="text-xs">
+                                  {chat.unreadCount}
+                                </Badge>
+                              )}
+                            </div>
                           </div>
                           {user?.role === 'patient' && (
                             <Badge variant="secondary" className="text-xs mb-1">
@@ -331,9 +431,16 @@ export default function Messages() {
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-medium text-gray-900 dark:text-white truncate">
-                              {otherUser?.first_name} {otherUser?.last_name}
-                            </h4>
+                            <div className="flex items-center justify-between">
+                              <h4 className="font-medium text-gray-900 dark:text-white truncate">
+                                {otherUser?.first_name} {otherUser?.last_name}
+                              </h4>
+                              {chat.unreadCount > 0 && (
+                                <Badge variant="default" className="text-xs">
+                                  {chat.unreadCount}
+                                </Badge>
+                              )}
+                            </div>
                             <p className="text-sm text-gray-600 dark:text-gray-300 truncate">
                               {chat.lastMessage}
                             </p>
@@ -392,13 +499,21 @@ export default function Messages() {
                               : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
                           }`}>
                             <p className="text-sm">{msg.message}</p>
-                            <span className={`text-xs ${isOwn ? 'text-emerald-100' : 'text-gray-500'}`}>
-                              {format(new Date(msg.created_at), 'h:mm a')}
-                            </span>
+                            <div className="flex items-center justify-between mt-1">
+                              <span className={`text-xs ${isOwn ? 'text-emerald-100' : 'text-gray-500'}`}>
+                                {format(new Date(msg.created_at), 'h:mm a')}
+                              </span>
+                              {isOwn && (
+                                <span className={`text-xs ${isOwn ? 'text-emerald-100' : 'text-gray-500'}`}>
+                                  {msg.is_read ? '✓✓' : '✓'}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       );
                     })}
+                    <div ref={messagesEndRef} />
                   </div>
                   
                   {/* Message Input */}

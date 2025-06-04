@@ -12,6 +12,17 @@ import { Search, Users, Heart } from 'lucide-react';
 import { useState } from 'react';
 import { useSavedDoctors } from '@/hooks/useSavedDoctors';
 
+interface Doctor {
+  id: string;
+  first_name: string;
+  last_name: string;
+  avatar_url?: string;
+  role: string;
+  email: string;
+  phone?: string;
+  country?: string;
+}
+
 export default function DoctorsList() {
   const { user } = useAuth();
   const { onlineDoctors } = useOnlineStatus();
@@ -19,27 +30,37 @@ export default function DoctorsList() {
   const { savedDoctors } = useSavedDoctors();
   const [searchTerm, setSearchTerm] = useState('');
 
-  const { data: allDoctors, isLoading } = useQuery({
+  const { data: allDoctors = [], isLoading } = useQuery({
     queryKey: ['doctors'],
     queryFn: async () => {
+      console.log('Fetching doctors from profiles table...');
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('role', 'doctor');
+        .eq('role', 'doctor')
+        .order('created_at', { ascending: false });
       
-      if (error) throw error;
-      return data || [];
+      if (error) {
+        console.error('Error fetching doctors:', error);
+        throw error;
+      }
+      
+      console.log('Doctors fetched:', data?.length || 0);
+      return (data as Doctor[]) || [];
     }
   });
 
-  const filteredDoctors = allDoctors?.filter(doctor =>
-    `${doctor.first_name} ${doctor.last_name}`
+  const filteredDoctors = allDoctors.filter(doctor =>
+    `${doctor.first_name} ${doctor.last_name} ${doctor.email}`
       .toLowerCase()
       .includes(searchTerm.toLowerCase())
-  ) || [];
+  );
 
   // Get doctors with recent posts
   const doctorsWithPosts = new Set(posts.map(post => post.doctor_id));
+
+  // Get online doctor IDs for easy lookup
+  const onlineDoctorIds = new Set(onlineDoctors.map(online => online.doctor_id));
 
   if (isLoading) {
     return (
@@ -82,16 +103,16 @@ export default function DoctorsList() {
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="all" className="flex items-center space-x-2">
               <Users className="w-4 h-4" />
-              <span>All Doctors</span>
+              <span>All Doctors ({filteredDoctors.length})</span>
             </TabsTrigger>
             <TabsTrigger value="online" className="flex items-center space-x-2">
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span>Online Now</span>
+              <span>Online Now ({onlineDoctors.length})</span>
             </TabsTrigger>
             {user?.role === 'patient' && (
               <TabsTrigger value="saved" className="flex items-center space-x-2">
                 <Heart className="w-4 h-4" />
-                <span>Saved</span>
+                <span>Saved ({savedDoctors.length})</span>
               </TabsTrigger>
             )}
           </TabsList>
@@ -102,7 +123,7 @@ export default function DoctorsList() {
                 <DoctorCard
                   key={doctor.id}
                   doctor={doctor}
-                  isOnline={onlineDoctors.some(online => online.doctor_id === doctor.id)}
+                  isOnline={onlineDoctorIds.has(doctor.id)}
                   hasNewPosts={doctorsWithPosts.has(doctor.id)}
                 />
               ))}
@@ -141,7 +162,7 @@ export default function DoctorsList() {
                     <DoctorCard
                       key={saved.doctor.id}
                       doctor={saved.doctor}
-                      isOnline={onlineDoctors.some(online => online.doctor_id === saved.doctor.id)}
+                      isOnline={onlineDoctorIds.has(saved.doctor.id)}
                       hasNewPosts={doctorsWithPosts.has(saved.doctor.id)}
                     />
                   ))}
@@ -154,10 +175,13 @@ export default function DoctorsList() {
           <div className="text-center py-12">
             <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-              No doctors found
+              {searchTerm ? 'No doctors found' : 'No doctors available'}
             </h3>
             <p className="text-gray-600 dark:text-gray-300">
-              Try adjusting your search terms
+              {searchTerm 
+                ? 'Try adjusting your search terms'
+                : 'No doctors have registered yet. Please check back later.'
+              }
             </p>
           </div>
         )}
