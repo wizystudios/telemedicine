@@ -30,12 +30,30 @@ export default function DoctorsList() {
   const { savedDoctors } = useSavedDoctors();
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Only allow patients to access this page
+  if (user?.user_metadata?.role !== 'patient') {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center py-8">
+            <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+              Access Denied
+            </h3>
+            <p className="text-gray-600 dark:text-gray-300">
+              This page is only accessible to patients.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const { data: allDoctors = [], isLoading, error } = useQuery({
-    queryKey: ['doctors'],
+    queryKey: ['doctors-for-patients'],
     queryFn: async () => {
-      console.log('Fetching doctors from profiles table...');
+      console.log('Fetching doctors for patient view...');
       
-      // First, let's try to get all profiles with role 'doctor'
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -47,15 +65,15 @@ export default function DoctorsList() {
         throw error;
       }
       
-      console.log('Raw doctors data:', data);
-      console.log('Number of doctors found:', data?.length || 0);
+      console.log('Doctors found for patients:', data?.length || 0);
       
       return (data as Doctor[]) || [];
-    }
+    },
+    enabled: !!user && user?.user_metadata?.role === 'patient'
   });
 
-  console.log('Current user role:', user?.user_metadata?.role || user?.role);
-  console.log('All doctors:', allDoctors);
+  console.log('Current user role:', user?.user_metadata?.role);
+  console.log('Doctors for patients:', allDoctors);
   console.log('Online doctors:', onlineDoctors);
 
   const filteredDoctors = allDoctors.filter(doctor =>
@@ -135,12 +153,10 @@ export default function DoctorsList() {
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
               <span>Online Now ({onlineDoctors.length})</span>
             </TabsTrigger>
-            {user?.role === 'patient' && (
-              <TabsTrigger value="saved" className="flex items-center space-x-2">
-                <Heart className="w-4 h-4" />
-                <span>Saved ({savedDoctors.length})</span>
-              </TabsTrigger>
-            )}
+            <TabsTrigger value="saved" className="flex items-center space-x-2">
+              <Heart className="w-4 h-4" />
+              <span>Saved ({savedDoctors.length})</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="all">
@@ -202,38 +218,36 @@ export default function DoctorsList() {
             )}
           </TabsContent>
 
-          {user?.role === 'patient' && (
-            <TabsContent value="saved">
-              {savedDoctors.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                  {savedDoctors
-                    .filter(saved => 
-                      `${saved.doctor.first_name} ${saved.doctor.last_name}`
-                        .toLowerCase()
-                        .includes(searchTerm.toLowerCase())
-                    )
-                    .map((saved) => (
-                      <DoctorCard
-                        key={saved.doctor.id}
-                        doctor={saved.doctor}
-                        isOnline={onlineDoctorIds.has(saved.doctor.id)}
-                        hasNewPosts={doctorsWithPosts.has(saved.doctor.id)}
-                      />
-                    ))}
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <Heart className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                    No saved doctors
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-300">
-                    You haven't saved any doctors yet. Save doctors you like to see them here.
-                  </p>
-                </div>
-              )}
-            </TabsContent>
-          )}
+          <TabsContent value="saved">
+            {savedDoctors.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {savedDoctors
+                  .filter(saved => 
+                    `${saved.doctor.first_name} ${saved.doctor.last_name}`
+                      .toLowerCase()
+                      .includes(searchTerm.toLowerCase())
+                  )
+                  .map((saved) => (
+                    <DoctorCard
+                      key={saved.doctor.id}
+                      doctor={saved.doctor}
+                      isOnline={onlineDoctorIds.has(saved.doctor.id)}
+                      hasNewPosts={doctorsWithPosts.has(saved.doctor.id)}
+                    />
+                  ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <Heart className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                  No saved doctors
+                </h3>
+                <p className="text-gray-600 dark:text-gray-300">
+                  You haven't saved any doctors yet. Save doctors you like to see them here.
+                </p>
+              </div>
+            )}
+          </TabsContent>
         </Tabs>
       </div>
     </div>

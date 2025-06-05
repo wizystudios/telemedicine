@@ -26,10 +26,29 @@ export default function Patients() {
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Only allow doctors to access this page
+  if (user?.user_metadata?.role !== 'doctor') {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center py-8">
+            <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+              Access Denied
+            </h3>
+            <p className="text-gray-600 dark:text-gray-300">
+              This page is only accessible to doctors.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const { data: allPatients = [], isLoading, error } = useQuery({
-    queryKey: ['patients'],
+    queryKey: ['patients-for-doctors'],
     queryFn: async () => {
-      console.log('Fetching patients from profiles table...');
+      console.log('Fetching patients for doctor view...');
       
       const { data, error } = await supabase
         .from('profiles')
@@ -42,11 +61,11 @@ export default function Patients() {
         throw error;
       }
       
-      console.log('Raw patients data:', data);
-      console.log('Number of patients found:', data?.length || 0);
+      console.log('Patients found for doctors:', data?.length || 0);
       
       return (data as Patient[]) || [];
-    }
+    },
+    enabled: !!user && user?.user_metadata?.role === 'doctor'
   });
 
   // Get recent appointments for this doctor
@@ -77,11 +96,11 @@ export default function Patients() {
       
       return data || [];
     },
-    enabled: !!user?.id && user?.role === 'doctor'
+    enabled: !!user?.id && user?.user_metadata?.role === 'doctor'
   });
 
-  console.log('Current user role:', user?.user_metadata?.role || user?.role);
-  console.log('All patients:', allPatients);
+  console.log('Current user role:', user?.user_metadata?.role);
+  console.log('Patients for doctors:', allPatients);
   console.log('Recent appointments:', recentAppointments);
 
   const filteredPatients = allPatients.filter(patient =>
