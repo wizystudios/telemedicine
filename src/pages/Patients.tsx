@@ -46,26 +46,25 @@ export default function Patients() {
   }
 
   const { data: allPatients = [], isLoading, error } = useQuery({
-    queryKey: ['patients-for-doctors'],
+    queryKey: ['all-patients'],
     queryFn: async () => {
-      console.log('Fetching patients for doctor view...');
+      console.log('Fetching all patients from profiles table...');
       
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('role', 'patient')
-        .order('created_at', { ascending: false });
+        .eq('role', 'patient');
       
       if (error) {
         console.error('Error fetching patients:', error);
         throw error;
       }
       
-      console.log('Patients found for doctors:', data?.length || 0);
+      console.log('All patients found:', data?.length || 0);
+      console.log('Patients data:', data);
       
       return (data as Patient[]) || [];
-    },
-    enabled: !!user && user?.user_metadata?.role === 'doctor'
+    }
   });
 
   // Get recent appointments for this doctor
@@ -100,7 +99,7 @@ export default function Patients() {
   });
 
   console.log('Current user role:', user?.user_metadata?.role);
-  console.log('Patients for doctors:', allPatients);
+  console.log('All patients:', allPatients);
   console.log('Recent appointments:', recentAppointments);
 
   const filteredPatients = allPatients.filter(patient =>

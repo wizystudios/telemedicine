@@ -50,30 +50,29 @@ export default function DoctorsList() {
   }
 
   const { data: allDoctors = [], isLoading, error } = useQuery({
-    queryKey: ['doctors-for-patients'],
+    queryKey: ['all-doctors'],
     queryFn: async () => {
-      console.log('Fetching doctors for patient view...');
+      console.log('Fetching all doctors from profiles table...');
       
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('role', 'doctor')
-        .order('created_at', { ascending: false });
+        .eq('role', 'doctor');
       
       if (error) {
         console.error('Error fetching doctors:', error);
         throw error;
       }
       
-      console.log('Doctors found for patients:', data?.length || 0);
+      console.log('All doctors found:', data?.length || 0);
+      console.log('Doctors data:', data);
       
       return (data as Doctor[]) || [];
-    },
-    enabled: !!user && user?.user_metadata?.role === 'patient'
+    }
   });
 
   console.log('Current user role:', user?.user_metadata?.role);
-  console.log('Doctors for patients:', allDoctors);
+  console.log('All doctors:', allDoctors);
   console.log('Online doctors:', onlineDoctors);
 
   const filteredDoctors = allDoctors.filter(doctor =>
