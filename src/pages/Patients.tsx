@@ -48,40 +48,23 @@ export default function Patients() {
   const { data: allPatients = [], isLoading, error } = useQuery({
     queryKey: ['patients-list'],
     queryFn: async () => {
-      console.log('🔍 Fetching all patients from profiles table...');
+      console.log('🔍 Fetching patients from profiles table...');
       
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select(`
-            id,
-            first_name,
-            last_name,
-            avatar_url,
-            role,
-            email,
-            phone,
-            country,
-            created_at
-          `)
-          .eq('role', 'patient')
-          .order('created_at', { ascending: false });
-        
-        if (error) {
-          console.error('❌ Error fetching patients:', error);
-          throw error;
-        }
-        
-        console.log('✅ Patients fetched successfully:', data?.length || 0);
-        console.log('📋 Patients data:', data);
-        
-        return (data as Patient[]) || [];
-      } catch (err) {
-        console.error('💥 Exception fetching patients:', err);
-        throw err;
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('role', 'patient')
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error('❌ Error fetching patients:', error);
+        throw error;
       }
+      
+      console.log('✅ Patients fetched successfully:', data?.length || 0);
+      return (data as Patient[]) || [];
     },
-    retry: 3,
+    retry: 2,
     retryDelay: 1000
   });
 
@@ -116,13 +99,12 @@ export default function Patients() {
     enabled: !!user?.id && user?.user_metadata?.role === 'doctor'
   });
 
-  console.log('👤 Current user:', user?.id);
-  console.log('🔑 User role:', user?.user_metadata?.role);
+  console.log('👤 Current user role:', user?.user_metadata?.role);
   console.log('👥 Total patients found:', allPatients?.length || 0);
   console.log('📅 Recent appointments:', recentAppointments?.length || 0);
 
   const filteredPatients = allPatients.filter(patient =>
-    `${patient.first_name} ${patient.last_name} ${patient.email}`
+    `${patient.first_name || ''} ${patient.last_name || ''} ${patient.email || ''}`
       .toLowerCase()
       .includes(searchTerm.toLowerCase())
   );
@@ -157,9 +139,6 @@ export default function Patients() {
             </h3>
             <p className="text-gray-600 dark:text-gray-300">
               Failed to load patients: {error.message}
-            </p>
-            <p className="text-sm text-gray-500 mt-2">
-              Please check your internet connection and try again.
             </p>
           </div>
         </div>
@@ -203,13 +182,13 @@ export default function Patients() {
                     <Avatar className="w-16 h-16">
                       <AvatarImage src={patient.avatar_url} />
                       <AvatarFallback>
-                        {patient.first_name?.[0]}{patient.last_name?.[0]}
+                        {patient.first_name?.[0] || 'P'}{patient.last_name?.[0] || ''}
                       </AvatarFallback>
                     </Avatar>
                     
                     <div className="text-center">
                       <h3 className="font-semibold text-gray-900 dark:text-white">
-                        {patient.first_name} {patient.last_name}
+                        {patient.first_name || 'Unknown'} {patient.last_name || ''}
                       </h3>
                       <p className="text-sm text-gray-600 dark:text-gray-300">{patient.email}</p>
                       <div className="flex items-center justify-center space-x-2 mt-1">

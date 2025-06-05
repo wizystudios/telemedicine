@@ -52,50 +52,32 @@ export default function DoctorsList() {
   const { data: allDoctors = [], isLoading, error } = useQuery({
     queryKey: ['doctors-list'],
     queryFn: async () => {
-      console.log('🔍 Fetching all doctors from profiles table...');
+      console.log('🔍 Fetching doctors from profiles table...');
       
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select(`
-            id,
-            first_name,
-            last_name,
-            avatar_url,
-            role,
-            email,
-            phone,
-            country,
-            created_at
-          `)
-          .eq('role', 'doctor')
-          .order('created_at', { ascending: false });
-        
-        if (error) {
-          console.error('❌ Error fetching doctors:', error);
-          throw error;
-        }
-        
-        console.log('✅ Doctors fetched successfully:', data?.length || 0);
-        console.log('📋 Doctors data:', data);
-        
-        return (data as Doctor[]) || [];
-      } catch (err) {
-        console.error('💥 Exception fetching doctors:', err);
-        throw err;
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('role', 'doctor')
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error('❌ Error fetching doctors:', error);
+        throw error;
       }
+      
+      console.log('✅ Doctors fetched successfully:', data?.length || 0);
+      return (data as Doctor[]) || [];
     },
-    retry: 3,
+    retry: 2,
     retryDelay: 1000
   });
 
-  console.log('👤 Current user:', user?.id);
-  console.log('🔑 User role:', user?.user_metadata?.role);
+  console.log('👤 Current user role:', user?.user_metadata?.role);
   console.log('👨‍⚕️ Total doctors found:', allDoctors?.length || 0);
   console.log('🟢 Online doctors:', onlineDoctors?.length || 0);
 
   const filteredDoctors = allDoctors.filter(doctor =>
-    `${doctor.first_name} ${doctor.last_name} ${doctor.email}`
+    `${doctor.first_name || ''} ${doctor.last_name || ''} ${doctor.email || ''}`
       .toLowerCase()
       .includes(searchTerm.toLowerCase())
   );
@@ -131,9 +113,6 @@ export default function DoctorsList() {
             </h3>
             <p className="text-gray-600 dark:text-gray-300">
               Failed to load doctors: {error.message}
-            </p>
-            <p className="text-sm text-gray-500 mt-2">
-              Please check your internet connection and try again.
             </p>
           </div>
         </div>
@@ -215,7 +194,7 @@ export default function DoctorsList() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {onlineDoctors
                   .filter(online => 
-                    `${online.doctor.first_name} ${online.doctor.last_name}`
+                    `${online.doctor.first_name || ''} ${online.doctor.last_name || ''}`
                       .toLowerCase()
                       .includes(searchTerm.toLowerCase())
                   )
@@ -246,7 +225,7 @@ export default function DoctorsList() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {savedDoctors
                   .filter(saved => 
-                    `${saved.doctor.first_name} ${saved.doctor.last_name}`
+                    `${saved.doctor.first_name || ''} ${saved.doctor.last_name || ''}`
                       .toLowerCase()
                       .includes(searchTerm.toLowerCase())
                   )
