@@ -50,30 +50,49 @@ export default function DoctorsList() {
   }
 
   const { data: allDoctors = [], isLoading, error } = useQuery({
-    queryKey: ['all-doctors'],
+    queryKey: ['doctors-list'],
     queryFn: async () => {
-      console.log('Fetching all doctors from profiles table...');
+      console.log('🔍 Fetching all doctors from profiles table...');
       
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('role', 'doctor');
-      
-      if (error) {
-        console.error('Error fetching doctors:', error);
-        throw error;
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select(`
+            id,
+            first_name,
+            last_name,
+            avatar_url,
+            role,
+            email,
+            phone,
+            country,
+            created_at
+          `)
+          .eq('role', 'doctor')
+          .order('created_at', { ascending: false });
+        
+        if (error) {
+          console.error('❌ Error fetching doctors:', error);
+          throw error;
+        }
+        
+        console.log('✅ Doctors fetched successfully:', data?.length || 0);
+        console.log('📋 Doctors data:', data);
+        
+        return (data as Doctor[]) || [];
+      } catch (err) {
+        console.error('💥 Exception fetching doctors:', err);
+        throw err;
       }
-      
-      console.log('All doctors found:', data?.length || 0);
-      console.log('Doctors data:', data);
-      
-      return (data as Doctor[]) || [];
-    }
+    },
+    retry: 3,
+    retryDelay: 1000
   });
 
-  console.log('Current user role:', user?.user_metadata?.role);
-  console.log('All doctors:', allDoctors);
-  console.log('Online doctors:', onlineDoctors);
+  console.log('👤 Current user:', user?.id);
+  console.log('🔑 User role:', user?.user_metadata?.role);
+  console.log('👨‍⚕️ Total doctors found:', allDoctors?.length || 0);
+  console.log('🟢 Online doctors:', onlineDoctors?.length || 0);
 
   const filteredDoctors = allDoctors.filter(doctor =>
     `${doctor.first_name} ${doctor.last_name} ${doctor.email}`
@@ -101,6 +120,7 @@ export default function DoctorsList() {
   }
 
   if (error) {
+    console.error('🚨 Error in DoctorsList component:', error);
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
         <div className="max-w-7xl mx-auto">
@@ -111,6 +131,9 @@ export default function DoctorsList() {
             </h3>
             <p className="text-gray-600 dark:text-gray-300">
               Failed to load doctors: {error.message}
+            </p>
+            <p className="text-sm text-gray-500 mt-2">
+              Please check your internet connection and try again.
             </p>
           </div>
         </div>
@@ -127,6 +150,7 @@ export default function DoctorsList() {
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Doctors</h1>
             <p className="text-gray-600 dark:text-gray-300">Connect with medical experts worldwide</p>
+            <p className="text-sm text-blue-600 mt-1">Found {allDoctors.length} registered doctors</p>
           </div>
         </div>
 
@@ -179,7 +203,7 @@ export default function DoctorsList() {
                 <p className="text-gray-600 dark:text-gray-300">
                   {searchTerm 
                     ? 'Try adjusting your search terms'
-                    : 'No doctors have registered yet. Please check back later.'
+                    : `No doctors have registered yet. Total in database: ${allDoctors.length}`
                   }
                 </p>
               </div>

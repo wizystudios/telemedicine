@@ -46,25 +46,43 @@ export default function Patients() {
   }
 
   const { data: allPatients = [], isLoading, error } = useQuery({
-    queryKey: ['all-patients'],
+    queryKey: ['patients-list'],
     queryFn: async () => {
-      console.log('Fetching all patients from profiles table...');
+      console.log('🔍 Fetching all patients from profiles table...');
       
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('role', 'patient');
-      
-      if (error) {
-        console.error('Error fetching patients:', error);
-        throw error;
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select(`
+            id,
+            first_name,
+            last_name,
+            avatar_url,
+            role,
+            email,
+            phone,
+            country,
+            created_at
+          `)
+          .eq('role', 'patient')
+          .order('created_at', { ascending: false });
+        
+        if (error) {
+          console.error('❌ Error fetching patients:', error);
+          throw error;
+        }
+        
+        console.log('✅ Patients fetched successfully:', data?.length || 0);
+        console.log('📋 Patients data:', data);
+        
+        return (data as Patient[]) || [];
+      } catch (err) {
+        console.error('💥 Exception fetching patients:', err);
+        throw err;
       }
-      
-      console.log('All patients found:', data?.length || 0);
-      console.log('Patients data:', data);
-      
-      return (data as Patient[]) || [];
-    }
+    },
+    retry: 3,
+    retryDelay: 1000
   });
 
   // Get recent appointments for this doctor
@@ -98,9 +116,10 @@ export default function Patients() {
     enabled: !!user?.id && user?.user_metadata?.role === 'doctor'
   });
 
-  console.log('Current user role:', user?.user_metadata?.role);
-  console.log('All patients:', allPatients);
-  console.log('Recent appointments:', recentAppointments);
+  console.log('👤 Current user:', user?.id);
+  console.log('🔑 User role:', user?.user_metadata?.role);
+  console.log('👥 Total patients found:', allPatients?.length || 0);
+  console.log('📅 Recent appointments:', recentAppointments?.length || 0);
 
   const filteredPatients = allPatients.filter(patient =>
     `${patient.first_name} ${patient.last_name} ${patient.email}`
@@ -127,6 +146,7 @@ export default function Patients() {
   }
 
   if (error) {
+    console.error('🚨 Error in Patients component:', error);
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
         <div className="max-w-7xl mx-auto">
@@ -137,6 +157,9 @@ export default function Patients() {
             </h3>
             <p className="text-gray-600 dark:text-gray-300">
               Failed to load patients: {error.message}
+            </p>
+            <p className="text-sm text-gray-500 mt-2">
+              Please check your internet connection and try again.
             </p>
           </div>
         </div>
@@ -151,6 +174,7 @@ export default function Patients() {
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">My Patients</h1>
             <p className="text-gray-600 dark:text-gray-300">Manage your patient relationships</p>
+            <p className="text-sm text-blue-600 mt-1">Found {allPatients.length} registered patients</p>
           </div>
         </div>
 
@@ -238,7 +262,7 @@ export default function Patients() {
             <p className="text-gray-600 dark:text-gray-300">
               {searchTerm 
                 ? 'Try adjusting your search terms'
-                : 'No patients have registered yet or booked appointments with you.'
+                : `No patients have registered yet. Total in database: ${allPatients.length}`
               }
             </p>
           </div>
