@@ -106,6 +106,13 @@ export default function DoctorsList() {
   console.log('👨‍⚕️ Total doctors found:', allDoctors?.length || 0);
   console.log('🟢 Online doctors:', onlineDoctors?.length || 0);
 
+  // Filter doctors based on search term
+  const filteredDoctors = allDoctors.filter(doctor =>
+    `${doctor.first_name || ''} ${doctor.last_name || ''} ${doctor.email || ''}`
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase())
+  );
+
   // Get doctors with recent posts
   const doctorsWithPosts = new Set(posts.map(post => post.doctor_id));
 
