@@ -80,21 +80,27 @@ export default function Patients() {
     queryFn: async () => {
       console.log('🔍 Fetching patients from profiles table...');
       
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('role', 'patient')
-        .order('created_at', { ascending: false });
-      
-      if (error) {
-        console.error('❌ Error fetching patients:', error);
-        throw error;
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('role', 'patient')
+          .order('created_at', { ascending: false });
+        
+        if (error) {
+          console.error('❌ Database error fetching patients:', error);
+          throw error;
+        }
+        
+        console.log('✅ Raw query result:', data);
+        console.log('✅ Patients fetched successfully:', data?.length || 0);
+        console.log('👥 Patient data sample:', data?.[0]);
+        console.log('📋 All patients data:', data);
+        return (data as Patient[]) || [];
+      } catch (err) {
+        console.error('❌ Exception while fetching patients:', err);
+        throw err;
       }
-      
-      console.log('✅ Patients fetched successfully:', data?.length || 0);
-      console.log('👥 Patient data sample:', data?.[0]);
-      console.log('📋 All patients data:', data);
-      return (data as Patient[]) || [];
     },
     retry: 2,
     retryDelay: 1000
@@ -172,6 +178,7 @@ export default function Patients() {
             <p className="text-gray-600 dark:text-gray-300">
               Failed to load patients: {error.message}
             </p>
+            <p className="text-xs text-red-500 mt-2">Debug: Check console for details</p>
           </div>
         </div>
       </div>
@@ -188,6 +195,7 @@ export default function Patients() {
             <p className="text-sm text-blue-600 mt-1">Found {allPatients.length} registered patients</p>
             <p className="text-xs text-gray-500">Your role: {userRole}</p>
             <p className="text-xs text-purple-600">Debug: Raw patients count: {allPatients.length}</p>
+            <p className="text-xs text-green-600">Debug: Filtered patients: {filteredPatients.length}</p>
           </div>
         </div>
 
@@ -275,7 +283,7 @@ export default function Patients() {
             <p className="text-gray-600 dark:text-gray-300">
               {searchTerm 
                 ? 'Try adjusting your search terms'
-                : `No patients have registered yet. Total in database: ${allPatients.length}`
+                : `Should have ${allPatients.length} patients. Check console for debugging.`
               }
             </p>
           </div>

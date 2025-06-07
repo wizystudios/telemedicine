@@ -1,3 +1,4 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -83,21 +84,27 @@ export default function DoctorsList() {
     queryFn: async () => {
       console.log('🔍 Fetching doctors from profiles table...');
       
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('role', 'doctor')
-        .order('created_at', { ascending: false });
-      
-      if (error) {
-        console.error('❌ Error fetching doctors:', error);
-        throw error;
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('role', 'doctor')
+          .order('created_at', { ascending: false });
+        
+        if (error) {
+          console.error('❌ Database error fetching doctors:', error);
+          throw error;
+        }
+        
+        console.log('✅ Raw query result:', data);
+        console.log('✅ Doctors fetched successfully:', data?.length || 0);
+        console.log('👨‍⚕️ Doctor data sample:', data?.[0]);
+        console.log('📋 All doctors data:', data);
+        return (data as Doctor[]) || [];
+      } catch (err) {
+        console.error('❌ Exception while fetching doctors:', err);
+        throw err;
       }
-      
-      console.log('✅ Doctors fetched successfully:', data?.length || 0);
-      console.log('👨‍⚕️ Doctor data sample:', data?.[0]);
-      console.log('📋 All doctors data:', data);
-      return (data as Doctor[]) || [];
     },
     retry: 2,
     retryDelay: 1000
@@ -146,6 +153,7 @@ export default function DoctorsList() {
             <p className="text-gray-600 dark:text-gray-300">
               Failed to load doctors: {error.message}
             </p>
+            <p className="text-xs text-red-500 mt-2">Debug: Check console for details</p>
           </div>
         </div>
       </div>
@@ -164,6 +172,7 @@ export default function DoctorsList() {
             <p className="text-sm text-blue-600 mt-1">Found {allDoctors.length} registered doctors</p>
             <p className="text-xs text-gray-500">Your role: {userRole}</p>
             <p className="text-xs text-purple-600">Debug: Raw doctors count: {allDoctors.length}</p>
+            <p className="text-xs text-green-600">Debug: Filtered doctors: {filteredDoctors.length}</p>
           </div>
         </div>
 
@@ -216,7 +225,7 @@ export default function DoctorsList() {
                 <p className="text-gray-600 dark:text-gray-300">
                   {searchTerm 
                     ? 'Try adjusting your search terms'
-                    : `No doctors have registered yet. Total in database: ${allDoctors.length}`
+                    : `Should have ${allDoctors.length} doctors. Check console for debugging.`
                   }
                 </p>
               </div>
