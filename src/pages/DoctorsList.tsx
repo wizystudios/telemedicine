@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -30,8 +29,38 @@ export default function DoctorsList() {
   const { savedDoctors } = useSavedDoctors();
   const [searchTerm, setSearchTerm] = useState('');
 
+  console.log('🔍 DoctorsList - Current user:', user?.id);
+  console.log('🔍 DoctorsList - User metadata role:', user?.user_metadata?.role);
+
+  // Get user profile to check role from database
+  const { data: userProfile } = useQuery({
+    queryKey: ['user-profile', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching user profile:', error);
+        return null;
+      }
+      
+      console.log('📊 User profile role from DB:', data?.role);
+      return data;
+    },
+    enabled: !!user?.id
+  });
+
+  // Check role from either user metadata or database profile
+  const userRole = user?.user_metadata?.role || userProfile?.role;
+  console.log('✅ Final determined user role:', userRole);
+
   // Only allow patients to access this page
-  if (user?.user_metadata?.role !== 'patient') {
+  if (userRole && userRole !== 'patient') {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
         <div className="max-w-7xl mx-auto">
@@ -41,7 +70,7 @@ export default function DoctorsList() {
               Access Denied
             </h3>
             <p className="text-gray-600 dark:text-gray-300">
-              This page is only accessible to patients.
+              This page is only accessible to patients. Your role: {userRole}
             </p>
           </div>
         </div>
@@ -66,21 +95,16 @@ export default function DoctorsList() {
       }
       
       console.log('✅ Doctors fetched successfully:', data?.length || 0);
+      console.log('👨‍⚕️ Doctor data sample:', data?.[0]);
       return (data as Doctor[]) || [];
     },
     retry: 2,
     retryDelay: 1000
   });
 
-  console.log('👤 Current user role:', user?.user_metadata?.role);
+  console.log('👤 Current user role:', userRole);
   console.log('👨‍⚕️ Total doctors found:', allDoctors?.length || 0);
   console.log('🟢 Online doctors:', onlineDoctors?.length || 0);
-
-  const filteredDoctors = allDoctors.filter(doctor =>
-    `${doctor.first_name || ''} ${doctor.last_name || ''} ${doctor.email || ''}`
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase())
-  );
 
   // Get doctors with recent posts
   const doctorsWithPosts = new Set(posts.map(post => post.doctor_id));
@@ -130,6 +154,7 @@ export default function DoctorsList() {
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Doctors</h1>
             <p className="text-gray-600 dark:text-gray-300">Connect with medical experts worldwide</p>
             <p className="text-sm text-blue-600 mt-1">Found {allDoctors.length} registered doctors</p>
+            <p className="text-xs text-gray-500">Your role: {userRole}</p>
           </div>
         </div>
 
