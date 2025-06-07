@@ -78,32 +78,64 @@ export default function Patients() {
   const { data: allPatients = [], isLoading, error } = useQuery({
     queryKey: ['patients-list'],
     queryFn: async () => {
-      console.log('🔍 Fetching patients from profiles table...');
+      console.log('🔍 Starting patients fetch...');
       
       try {
+        // First, let's try a simple select all to see what we get
+        const { data: allProfiles, error: allError } = await supabase
+          .from('profiles')
+          .select('*');
+        
+        console.log('📋 ALL profiles in database:', allProfiles?.length || 0);
+        console.log('📋 All profiles data:', allProfiles);
+        
+        if (allError) {
+          console.error('❌ Error fetching all profiles:', allError);
+        }
+
+        // Now try the specific patient query
         const { data, error } = await supabase
           .from('profiles')
           .select('*')
-          .eq('role', 'patient')
-          .order('created_at', { ascending: false });
+          .eq('role', 'patient');
         
         if (error) {
           console.error('❌ Database error fetching patients:', error);
+          console.error('❌ Error details:', {
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            code: error.code
+          });
           throw error;
         }
         
-        console.log('✅ Raw query result:', data);
-        console.log('✅ Patients fetched successfully:', data?.length || 0);
-        console.log('👥 Patient data sample:', data?.[0]);
-        console.log('📋 All patients data:', data);
+        console.log('✅ Patients query successful');
+        console.log('✅ Raw patients data:', data);
+        console.log('✅ Number of patients found:', data?.length || 0);
+        
+        if (data && data.length > 0) {
+          console.log('👤 First patient sample:', data[0]);
+          data.forEach((patient, index) => {
+            console.log(`👤 Patient ${index + 1}:`, {
+              id: patient.id,
+              name: `${patient.first_name} ${patient.last_name}`,
+              role: patient.role,
+              email: patient.email
+            });
+          });
+        } else {
+          console.log('❌ No patients found in query result');
+        }
+        
         return (data as Patient[]) || [];
       } catch (err) {
         console.error('❌ Exception while fetching patients:', err);
         throw err;
       }
     },
-    retry: 2,
-    retryDelay: 1000
+    retry: 1,
+    retryDelay: 500
   });
 
   // Get recent appointments for this doctor
@@ -283,7 +315,7 @@ export default function Patients() {
             <p className="text-gray-600 dark:text-gray-300">
               {searchTerm 
                 ? 'Try adjusting your search terms'
-                : `Should have ${allPatients.length} patients. Check console for debugging.`
+                : `Total patients in database: ${allPatients.length}. Check console for debugging.`
               }
             </p>
           </div>

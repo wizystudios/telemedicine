@@ -82,32 +82,64 @@ export default function DoctorsList() {
   const { data: allDoctors = [], isLoading, error } = useQuery({
     queryKey: ['doctors-list'],
     queryFn: async () => {
-      console.log('🔍 Fetching doctors from profiles table...');
+      console.log('🔍 Starting doctors fetch...');
       
       try {
+        // First, let's try a simple select all to see what we get
+        const { data: allProfiles, error: allError } = await supabase
+          .from('profiles')
+          .select('*');
+        
+        console.log('📋 ALL profiles in database:', allProfiles?.length || 0);
+        console.log('📋 All profiles data:', allProfiles);
+        
+        if (allError) {
+          console.error('❌ Error fetching all profiles:', allError);
+        }
+
+        // Now try the specific doctor query
         const { data, error } = await supabase
           .from('profiles')
           .select('*')
-          .eq('role', 'doctor')
-          .order('created_at', { ascending: false });
+          .eq('role', 'doctor');
         
         if (error) {
           console.error('❌ Database error fetching doctors:', error);
+          console.error('❌ Error details:', {
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            code: error.code
+          });
           throw error;
         }
         
-        console.log('✅ Raw query result:', data);
-        console.log('✅ Doctors fetched successfully:', data?.length || 0);
-        console.log('👨‍⚕️ Doctor data sample:', data?.[0]);
-        console.log('📋 All doctors data:', data);
+        console.log('✅ Doctors query successful');
+        console.log('✅ Raw doctors data:', data);
+        console.log('✅ Number of doctors found:', data?.length || 0);
+        
+        if (data && data.length > 0) {
+          console.log('👨‍⚕️ First doctor sample:', data[0]);
+          data.forEach((doctor, index) => {
+            console.log(`👨‍⚕️ Doctor ${index + 1}:`, {
+              id: doctor.id,
+              name: `${doctor.first_name} ${doctor.last_name}`,
+              role: doctor.role,
+              email: doctor.email
+            });
+          });
+        } else {
+          console.log('❌ No doctors found in query result');
+        }
+        
         return (data as Doctor[]) || [];
       } catch (err) {
         console.error('❌ Exception while fetching doctors:', err);
         throw err;
       }
     },
-    retry: 2,
-    retryDelay: 1000
+    retry: 1,
+    retryDelay: 500
   });
 
   console.log('👤 Current user role:', userRole);
@@ -225,7 +257,7 @@ export default function DoctorsList() {
                 <p className="text-gray-600 dark:text-gray-300">
                   {searchTerm 
                     ? 'Try adjusting your search terms'
-                    : `Should have ${allDoctors.length} doctors. Check console for debugging.`
+                    : `Total doctors in database: ${allDoctors.length}. Check console for debugging.`
                   }
                 </p>
               </div>
