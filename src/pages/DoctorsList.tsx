@@ -55,8 +55,8 @@ export default function DoctorsList() {
     enabled: !!user?.id
   });
 
-  // Check role from either user metadata or database profile
-  const userRole = user?.user_metadata?.role || userProfile?.role;
+  // Check role from either database profile or user metadata
+  const userRole = userProfile?.role || user?.user_metadata?.role;
   console.log('✅ Final determined user role:', userRole);
 
   // Only allow patients to access this page
@@ -96,6 +96,7 @@ export default function DoctorsList() {
       
       console.log('✅ Doctors fetched successfully:', data?.length || 0);
       console.log('👨‍⚕️ Doctor data sample:', data?.[0]);
+      console.log('📋 All doctors data:', data);
       return (data as Doctor[]) || [];
     },
     retry: 2,
@@ -162,6 +163,7 @@ export default function DoctorsList() {
             <p className="text-gray-600 dark:text-gray-300">Connect with medical experts worldwide</p>
             <p className="text-sm text-blue-600 mt-1">Found {allDoctors.length} registered doctors</p>
             <p className="text-xs text-gray-500">Your role: {userRole}</p>
+            <p className="text-xs text-purple-600">Debug: Raw doctors count: {allDoctors.length}</p>
           </div>
         </div>
 

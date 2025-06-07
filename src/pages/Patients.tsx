@@ -1,3 +1,4 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -51,8 +52,8 @@ export default function Patients() {
     enabled: !!user?.id
   });
 
-  // Check role from either user metadata or database profile
-  const userRole = user?.user_metadata?.role || userProfile?.role;
+  // Check role from either database profile or user metadata
+  const userRole = userProfile?.role || user?.user_metadata?.role;
   console.log('✅ Final determined user role:', userRole);
 
   // Only allow doctors to access this page
@@ -92,6 +93,7 @@ export default function Patients() {
       
       console.log('✅ Patients fetched successfully:', data?.length || 0);
       console.log('👥 Patient data sample:', data?.[0]);
+      console.log('📋 All patients data:', data);
       return (data as Patient[]) || [];
     },
     retry: 2,
@@ -185,6 +187,7 @@ export default function Patients() {
             <p className="text-gray-600 dark:text-gray-300">Manage your patient relationships</p>
             <p className="text-sm text-blue-600 mt-1">Found {allPatients.length} registered patients</p>
             <p className="text-xs text-gray-500">Your role: {userRole}</p>
+            <p className="text-xs text-purple-600">Debug: Raw patients count: {allPatients.length}</p>
           </div>
         </div>
 
