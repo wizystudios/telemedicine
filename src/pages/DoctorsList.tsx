@@ -82,44 +82,25 @@ export default function DoctorsList() {
   const { data: allDoctors = [], isLoading, error } = useQuery({
     queryKey: ['doctors-list'],
     queryFn: async () => {
-      console.log('🔍 Starting doctors fetch...');
+      console.log('🔍 Starting doctors fetch from profiles table...');
       
       try {
-        // First, let's try a simple select all to see what we get
-        const { data: allProfiles, error: allError } = await supabase
-          .from('profiles')
-          .select('*');
+        console.log('📋 Executing query: SELECT * FROM profiles WHERE role = doctor');
         
-        console.log('📋 ALL profiles in database:', allProfiles?.length || 0);
-        console.log('📋 All profiles data:', allProfiles);
-        
-        if (allError) {
-          console.error('❌ Error fetching all profiles:', allError);
-        }
-
-        // Now try the specific doctor query
         const { data, error } = await supabase
           .from('profiles')
           .select('*')
           .eq('role', 'doctor');
         
         if (error) {
-          console.error('❌ Database error fetching doctors:', error);
-          console.error('❌ Error details:', {
-            message: error.message,
-            details: error.details,
-            hint: error.hint,
-            code: error.code
-          });
+          console.error('❌ Supabase error:', error);
           throw error;
         }
         
-        console.log('✅ Doctors query successful');
-        console.log('✅ Raw doctors data:', data);
+        console.log('✅ Raw query result:', data);
         console.log('✅ Number of doctors found:', data?.length || 0);
         
         if (data && data.length > 0) {
-          console.log('👨‍⚕️ First doctor sample:', data[0]);
           data.forEach((doctor, index) => {
             console.log(`👨‍⚕️ Doctor ${index + 1}:`, {
               id: doctor.id,
@@ -128,18 +109,16 @@ export default function DoctorsList() {
               email: doctor.email
             });
           });
-        } else {
-          console.log('❌ No doctors found in query result');
         }
         
-        return (data as Doctor[]) || [];
+        return data as Doctor[] || [];
       } catch (err) {
-        console.error('❌ Exception while fetching doctors:', err);
+        console.error('❌ Exception in doctors fetch:', err);
         throw err;
       }
     },
-    retry: 1,
-    retryDelay: 500
+    retry: 2,
+    retryDelay: 1000
   });
 
   console.log('👤 Current user role:', userRole);
@@ -203,8 +182,6 @@ export default function DoctorsList() {
             <p className="text-gray-600 dark:text-gray-300">Connect with medical experts worldwide</p>
             <p className="text-sm text-blue-600 mt-1">Found {allDoctors.length} registered doctors</p>
             <p className="text-xs text-gray-500">Your role: {userRole}</p>
-            <p className="text-xs text-purple-600">Debug: Raw doctors count: {allDoctors.length}</p>
-            <p className="text-xs text-green-600">Debug: Filtered doctors: {filteredDoctors.length}</p>
           </div>
         </div>
 
@@ -257,7 +234,7 @@ export default function DoctorsList() {
                 <p className="text-gray-600 dark:text-gray-300">
                   {searchTerm 
                     ? 'Try adjusting your search terms'
-                    : `Total doctors in database: ${allDoctors.length}. Check console for debugging.`
+                    : `We're fetching from the profiles table with role='doctor'. Found ${allDoctors.length} doctors.`
                   }
                 </p>
               </div>
@@ -325,7 +302,7 @@ export default function DoctorsList() {
               </div>
             )}
           </TabsContent>
-        </Tabs>
+        </tabs>
       </div>
     </div>
   );
