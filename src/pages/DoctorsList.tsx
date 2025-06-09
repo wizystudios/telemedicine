@@ -58,7 +58,7 @@ export default function DoctorsList() {
   // Only allow patients to access this page
   if (userRole && userRole !== 'patient') {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 overflow-x-hidden">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
         <div className="max-w-4xl mx-auto">
           <div className="text-center py-8">
             <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
@@ -74,11 +74,11 @@ export default function DoctorsList() {
     );
   }
 
-  // Fetch ALL doctors from profiles table
+  // Fetch ALL doctors from profiles table where role = 'doctor'
   const { data: allDoctors = [], isLoading, error } = useQuery({
     queryKey: ['all-doctors-list'],
     queryFn: async () => {
-      console.log('🔍 Fetching ALL doctors from profiles table...');
+      console.log('🔍 Fetching doctors with role=doctor from profiles table...');
       
       const { data, error, count } = await supabase
         .from('profiles')
@@ -91,9 +91,9 @@ export default function DoctorsList() {
         throw error;
       }
       
-      console.log('✅ Total doctors in database:', count);
-      console.log('✅ Doctors data fetched:', data?.length || 0);
-      console.log('📊 Sample doctor data:', data?.[0]);
+      console.log('✅ Total doctors found:', count);
+      console.log('✅ Doctors data:', data?.length || 0);
+      console.log('📊 First doctor sample:', data?.[0]);
       
       return data as Doctor[] || [];
     },
@@ -114,27 +114,25 @@ export default function DoctorsList() {
   // Get online doctor IDs for easy lookup
   const onlineDoctorIds = new Set(onlineDoctors.map(online => online.doctor_id));
 
-  // Filter online doctors that exist and have valid doctor data
+  // Filter valid data that exists
   const validOnlineDoctors = onlineDoctors.filter(online => 
     online && online.doctor && online.doctor.id
   );
 
-  // Filter saved doctors that exist and have valid doctor data
   const validSavedDoctors = savedDoctors.filter(saved => 
     saved && saved.doctor && saved.doctor.id
   );
 
-  console.log('🔍 Debug Info:');
-  console.log('- Total doctors in database:', allDoctors.length);
+  console.log('🔍 Doctors Debug:');
+  console.log('- Total doctors:', allDoctors.length);
   console.log('- Filtered doctors:', filteredDoctors.length);
   console.log('- Online doctors:', validOnlineDoctors.length);
   console.log('- Saved doctors:', validSavedDoctors.length);
-  console.log('- Search term:', searchTerm);
   console.log('- User role:', userRole);
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 overflow-x-hidden">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
         <div className="max-w-4xl mx-auto">
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto"></div>
@@ -148,7 +146,7 @@ export default function DoctorsList() {
   if (error) {
     console.error('🚨 Error in DoctorsList component:', error);
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 overflow-x-hidden">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
         <div className="max-w-4xl mx-auto">
           <div className="text-center py-8">
             <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
@@ -165,63 +163,54 @@ export default function DoctorsList() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-2 sm:p-4 pb-20 overflow-x-hidden">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 pb-20">
       <CallInterface />
       
-      <div className="max-w-6xl mx-auto">
-        <div className="mb-4 sm:mb-6">
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-1">
+      <div className="max-w-4xl mx-auto">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
             Madaktari
           </h1>
-          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mb-2">
+          <p className="text-gray-600 dark:text-gray-300 mb-2">
             Unganisha na wataalamu wa matibabu duniani kote
           </p>
-          <div className="flex flex-col sm:flex-row gap-2 text-xs sm:text-sm">
+          <div className="flex flex-col sm:flex-row gap-2 text-sm">
             <p className="text-blue-600">Madaktari {allDoctors.length} waliojisajili</p>
             <p className="text-gray-500">Jukumu lako: {userRole}</p>
           </div>
         </div>
 
-        <div className="mb-4 sm:mb-6">
+        <div className="mb-6">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <Input
               placeholder="Tafuta madaktari kwa jina..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 text-sm"
+              className="pl-10"
             />
           </div>
         </div>
 
-        <Tabs defaultValue="all" className="space-y-4 sm:space-y-6">
-          <TabsList className="grid w-full grid-cols-3 h-auto">
-            <TabsTrigger value="all" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 p-2 text-xs sm:text-sm">
-              <Users className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span className="text-center">
-                <span className="block sm:inline">Wote</span>
-                <span className="block sm:inline sm:ml-1">({filteredDoctors.length})</span>
-              </span>
+        <Tabs defaultValue="all" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="all" className="flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              Wote ({filteredDoctors.length})
             </TabsTrigger>
-            <TabsTrigger value="online" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 p-2 text-xs sm:text-sm">
+            <TabsTrigger value="online" className="flex items-center gap-2">
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span className="text-center">
-                <span className="block sm:inline">Mtandaoni</span>
-                <span className="block sm:inline sm:ml-1">({validOnlineDoctors.length})</span>
-              </span>
+              Mtandaoni ({validOnlineDoctors.length})
             </TabsTrigger>
-            <TabsTrigger value="saved" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 p-2 text-xs sm:text-sm">
-              <Heart className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span className="text-center">
-                <span className="block sm:inline">Vilivyohifadhiwa</span>
-                <span className="block sm:inline sm:ml-1">({validSavedDoctors.length})</span>
-              </span>
+            <TabsTrigger value="saved" className="flex items-center gap-2">
+              <Heart className="w-4 h-4" />
+              Vilivyohifadhiwa ({validSavedDoctors.length})
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="all">
             {filteredDoctors.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredDoctors.map((doctor) => (
                   <DoctorCard
                     key={doctor.id}
@@ -232,12 +221,12 @@ export default function DoctorsList() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8 sm:py-12">
-                <Users className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-2">
+              <div className="text-center py-12">
+                <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
                   {searchTerm ? 'Hakuna madaktari waliopatikana' : 'Hakuna madaktari kwa sasa'}
                 </h3>
-                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 px-4">
+                <p className="text-gray-600 dark:text-gray-300">
                   {searchTerm 
                     ? 'Jaribu kubadilisha masharti ya utafutaji'
                     : `Jumla ya madaktari kwenye hifadhidata: ${allDoctors.length}. Madaktari wataonekana hapa baada ya kujisajili.`
@@ -249,7 +238,7 @@ export default function DoctorsList() {
 
           <TabsContent value="online">
             {validOnlineDoctors.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {validOnlineDoctors
                   .filter(online => 
                     online.doctor && 
@@ -267,12 +256,12 @@ export default function DoctorsList() {
                   ))}
               </div>
             ) : (
-              <div className="text-center py-8 sm:py-12">
+              <div className="text-center py-12">
                 <div className="w-2 h-2 bg-gray-400 rounded-full mx-auto mb-4"></div>
-                <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-2">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
                   Hakuna madaktari mtandaoni
                 </h3>
-                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 px-4">
+                <p className="text-gray-600 dark:text-gray-300">
                   Hakuna madaktari waliopo mtandaoni kwa sasa. Tafadhali rudi baadaye.
                 </p>
               </div>
@@ -281,7 +270,7 @@ export default function DoctorsList() {
 
           <TabsContent value="saved">
             {validSavedDoctors.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {validSavedDoctors
                   .filter(saved => 
                     saved.doctor &&
@@ -299,12 +288,12 @@ export default function DoctorsList() {
                   ))}
               </div>
             ) : (
-              <div className="text-center py-8 sm:py-12">
-                <Heart className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-2">
+              <div className="text-center py-12">
+                <Heart className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
                   Hakuna madaktari waliohifadhiwa
                 </h3>
-                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 px-4">
+                <p className="text-gray-600 dark:text-gray-300">
                   Bado hujahifadhi madaktari yoyote. Hifadhi madaktari unaowapenda kuwaona hapa.
                 </p>
               </div>

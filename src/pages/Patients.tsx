@@ -54,7 +54,7 @@ export default function Patients() {
   // Only allow doctors to access this page
   if (userRole && userRole !== 'doctor') {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 overflow-x-hidden">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
         <div className="max-w-4xl mx-auto">
           <div className="text-center py-8">
             <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
@@ -70,11 +70,11 @@ export default function Patients() {
     );
   }
 
-  // Fetch ALL patients from profiles table
+  // Fetch ALL patients from profiles table where role = 'patient'
   const { data: allPatients = [], isLoading, error } = useQuery({
     queryKey: ['all-patients-list'],
     queryFn: async () => {
-      console.log('🔍 Fetching ALL patients from profiles table...');
+      console.log('🔍 Fetching patients with role=patient from profiles table...');
       
       const { data, error, count } = await supabase
         .from('profiles')
@@ -87,45 +87,14 @@ export default function Patients() {
         throw error;
       }
       
-      console.log('✅ Total patients in database:', count);
-      console.log('✅ Patients data fetched:', data?.length || 0);
-      console.log('📊 Sample patient data:', data?.[0]);
+      console.log('✅ Total patients found:', count);
+      console.log('✅ Patients data:', data?.length || 0);
+      console.log('📊 First patient sample:', data?.[0]);
       
       return data as Patient[] || [];
     },
     retry: 2,
     retryDelay: 1000
-  });
-
-  // Get recent appointments for this doctor
-  const { data: recentAppointments = [] } = useQuery({
-    queryKey: ['doctor-appointments', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return [];
-      
-      const { data, error } = await supabase
-        .from('appointments')
-        .select(`
-          *,
-          patient:profiles!appointments_patient_id_fkey(
-            id,
-            first_name,
-            last_name,
-            avatar_url
-          )
-        `)
-        .eq('doctor_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(10);
-      
-      if (error) {
-        console.error('Error fetching appointments:', error);
-        return [];
-      }
-      
-      return data || [];
-    },
-    enabled: !!user?.id && userRole === 'doctor'
   });
 
   const filteredPatients = allPatients.filter(patient =>
@@ -134,21 +103,15 @@ export default function Patients() {
       .includes(searchTerm.toLowerCase())
   );
 
-  // Get patients with recent appointments
-  const patientsWithAppointments = new Set(
-    recentAppointments.map(apt => apt.patient_id).filter(Boolean)
-  );
-
-  console.log('🔍 Debug Info:');
-  console.log('- Total patients in database:', allPatients.length);
+  console.log('🔍 Patients Debug:');
+  console.log('- Total patients:', allPatients.length);
   console.log('- Filtered patients:', filteredPatients.length);
   console.log('- Search term:', searchTerm);
   console.log('- User role:', userRole);
-  console.log('- Patients with appointments:', patientsWithAppointments.size);
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 overflow-x-hidden">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
         <div className="max-w-4xl mx-auto">
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto"></div>
@@ -162,7 +125,7 @@ export default function Patients() {
   if (error) {
     console.error('🚨 Error in Patients component:', error);
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 overflow-x-hidden">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
         <div className="max-w-4xl mx-auto">
           <div className="text-center py-8">
             <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
@@ -179,64 +142,55 @@ export default function Patients() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-2 sm:p-4 pb-20 overflow-x-hidden">
-      <div className="max-w-6xl mx-auto">
-        <div className="mb-4 sm:mb-6">
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-1">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 pb-20">
+      <div className="max-w-4xl mx-auto">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
             Wagonjwa Wangu
           </h1>
-          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mb-2">
+          <p className="text-gray-600 dark:text-gray-300 mb-2">
             Simamia mahusiano yako na wagonjwa
           </p>
-          <div className="flex flex-col sm:flex-row gap-2 text-xs sm:text-sm">
+          <div className="flex flex-col sm:flex-row gap-2 text-sm">
             <p className="text-blue-600">Wagonjwa {allPatients.length} waliojisajili</p>
             <p className="text-gray-500">Jukumu lako: {userRole}</p>
           </div>
         </div>
 
-        <div className="mb-4 sm:mb-6">
+        <div className="mb-6">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <Input
               placeholder="Tafuta wagonjwa kwa jina..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 text-sm"
+              className="pl-10"
             />
           </div>
         </div>
 
         {filteredPatients.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredPatients.map((patient) => (
-              <Card key={patient.id} className="relative overflow-hidden hover:shadow-lg transition-shadow">
-                {patientsWithAppointments.has(patient.id) && (
-                  <div className="absolute top-2 right-2 w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
-                )}
-                
-                <CardContent className="p-3 sm:p-4">
-                  <div className="flex flex-col items-center space-y-2 sm:space-y-3">
-                    <Avatar className="w-12 h-12 sm:w-16 sm:h-16">
+              <Card key={patient.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                <CardContent className="p-4">
+                  <div className="flex flex-col items-center space-y-3">
+                    <Avatar className="w-16 h-16">
                       <AvatarImage src={patient.avatar_url} />
-                      <AvatarFallback className="text-xs sm:text-sm">
+                      <AvatarFallback>
                         {patient.first_name?.[0] || 'M'}{patient.last_name?.[0] || ''}
                       </AvatarFallback>
                     </Avatar>
                     
                     <div className="text-center w-full">
-                      <h3 className="font-semibold text-gray-900 dark:text-white text-sm sm:text-base truncate">
+                      <h3 className="font-semibold text-gray-900 dark:text-white truncate">
                         {patient.first_name || 'Hajaajulikani'} {patient.last_name || ''}
                       </h3>
-                      <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 truncate">
+                      <p className="text-sm text-gray-600 dark:text-gray-300 truncate">
                         {patient.email}
                       </p>
-                      <div className="flex flex-wrap items-center justify-center gap-1 mt-1">
+                      <div className="flex justify-center mt-1">
                         <Badge variant="secondary" className="text-xs">Mgonjwa</Badge>
-                        {patientsWithAppointments.has(patient.id) && (
-                          <Badge variant="default" className="text-xs bg-blue-100 text-blue-800">
-                            Miadi ya Karibuni
-                          </Badge>
-                        )}
                       </div>
                       {patient.country && (
                         <p className="text-xs text-gray-500 mt-1 truncate">{patient.country}</p>
@@ -247,22 +201,22 @@ export default function Patients() {
                       <div className="flex space-x-2">
                         <Button variant="outline" size="sm" className="flex-1 text-xs">
                           <MessageCircle className="w-3 h-3 mr-1" />
-                          <span className="hidden sm:inline">Ujumbe</span>
+                          Ujumbe
                         </Button>
                         <Button variant="outline" size="sm" className="flex-1 text-xs">
                           <Phone className="w-3 h-3 mr-1" />
-                          <span className="hidden sm:inline">Simu</span>
+                          Simu
                         </Button>
                       </div>
                       
                       <div className="flex space-x-2">
                         <Button variant="outline" size="sm" className="flex-1 text-xs">
                           <Video className="w-3 h-3 mr-1" />
-                          <span className="hidden sm:inline">Video</span>
+                          Video
                         </Button>
                         <Button variant="default" size="sm" className="flex-1 text-xs">
                           <Calendar className="w-3 h-3 mr-1" />
-                          <span className="hidden sm:inline">Miadi</span>
+                          Miadi
                         </Button>
                       </div>
                     </div>
@@ -272,12 +226,12 @@ export default function Patients() {
             ))}
           </div>
         ) : (
-          <div className="text-center py-8 sm:py-12">
-            <Users className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-2">
+          <div className="text-center py-12">
+            <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
               {searchTerm ? 'Hakuna wagonjwa waliopatikana' : 'Bado hakuna wagonjwa'}
             </h3>
-            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 px-4">
+            <p className="text-gray-600 dark:text-gray-300">
               {searchTerm 
                 ? 'Jaribu kubadilisha masharti ya utafutaji'
                 : `Jumla ya wagonjwa kwenye hifadhidata: ${allPatients.length}. Wagonjwa wataonekana hapa baada ya kujisajili.`
