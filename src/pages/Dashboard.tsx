@@ -1,8 +1,8 @@
+
 import { useAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { NotificationsList } from '@/components/NotificationsList';
 import { CallInterface } from '@/components/CallInterface';
@@ -11,7 +11,6 @@ import {
   MessageCircle, 
   Users, 
   Heart,
-  Clock,
   Activity
 } from 'lucide-react';
 
@@ -151,25 +150,6 @@ export default function Dashboard() {
     enabled: !!user?.id
   });
 
-  const { data: recentActivity } = useQuery({
-    queryKey: ['recent-activity', user?.id, userRole],
-    queryFn: async () => {
-      const { data: appointments } = await supabase
-        .from('appointments')
-        .select(`
-          *,
-          patient:profiles!appointments_patient_id_fkey(first_name, last_name, avatar_url),
-          doctor:profiles!appointments_doctor_id_fkey(first_name, last_name, avatar_url)
-        `)
-        .or(`patient_id.eq.${user?.id},doctor_id.eq.${user?.id}`)
-        .order('created_at', { ascending: false })
-        .limit(5);
-      
-      return appointments || [];
-    },
-    enabled: !!user?.id
-  });
-
   const renderDoctorDashboard = () => (
     <>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -283,73 +263,16 @@ export default function Dashboard() {
       
       <div className="max-w-4xl mx-auto">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Karibu tena, {user?.user_metadata?.first_name || 'Mtumiaji'}!
-          </h1>
-          <div className="flex items-center space-x-2 mt-2">
+          <div className="flex items-center space-x-2">
             <Badge variant={userRole === 'doctor' ? 'default' : 'secondary'}>
               {userRole === 'doctor' ? '🩺 Daktari' : '👤 Mgonjwa'}
             </Badge>
-            <p className="text-sm text-gray-600 dark:text-gray-300">
-              {userRole === 'doctor' 
-                ? 'Uko tayari kuwasaidia wagonjwa wako leo?'
-                : 'Afya yako ni kipaumbele chetu'
-              }
-            </p>
           </div>
         </div>
 
         {userRole === 'doctor' ? renderDoctorDashboard() : renderPatientDashboard()}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Clock className="w-5 h-5" />
-                <span>Shughuli za Hivi Karibuni</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {recentActivity && recentActivity.length > 0 ? (
-                <div className="space-y-3">
-                  {recentActivity.map((appointment) => {
-                    const otherUser = user?.id === appointment.patient_id 
-                      ? appointment.doctor 
-                      : appointment.patient;
-                    
-                    return (
-                      <div key={appointment.id} className="flex items-center space-x-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
-                        <Avatar className="h-10 w-10">
-                          <AvatarImage src={otherUser?.avatar_url} />
-                          <AvatarFallback>
-                            {otherUser?.first_name?.[0]}{otherUser?.last_name?.[0]}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                            {userRole === 'doctor' ? 'Mazungumzo na' : 'Miadi na'} {otherUser?.first_name} {otherUser?.last_name}
-                          </p>
-                          <div className="flex items-center space-x-2 mt-1">
-                            <Badge variant="secondary" className="text-xs">
-                              {appointment.status}
-                            </Badge>
-                            <span className="text-xs text-gray-500">
-                              {new Date(appointment.appointment_date).toLocaleDateString()}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <p className="text-gray-600 dark:text-gray-300 text-center py-6">
-                  Hakuna shughuli za hivi karibuni
-                </p>
-              )}
-            </CardContent>
-          </Card>
-
+        <div className="grid grid-cols-1 gap-6">
           <NotificationsList />
         </div>
       </div>

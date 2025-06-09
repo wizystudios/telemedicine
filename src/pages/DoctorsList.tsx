@@ -66,7 +66,7 @@ export default function DoctorsList() {
               Hairuhusiwi Kuingia
             </h3>
             <p className="text-gray-600 dark:text-gray-300">
-              Ukurasa huu unapatikana kwa wagonjwa tu. Jukumu lako: {userRole}
+              Ukurasa huu unapatikana kwa wagonjwa tu.
             </p>
           </div>
         </div>
@@ -93,7 +93,6 @@ export default function DoctorsList() {
       
       console.log('✅ Total doctors found:', count);
       console.log('✅ Doctors data:', data?.length || 0);
-      console.log('📊 First doctor sample:', data?.[0]);
       
       return data as Doctor[] || [];
     },
@@ -122,13 +121,6 @@ export default function DoctorsList() {
   const validSavedDoctors = savedDoctors.filter(saved => 
     saved && saved.doctor && saved.doctor.id
   );
-
-  console.log('🔍 Doctors Debug:');
-  console.log('- Total doctors:', allDoctors.length);
-  console.log('- Filtered doctors:', filteredDoctors.length);
-  console.log('- Online doctors:', validOnlineDoctors.length);
-  console.log('- Saved doctors:', validSavedDoctors.length);
-  console.log('- User role:', userRole);
 
   if (isLoading) {
     return (
@@ -168,16 +160,9 @@ export default function DoctorsList() {
       
       <div className="max-w-4xl mx-auto">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-            Madaktari
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            Madaktari ({allDoctors.length})
           </h1>
-          <p className="text-gray-600 dark:text-gray-300 mb-2">
-            Unganisha na wataalamu wa matibabu duniani kote
-          </p>
-          <div className="flex flex-col sm:flex-row gap-2 text-sm">
-            <p className="text-blue-600">Madaktari {allDoctors.length} waliojisajili</p>
-            <p className="text-gray-500">Jukumu lako: {userRole}</p>
-          </div>
         </div>
 
         <div className="mb-6">
@@ -224,12 +209,12 @@ export default function DoctorsList() {
               <div className="text-center py-12">
                 <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                  {searchTerm ? 'Hakuna madaktari waliopatikana' : 'Hakuna madaktari kwa sasa'}
+                  {searchTerm ? 'Hakuna madaktari waliopatikana' : 'Hakuna madaktari'}
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300">
                   {searchTerm 
                     ? 'Jaribu kubadilisha masharti ya utafutaji'
-                    : `Jumla ya madaktari kwenye hifadhidata: ${allDoctors.length}. Madaktari wataonekana hapa baada ya kujisajili.`
+                    : 'Hakuna madaktari waliosajiliwa bado.'
                   }
                 </p>
               </div>
@@ -262,7 +247,7 @@ export default function DoctorsList() {
                   Hakuna madaktari mtandaoni
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300">
-                  Hakuna madaktari waliopo mtandaoni kwa sasa. Tafadhali rudi baadaye.
+                  Hakuna madaktari waliopo mtandaoni kwa sasa.
                 </p>
               </div>
             )}
@@ -294,7 +279,7 @@ export default function DoctorsList() {
                   Hakuna madaktari waliohifadhiwa
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300">
-                  Bado hujahifadhi madaktari yoyote. Hifadhi madaktari unaowapenda kuwaona hapa.
+                  Bado hujahifadhi madaktari yoyote.
                 </p>
               </div>
             )}

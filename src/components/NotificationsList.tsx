@@ -40,8 +40,8 @@ export function NotificationsList() {
       refetch();
     } catch (error: any) {
       toast({
-        title: 'Error',
-        description: 'Failed to mark notification as read',
+        title: 'Hitilafu',
+        description: 'Imeshindwa kuweka arifa kama imesomwa',
         variant: 'destructive'
       });
     }
@@ -84,17 +84,17 @@ export function NotificationsList() {
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <Bell className="w-5 h-5" />
-            <span>Notifications</span>
+            <span>Arifa</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8">
             <Bell className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-600 dark:text-gray-300 text-center">
-              No notifications yet
+              Hakuna arifa bado
             </p>
             <p className="text-sm text-gray-500 mt-2">
-              You'll receive notifications about appointments, messages, and other activities here
+              Utapokea arifa kuhusu miadi, ujumbe, na shughuli nyingine hapa
             </p>
           </div>
         </CardContent>
@@ -108,10 +108,10 @@ export function NotificationsList() {
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Bell className="w-5 h-5" />
-            <span>Notifications</span>
+            <span>Arifa</span>
           </div>
           <Badge variant="secondary">
-            {notifications.filter(n => !n.is_read).length} new
+            {notifications.filter(n => !n.is_read).length} mpya
           </Badge>
         </CardTitle>
       </CardHeader>
@@ -136,7 +136,7 @@ export function NotificationsList() {
                   </h4>
                   <div className="flex items-center space-x-2">
                     {!notification.is_read && (
-                      <Badge variant="default" className="text-xs">New</Badge>
+                      <Badge variant="default" className="text-xs">Mpya</Badge>
                     )}
                     {!notification.is_read && (
                       <Button
@@ -145,7 +145,7 @@ export function NotificationsList() {
                         onClick={() => markAsRead(notification.id)}
                         className="text-xs px-2 py-1 h-6"
                       >
-                        Mark read
+                        Imesomwa
                       </Button>
                     )}
                   </div>
@@ -169,7 +169,7 @@ export function NotificationsList() {
         {notifications.length >= 10 && (
           <div className="text-center pt-3 border-t">
             <Button variant="ghost" size="sm" className="text-xs">
-              View all notifications
+              Ona arifa zote
             </Button>
           </div>
         )}

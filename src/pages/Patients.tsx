@@ -62,7 +62,7 @@ export default function Patients() {
               Hairuhusiwi Kuingia
             </h3>
             <p className="text-gray-600 dark:text-gray-300">
-              Ukurasa huu unapatikana kwa madaktari tu. Jukumu lako: {userRole}
+              Ukurasa huu unapatikana kwa madaktari tu.
             </p>
           </div>
         </div>
@@ -89,7 +89,6 @@ export default function Patients() {
       
       console.log('✅ Total patients found:', count);
       console.log('✅ Patients data:', data?.length || 0);
-      console.log('📊 First patient sample:', data?.[0]);
       
       return data as Patient[] || [];
     },
@@ -102,12 +101,6 @@ export default function Patients() {
       .toLowerCase()
       .includes(searchTerm.toLowerCase())
   );
-
-  console.log('🔍 Patients Debug:');
-  console.log('- Total patients:', allPatients.length);
-  console.log('- Filtered patients:', filteredPatients.length);
-  console.log('- Search term:', searchTerm);
-  console.log('- User role:', userRole);
 
   if (isLoading) {
     return (
@@ -145,16 +138,9 @@ export default function Patients() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 pb-20">
       <div className="max-w-4xl mx-auto">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-            Wagonjwa Wangu
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            Wagonjwa ({allPatients.length})
           </h1>
-          <p className="text-gray-600 dark:text-gray-300 mb-2">
-            Simamia mahusiano yako na wagonjwa
-          </p>
-          <div className="flex flex-col sm:flex-row gap-2 text-sm">
-            <p className="text-blue-600">Wagonjwa {allPatients.length} waliojisajili</p>
-            <p className="text-gray-500">Jukumu lako: {userRole}</p>
-          </div>
         </div>
 
         <div className="mb-6">
@@ -229,12 +215,12 @@ export default function Patients() {
           <div className="text-center py-12">
             <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-              {searchTerm ? 'Hakuna wagonjwa waliopatikana' : 'Bado hakuna wagonjwa'}
+              {searchTerm ? 'Hakuna wagonjwa waliopatikana' : 'Hakuna wagonjwa'}
             </h3>
             <p className="text-gray-600 dark:text-gray-300">
               {searchTerm 
                 ? 'Jaribu kubadilisha masharti ya utafutaji'
-                : `Jumla ya wagonjwa kwenye hifadhidata: ${allPatients.length}. Wagonjwa wataonekana hapa baada ya kujisajili.`
+                : 'Hakuna wagonjwa waliosajiliwa bado.'
               }
             </p>
           </div>
