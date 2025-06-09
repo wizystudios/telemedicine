@@ -1,3 +1,4 @@
+
 import { useAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -22,7 +23,6 @@ export default function Dashboard() {
   
   console.log('Dashboard - Current user:', user);
   console.log('Dashboard - User role:', user?.user_metadata?.role);
-  console.log('Dashboard - User metadata:', user?.user_metadata);
 
   // Get user role from metadata
   const userRole = user?.user_metadata?.role || 'patient';
@@ -36,11 +36,11 @@ export default function Dashboard() {
       const [doctorsResult, patientsResult] = await Promise.all([
         supabase
           .from('profiles')
-          .select('id', { count: 'exact' })
+          .select('*', { count: 'exact', head: true })
           .eq('role', 'doctor'),
         supabase
           .from('profiles')
-          .select('id', { count: 'exact' })
+          .select('*', { count: 'exact', head: true })
           .eq('role', 'patient')
       ]);
       
@@ -175,53 +175,53 @@ export default function Dashboard() {
   const renderDoctorDashboard = () => (
     <>
       {/* Doctor Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Card>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+        <Card className="p-3">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Today's Appointments</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-xs sm:text-sm font-medium">Miadi Ya Leo</CardTitle>
+            <Calendar className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.upcomingAppointments || 0}</div>
-            <p className="text-xs text-muted-foreground">Scheduled for today</p>
+          <CardContent className="p-0">
+            <div className="text-lg sm:text-2xl font-bold">{stats?.upcomingAppointments || 0}</div>
+            <p className="text-xs text-muted-foreground">Iliyopangwa leo</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="p-3">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Patients</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-xs sm:text-sm font-medium">Wagonjwa</CardTitle>
+            <Users className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{profileCounts?.totalPatients || 0}</div>
-            <p className="text-xs text-muted-foreground">Registered in system</p>
+          <CardContent className="p-0">
+            <div className="text-lg sm:text-2xl font-bold">{profileCounts?.totalPatients || 0}</div>
+            <p className="text-xs text-muted-foreground">Waliojisajili</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="p-3">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Online Status</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-xs sm:text-sm font-medium">Hali Mtandaoni</CardTitle>
+            <Activity className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0">
             <div className="flex items-center space-x-2">
-              <div className={`w-3 h-3 rounded-full ${stats?.isOnline ? 'bg-green-500' : 'bg-gray-400'}`}></div>
-              <span className="text-sm font-medium">
-                {stats?.isOnline ? 'Online' : 'Offline'}
+              <div className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full ${stats?.isOnline ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+              <span className="text-xs sm:text-sm font-medium">
+                {stats?.isOnline ? 'Mtandaoni' : 'Nje ya mtandao'}
               </span>
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Visible to patients</p>
+            <p className="text-xs text-muted-foreground mt-1">Inaonekana kwa wagonjwa</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="p-3">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Unread Messages</CardTitle>
-            <MessageCircle className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-xs sm:text-sm font-medium">Ujumbe</CardTitle>
+            <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.unreadMessages || 0}</div>
-            <p className="text-xs text-muted-foreground">New messages</p>
+          <CardContent className="p-0">
+            <div className="text-lg sm:text-2xl font-bold">{stats?.unreadMessages || 0}</div>
+            <p className="text-xs text-muted-foreground">Ujumbe mpya</p>
           </CardContent>
         </Card>
       </div>
@@ -231,50 +231,50 @@ export default function Dashboard() {
   const renderPatientDashboard = () => (
     <>
       {/* Patient Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Card>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+        <Card className="p-3">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Upcoming Appointments</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-xs sm:text-sm font-medium">Miadi Ijayo</CardTitle>
+            <Calendar className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.upcomingAppointments || 0}</div>
-            <p className="text-xs text-muted-foreground">This week</p>
+          <CardContent className="p-0">
+            <div className="text-lg sm:text-2xl font-bold">{stats?.upcomingAppointments || 0}</div>
+            <p className="text-xs text-muted-foreground">Wiki hii</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="p-3">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Saved Doctors</CardTitle>
-            <Heart className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-xs sm:text-sm font-medium">Madaktari Waliohifadhiwa</CardTitle>
+            <Heart className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.savedDoctors || 0}</div>
-            <p className="text-xs text-muted-foreground">Your favorites</p>
+          <CardContent className="p-0">
+            <div className="text-lg sm:text-2xl font-bold">{stats?.savedDoctors || 0}</div>
+            <p className="text-xs text-muted-foreground">Unaowapenda</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="p-3">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Doctors</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-xs sm:text-sm font-medium">Madaktari Jumla</CardTitle>
+            <Users className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{profileCounts?.totalDoctors || 0}</div>
-            <p className="text-xs text-muted-foreground">Registered in system</p>
+          <CardContent className="p-0">
+            <div className="text-lg sm:text-2xl font-bold">{profileCounts?.totalDoctors || 0}</div>
+            <p className="text-xs text-muted-foreground">Waliojisajili</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="p-3">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Online Doctors</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-xs sm:text-sm font-medium">Madaktari Mtandaoni</CardTitle>
+            <Activity className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+          <CardContent className="p-0">
+            <div className="text-lg sm:text-2xl font-bold text-green-600">
               {onlineDoctors?.length || 0}
             </div>
-            <p className="text-xs text-muted-foreground">Available now</p>
+            <p className="text-xs text-muted-foreground">Wanapatikana sasa</p>
           </CardContent>
         </Card>
       </div>
@@ -282,22 +282,22 @@ export default function Dashboard() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 pb-20">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-2 sm:p-4 pb-20 overflow-x-hidden">
       <CallInterface />
       
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Welcome back, {user?.user_metadata?.first_name || 'User'}!
+      <div className="max-w-6xl mx-auto">
+        <div className="mb-4 sm:mb-6">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+            Karibu tena, {user?.user_metadata?.first_name || 'Mtumiaji'}!
           </h1>
           <div className="flex items-center space-x-2 mt-2">
-            <Badge variant={userRole === 'doctor' ? 'default' : 'secondary'}>
-              {userRole === 'doctor' ? '🩺 Doctor' : '👤 Patient'}
+            <Badge variant={userRole === 'doctor' ? 'default' : 'secondary'} className="text-xs">
+              {userRole === 'doctor' ? '🩺 Daktari' : '👤 Mgonjwa'}
             </Badge>
-            <p className="text-gray-600 dark:text-gray-300">
+            <p className="text-sm text-gray-600 dark:text-gray-300">
               {userRole === 'doctor' 
-                ? 'Ready to help your patients today?'
-                : 'Your health is our priority'
+                ? 'Uko tayari kuwasaidia wagonjwa wako leo?'
+                : 'Afya yako ni kipaumbele chetu'
               }
             </p>
           </div>
@@ -306,34 +306,34 @@ export default function Dashboard() {
         {/* Role-based dashboard content */}
         {userRole === 'doctor' ? renderDoctorDashboard() : renderPatientDashboard()}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           {/* Recent Activity */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Clock className="w-5 h-5" />
-                <span>Recent Activity</span>
+              <CardTitle className="flex items-center space-x-2 text-sm sm:text-base">
+                <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span>Shughuli za Hivi Karibuni</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
               {recentActivity && recentActivity.length > 0 ? (
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {recentActivity.map((appointment) => {
                     const otherUser = user?.id === appointment.patient_id 
                       ? appointment.doctor 
                       : appointment.patient;
                     
                     return (
-                      <div key={appointment.id} className="flex items-center space-x-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
-                        <Avatar className="h-10 w-10">
+                      <div key={appointment.id} className="flex items-center space-x-3 p-2 sm:p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
+                        <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
                           <AvatarImage src={otherUser?.avatar_url} />
-                          <AvatarFallback>
+                          <AvatarFallback className="text-xs">
                             {otherUser?.first_name?.[0]}{otherUser?.last_name?.[0]}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 dark:text-white">
-                            {userRole === 'doctor' ? 'Consultation with' : 'Appointment with'} {otherUser?.first_name} {otherUser?.last_name}
+                          <p className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white truncate">
+                            {userRole === 'doctor' ? 'Mazungumzo na' : 'Miadi na'} {otherUser?.first_name} {otherUser?.last_name}
                           </p>
                           <div className="flex items-center space-x-2 mt-1">
                             <Badge variant="secondary" className="text-xs">
@@ -349,8 +349,8 @@ export default function Dashboard() {
                   })}
                 </div>
               ) : (
-                <p className="text-gray-600 dark:text-gray-300 text-center py-8">
-                  No recent activity
+                <p className="text-gray-600 dark:text-gray-300 text-center py-6 text-sm">
+                  Hakuna shughuli za hivi karibuni
                 </p>
               )}
             </CardContent>

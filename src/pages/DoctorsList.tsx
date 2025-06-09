@@ -58,7 +58,7 @@ export default function DoctorsList() {
   // Only allow patients to access this page
   if (userRole && userRole !== 'patient') {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 overflow-x-hidden">
         <div className="max-w-4xl mx-auto">
           <div className="text-center py-8">
             <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
@@ -134,7 +134,7 @@ export default function DoctorsList() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 overflow-x-hidden">
         <div className="max-w-4xl mx-auto">
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto"></div>
@@ -148,7 +148,7 @@ export default function DoctorsList() {
   if (error) {
     console.error('🚨 Error in DoctorsList component:', error);
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 overflow-x-hidden">
         <div className="max-w-4xl mx-auto">
           <div className="text-center py-8">
             <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
@@ -165,10 +165,10 @@ export default function DoctorsList() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-2 sm:p-4 pb-20">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-2 sm:p-4 pb-20 overflow-x-hidden">
       <CallInterface />
       
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         <div className="mb-4 sm:mb-6">
           <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-1">
             Madaktari
@@ -177,11 +177,8 @@ export default function DoctorsList() {
             Unganisha na wataalamu wa matibabu duniani kote
           </p>
           <div className="flex flex-col sm:flex-row gap-2 text-xs sm:text-sm">
-            <p className="text-blue-600">Madaktari {allDoctors.length}</p>
+            <p className="text-blue-600">Madaktari {allDoctors.length} waliojisajili</p>
             <p className="text-gray-500">Jukumu lako: {userRole}</p>
-          </div>
-          <div className="mt-2 text-xs text-gray-400">
-            Debug: Jumla ya madaktari: {allDoctors.length} | Waliosafishwa: {filteredDoctors.length}
           </div>
         </div>
 
@@ -224,7 +221,7 @@ export default function DoctorsList() {
 
           <TabsContent value="all">
             {filteredDoctors.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
                 {filteredDoctors.map((doctor) => (
                   <DoctorCard
                     key={doctor.id}
@@ -243,7 +240,7 @@ export default function DoctorsList() {
                 <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 px-4">
                   {searchTerm 
                     ? 'Jaribu kubadilisha masharti ya utafutaji'
-                    : `Jumla ya madaktari kwenye hifadhidata: ${allDoctors.length}. Angalia console kwa ufuatiliaji...`
+                    : `Jumla ya madaktari kwenye hifadhidata: ${allDoctors.length}. Madaktari wataonekana hapa baada ya kujisajili.`
                   }
                 </p>
               </div>
@@ -252,7 +249,7 @@ export default function DoctorsList() {
 
           <TabsContent value="online">
             {validOnlineDoctors.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
                 {validOnlineDoctors
                   .filter(online => 
                     online.doctor && 
@@ -284,7 +281,7 @@ export default function DoctorsList() {
 
           <TabsContent value="saved">
             {validSavedDoctors.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
                 {validSavedDoctors
                   .filter(saved => 
                     saved.doctor &&

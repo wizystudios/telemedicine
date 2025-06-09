@@ -54,7 +54,7 @@ export default function Patients() {
   // Only allow doctors to access this page
   if (userRole && userRole !== 'doctor') {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 overflow-x-hidden">
         <div className="max-w-4xl mx-auto">
           <div className="text-center py-8">
             <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
@@ -148,7 +148,7 @@ export default function Patients() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 overflow-x-hidden">
         <div className="max-w-4xl mx-auto">
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto"></div>
@@ -162,7 +162,7 @@ export default function Patients() {
   if (error) {
     console.error('🚨 Error in Patients component:', error);
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 overflow-x-hidden">
         <div className="max-w-4xl mx-auto">
           <div className="text-center py-8">
             <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
@@ -179,8 +179,8 @@ export default function Patients() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-2 sm:p-4 pb-20">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-2 sm:p-4 pb-20 overflow-x-hidden">
+      <div className="max-w-6xl mx-auto">
         <div className="mb-4 sm:mb-6">
           <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-1">
             Wagonjwa Wangu
@@ -191,9 +191,6 @@ export default function Patients() {
           <div className="flex flex-col sm:flex-row gap-2 text-xs sm:text-sm">
             <p className="text-blue-600">Wagonjwa {allPatients.length} waliojisajili</p>
             <p className="text-gray-500">Jukumu lako: {userRole}</p>
-          </div>
-          <div className="mt-2 text-xs text-gray-400">
-            Debug: Jumla ya wagonjwa: {allPatients.length} | Waliosafishwa: {filteredPatients.length}
           </div>
         </div>
 
@@ -210,7 +207,7 @@ export default function Patients() {
         </div>
 
         {filteredPatients.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
             {filteredPatients.map((patient) => (
               <Card key={patient.id} className="relative overflow-hidden hover:shadow-lg transition-shadow">
                 {patientsWithAppointments.has(patient.id) && (
@@ -226,11 +223,11 @@ export default function Patients() {
                       </AvatarFallback>
                     </Avatar>
                     
-                    <div className="text-center">
-                      <h3 className="font-semibold text-gray-900 dark:text-white text-sm sm:text-base">
+                    <div className="text-center w-full">
+                      <h3 className="font-semibold text-gray-900 dark:text-white text-sm sm:text-base truncate">
                         {patient.first_name || 'Hajaajulikani'} {patient.last_name || ''}
                       </h3>
-                      <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 break-all">
+                      <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 truncate">
                         {patient.email}
                       </p>
                       <div className="flex flex-wrap items-center justify-center gap-1 mt-1">
@@ -242,30 +239,30 @@ export default function Patients() {
                         )}
                       </div>
                       {patient.country && (
-                        <p className="text-xs text-gray-500 mt-1">{patient.country}</p>
+                        <p className="text-xs text-gray-500 mt-1 truncate">{patient.country}</p>
                       )}
                     </div>
 
                     <div className="flex flex-col space-y-2 w-full">
                       <div className="flex space-x-2">
-                        <Button variant="outline" size="sm" className="flex-1 text-xs sm:text-sm">
-                          <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-                          Ujumbe
+                        <Button variant="outline" size="sm" className="flex-1 text-xs">
+                          <MessageCircle className="w-3 h-3 mr-1" />
+                          <span className="hidden sm:inline">Ujumbe</span>
                         </Button>
-                        <Button variant="outline" size="sm" className="flex-1 text-xs sm:text-sm">
-                          <Phone className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-                          Simu
+                        <Button variant="outline" size="sm" className="flex-1 text-xs">
+                          <Phone className="w-3 h-3 mr-1" />
+                          <span className="hidden sm:inline">Simu</span>
                         </Button>
                       </div>
                       
                       <div className="flex space-x-2">
-                        <Button variant="outline" size="sm" className="flex-1 text-xs sm:text-sm">
-                          <Video className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-                          Video
+                        <Button variant="outline" size="sm" className="flex-1 text-xs">
+                          <Video className="w-3 h-3 mr-1" />
+                          <span className="hidden sm:inline">Video</span>
                         </Button>
-                        <Button variant="default" size="sm" className="flex-1 text-xs sm:text-sm">
-                          <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-                          Miadi
+                        <Button variant="default" size="sm" className="flex-1 text-xs">
+                          <Calendar className="w-3 h-3 mr-1" />
+                          <span className="hidden sm:inline">Miadi</span>
                         </Button>
                       </div>
                     </div>
@@ -283,7 +280,7 @@ export default function Patients() {
             <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 px-4">
               {searchTerm 
                 ? 'Jaribu kubadilisha masharti ya utafutaji'
-                : `Jumla ya wagonjwa kwenye hifadhidata: ${allPatients.length}. Angalia console kwa ufuatiliaji...`
+                : `Jumla ya wagonjwa kwenye hifadhidata: ${allPatients.length}. Wagonjwa wataonekana hapa baada ya kujisajili.`
               }
             </p>
           </div>
