@@ -30,9 +30,6 @@ export default function DoctorsList() {
   const { savedDoctors } = useSavedDoctors();
   const [searchTerm, setSearchTerm] = useState('');
 
-  console.log('🔍 DoctorsList - Current user:', user?.id);
-  console.log('🔍 DoctorsList - User metadata role:', user?.user_metadata?.role);
-
   // Get user profile to check role from database
   const { data: userProfile } = useQuery({
     queryKey: ['user-profile', user?.id],
@@ -50,7 +47,6 @@ export default function DoctorsList() {
         return null;
       }
       
-      console.log('📊 User profile role from DB:', data?.role);
       return data;
     },
     enabled: !!user?.id
@@ -58,13 +54,12 @@ export default function DoctorsList() {
 
   // Check role from either database profile or user metadata
   const userRole = userProfile?.role || user?.user_metadata?.role;
-  console.log('✅ Final determined user role:', userRole);
 
   // Only allow patients to access this page
   if (userRole && userRole !== 'patient') {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-4xl mx-auto">
           <div className="text-center py-8">
             <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
@@ -82,48 +77,24 @@ export default function DoctorsList() {
   const { data: allDoctors = [], isLoading, error } = useQuery({
     queryKey: ['doctors-list'],
     queryFn: async () => {
-      console.log('🔍 Starting doctors fetch from profiles table...');
+      console.log('🔍 Fetching doctors from profiles table...');
       
-      try {
-        console.log('📋 Executing query: SELECT * FROM profiles WHERE role = doctor');
-        
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('role', 'doctor');
-        
-        if (error) {
-          console.error('❌ Supabase error:', error);
-          throw error;
-        }
-        
-        console.log('✅ Raw query result:', data);
-        console.log('✅ Number of doctors found:', data?.length || 0);
-        
-        if (data && data.length > 0) {
-          data.forEach((doctor, index) => {
-            console.log(`👨‍⚕️ Doctor ${index + 1}:`, {
-              id: doctor.id,
-              name: `${doctor.first_name} ${doctor.last_name}`,
-              role: doctor.role,
-              email: doctor.email
-            });
-          });
-        }
-        
-        return data as Doctor[] || [];
-      } catch (err) {
-        console.error('❌ Exception in doctors fetch:', err);
-        throw err;
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, first_name, last_name, avatar_url, role, email, phone, country')
+        .eq('role', 'doctor');
+      
+      if (error) {
+        console.error('❌ Error fetching doctors:', error);
+        throw error;
       }
+      
+      console.log('✅ Doctors fetched:', data?.length || 0);
+      return data as Doctor[] || [];
     },
     retry: 2,
     retryDelay: 1000
   });
-
-  console.log('👤 Current user role:', userRole);
-  console.log('👨‍⚕️ Total doctors found:', allDoctors?.length || 0);
-  console.log('🟢 Online doctors:', onlineDoctors?.length || 0);
 
   // Filter doctors based on search term
   const filteredDoctors = allDoctors.filter(doctor =>
@@ -151,7 +122,7 @@ export default function DoctorsList() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-4xl mx-auto">
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto"></div>
             <p className="mt-2 text-gray-600 dark:text-gray-300">Loading doctors...</p>
@@ -165,7 +136,7 @@ export default function DoctorsList() {
     console.error('🚨 Error in DoctorsList component:', error);
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-4xl mx-auto">
           <div className="text-center py-8">
             <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
@@ -174,7 +145,6 @@ export default function DoctorsList() {
             <p className="text-gray-600 dark:text-gray-300">
               Failed to load doctors: {error.message}
             </p>
-            <p className="text-xs text-red-500 mt-2">Debug: Check console for details</p>
           </div>
         </div>
       </div>
@@ -182,50 +152,63 @@ export default function DoctorsList() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 pb-20">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-2 sm:p-4 pb-20">
       <CallInterface />
       
-      <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Doctors</h1>
-            <p className="text-gray-600 dark:text-gray-300">Connect with medical experts worldwide</p>
-            <p className="text-sm text-blue-600 mt-1">Found {allDoctors.length} registered doctors</p>
-            <p className="text-xs text-gray-500">Your role: {userRole}</p>
+      <div className="max-w-4xl mx-auto">
+        <div className="mb-4 sm:mb-6">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-1">
+            Madaktari
+          </h1>
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mb-2">
+            Unganisha na wataalamu wa matibabu duniani kote
+          </p>
+          <div className="flex flex-col sm:flex-row gap-2 text-xs sm:text-sm">
+            <p className="text-blue-600">Madaktari {allDoctors.length}</p>
+            <p className="text-gray-500">Jukumu lako: {userRole}</p>
           </div>
         </div>
 
-        <div className="mb-6">
+        <div className="mb-4 sm:mb-6">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <Input
-              placeholder="Search doctors by name..."
+              placeholder="Tafuta madaktari kwa jina..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="pl-10 text-sm"
             />
           </div>
         </div>
 
-        <Tabs defaultValue="all" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="all" className="flex items-center space-x-2">
-              <Users className="w-4 h-4" />
-              <span>All Doctors ({filteredDoctors.length})</span>
+        <Tabs defaultValue="all" className="space-y-4 sm:space-y-6">
+          <TabsList className="grid w-full grid-cols-3 h-auto">
+            <TabsTrigger value="all" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 p-2 text-xs sm:text-sm">
+              <Users className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="text-center">
+                <span className="block sm:inline">Wote</span>
+                <span className="block sm:inline sm:ml-1">({filteredDoctors.length})</span>
+              </span>
             </TabsTrigger>
-            <TabsTrigger value="online" className="flex items-center space-x-2">
+            <TabsTrigger value="online" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 p-2 text-xs sm:text-sm">
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span>Online Now ({validOnlineDoctors.length})</span>
+              <span className="text-center">
+                <span className="block sm:inline">Mtandaoni</span>
+                <span className="block sm:inline sm:ml-1">({validOnlineDoctors.length})</span>
+              </span>
             </TabsTrigger>
-            <TabsTrigger value="saved" className="flex items-center space-x-2">
-              <Heart className="w-4 h-4" />
-              <span>Saved ({validSavedDoctors.length})</span>
+            <TabsTrigger value="saved" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 p-2 text-xs sm:text-sm">
+              <Heart className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="text-center">
+                <span className="block sm:inline">Vilivyohifadhiwa</span>
+                <span className="block sm:inline sm:ml-1">({validSavedDoctors.length})</span>
+              </span>
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="all">
             {filteredDoctors.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 {filteredDoctors.map((doctor) => (
                   <DoctorCard
                     key={doctor.id}
@@ -236,15 +219,15 @@ export default function DoctorsList() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12">
-                <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                  {searchTerm ? 'No doctors found' : 'No doctors available'}
+              <div className="text-center py-8 sm:py-12">
+                <Users className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-2">
+                  {searchTerm ? 'Hakuna madaktari waliopatikana' : 'Hakuna madaktari kwa sasa'}
                 </h3>
-                <p className="text-gray-600 dark:text-gray-300">
+                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 px-4">
                   {searchTerm 
-                    ? 'Try adjusting your search terms'
-                    : `We're fetching from the profiles table with role='doctor'. Found ${allDoctors.length} doctors.`
+                    ? 'Jaribu kubadilisha masharti ya utafutaji'
+                    : 'Tunachukua data kutoka jedwali la wasifu na jukumu="daktari".'
                   }
                 </p>
               </div>
@@ -253,7 +236,7 @@ export default function DoctorsList() {
 
           <TabsContent value="online">
             {validOnlineDoctors.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 {validOnlineDoctors
                   .filter(online => 
                     `${online.doctor.first_name || ''} ${online.doctor.last_name || ''}`
@@ -270,13 +253,13 @@ export default function DoctorsList() {
                   ))}
               </div>
             ) : (
-              <div className="text-center py-12">
+              <div className="text-center py-8 sm:py-12">
                 <div className="w-2 h-2 bg-gray-400 rounded-full mx-auto mb-4"></div>
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                  No doctors online
+                <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-2">
+                  Hakuna madaktari mtandaoni
                 </h3>
-                <p className="text-gray-600 dark:text-gray-300">
-                  No doctors are currently online. Please check back later.
+                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 px-4">
+                  Hakuna madaktari waliopo mtandaoni kwa sasa. Tafadhali rudi baadaye.
                 </p>
               </div>
             )}
@@ -284,7 +267,7 @@ export default function DoctorsList() {
 
           <TabsContent value="saved">
             {validSavedDoctors.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 {validSavedDoctors
                   .filter(saved => 
                     `${saved.doctor.first_name || ''} ${saved.doctor.last_name || ''}`
@@ -301,13 +284,13 @@ export default function DoctorsList() {
                   ))}
               </div>
             ) : (
-              <div className="text-center py-12">
-                <Heart className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                  No saved doctors
+              <div className="text-center py-8 sm:py-12">
+                <Heart className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-2">
+                  Hakuna madaktari waliohifadhiwa
                 </h3>
-                <p className="text-gray-600 dark:text-gray-300">
-                  You haven't saved any doctors yet. Save doctors you like to see them here.
+                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 px-4">
+                  Bado hujahifadhi madaktari yoyote. Hifadhi madaktari unaowapenda kuwaona hapa.
                 </p>
               </div>
             )}
