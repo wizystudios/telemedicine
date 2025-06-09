@@ -138,6 +138,16 @@ export default function DoctorsList() {
   // Get online doctor IDs for easy lookup
   const onlineDoctorIds = new Set(onlineDoctors.map(online => online.doctor_id));
 
+  // Filter online doctors that exist and have valid doctor data
+  const validOnlineDoctors = onlineDoctors.filter(online => 
+    online && online.doctor && online.doctor.id
+  );
+
+  // Filter saved doctors that exist and have valid doctor data
+  const validSavedDoctors = savedDoctors.filter(saved => 
+    saved && saved.doctor && saved.doctor.id
+  );
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
@@ -205,11 +215,11 @@ export default function DoctorsList() {
             </TabsTrigger>
             <TabsTrigger value="online" className="flex items-center space-x-2">
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span>Online Now ({onlineDoctors.length})</span>
+              <span>Online Now ({validOnlineDoctors.length})</span>
             </TabsTrigger>
             <TabsTrigger value="saved" className="flex items-center space-x-2">
               <Heart className="w-4 h-4" />
-              <span>Saved ({savedDoctors.length})</span>
+              <span>Saved ({validSavedDoctors.length})</span>
             </TabsTrigger>
           </TabsList>
 
@@ -242,9 +252,9 @@ export default function DoctorsList() {
           </TabsContent>
 
           <TabsContent value="online">
-            {onlineDoctors.length > 0 ? (
+            {validOnlineDoctors.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {onlineDoctors
+                {validOnlineDoctors
                   .filter(online => 
                     `${online.doctor.first_name || ''} ${online.doctor.last_name || ''}`
                       .toLowerCase()
@@ -273,9 +283,9 @@ export default function DoctorsList() {
           </TabsContent>
 
           <TabsContent value="saved">
-            {savedDoctors.length > 0 ? (
+            {validSavedDoctors.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {savedDoctors
+                {validSavedDoctors
                   .filter(saved => 
                     `${saved.doctor.first_name || ''} ${saved.doctor.last_name || ''}`
                       .toLowerCase()
@@ -302,7 +312,7 @@ export default function DoctorsList() {
               </div>
             )}
           </TabsContent>
-        </tabs>
+        </Tabs>
       </div>
     </div>
   );
