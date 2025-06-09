@@ -1,4 +1,3 @@
-
 import { useAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -27,6 +26,33 @@ export default function Dashboard() {
 
   // Get user role from metadata
   const userRole = user?.user_metadata?.role || 'patient';
+
+  // Get total counts from profiles table
+  const { data: profileCounts } = useQuery({
+    queryKey: ['profile-counts'],
+    queryFn: async () => {
+      console.log('Fetching profile counts...');
+      
+      const [doctorsResult, patientsResult] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select('id', { count: 'exact' })
+          .eq('role', 'doctor'),
+        supabase
+          .from('profiles')
+          .select('id', { count: 'exact' })
+          .eq('role', 'patient')
+      ]);
+      
+      console.log('Doctors count:', doctorsResult.count);
+      console.log('Patients count:', patientsResult.count);
+      
+      return {
+        totalDoctors: doctorsResult.count || 0,
+        totalPatients: patientsResult.count || 0
+      };
+    }
+  });
 
   const { data: stats } = useQuery({
     queryKey: ['dashboard-stats', user?.id, userRole],
@@ -128,11 +154,19 @@ export default function Dashboard() {
   const { data: onlineDoctors } = useQuery({
     queryKey: ['online-doctors-count'],
     queryFn: async () => {
-      const { data } = await supabase
+      console.log('Fetching online doctors count...');
+      
+      const { data, error } = await supabase
         .from('doctor_online_status')
         .select('*, doctor:profiles!doctor_online_status_doctor_id_fkey(first_name, last_name)')
         .eq('is_online', true);
       
+      if (error) {
+        console.error('Error fetching online doctors:', error);
+        return [];
+      }
+      
+      console.log('Online doctors found:', data?.length || 0);
       return data || [];
     },
     enabled: userRole === 'patient'
@@ -159,8 +193,8 @@ export default function Dashboard() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.totalPatients || 0}</div>
-            <p className="text-xs text-muted-foreground">Under your care</p>
+            <div className="text-2xl font-bold">{profileCounts?.totalPatients || 0}</div>
+            <p className="text-xs text-muted-foreground">Registered in system</p>
           </CardContent>
         </Card>
 
@@ -222,6 +256,17 @@ export default function Dashboard() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Doctors</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{profileCounts?.totalDoctors || 0}</div>
+            <p className="text-xs text-muted-foreground">Registered in system</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Online Doctors</CardTitle>
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -230,17 +275,6 @@ export default function Dashboard() {
               {onlineDoctors?.length || 0}
             </div>
             <p className="text-xs text-muted-foreground">Available now</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">E-Prescriptions</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.prescriptions || 0}</div>
-            <p className="text-xs text-muted-foreground">Available</p>
           </CardContent>
         </Card>
       </div>

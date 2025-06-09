@@ -63,10 +63,10 @@ export default function DoctorsList() {
           <div className="text-center py-8">
             <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-              Access Denied
+              Hairuhusiwi Kuingia
             </h3>
             <p className="text-gray-600 dark:text-gray-300">
-              This page is only accessible to patients. Your role: {userRole}
+              Ukurasa huu unapatikana kwa wagonjwa tu. Jukumu lako: {userRole}
             </p>
           </div>
         </div>
@@ -74,22 +74,27 @@ export default function DoctorsList() {
     );
   }
 
+  // Fetch ALL doctors from profiles table
   const { data: allDoctors = [], isLoading, error } = useQuery({
-    queryKey: ['doctors-list'],
+    queryKey: ['all-doctors-list'],
     queryFn: async () => {
-      console.log('🔍 Fetching doctors from profiles table...');
+      console.log('🔍 Fetching ALL doctors from profiles table...');
       
-      const { data, error } = await supabase
+      const { data, error, count } = await supabase
         .from('profiles')
-        .select('id, first_name, last_name, avatar_url, role, email, phone, country')
-        .eq('role', 'doctor');
+        .select('id, first_name, last_name, avatar_url, role, email, phone, country', { count: 'exact' })
+        .eq('role', 'doctor')
+        .order('created_at', { ascending: false });
       
       if (error) {
         console.error('❌ Error fetching doctors:', error);
         throw error;
       }
       
-      console.log('✅ Doctors fetched:', data?.length || 0);
+      console.log('✅ Total doctors in database:', count);
+      console.log('✅ Doctors data fetched:', data?.length || 0);
+      console.log('📊 Sample doctor data:', data?.[0]);
+      
       return data as Doctor[] || [];
     },
     retry: 2,
@@ -119,13 +124,21 @@ export default function DoctorsList() {
     saved && saved.doctor && saved.doctor.id
   );
 
+  console.log('🔍 Debug Info:');
+  console.log('- Total doctors in database:', allDoctors.length);
+  console.log('- Filtered doctors:', filteredDoctors.length);
+  console.log('- Online doctors:', validOnlineDoctors.length);
+  console.log('- Saved doctors:', validSavedDoctors.length);
+  console.log('- Search term:', searchTerm);
+  console.log('- User role:', userRole);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
         <div className="max-w-4xl mx-auto">
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto"></div>
-            <p className="mt-2 text-gray-600 dark:text-gray-300">Loading doctors...</p>
+            <p className="mt-2 text-gray-600 dark:text-gray-300">Inapakia madaktari...</p>
           </div>
         </div>
       </div>
@@ -140,10 +153,10 @@ export default function DoctorsList() {
           <div className="text-center py-8">
             <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-              Error Loading Doctors
+              Hitilafu katika Kupakia Madaktari
             </h3>
             <p className="text-gray-600 dark:text-gray-300">
-              Failed to load doctors: {error.message}
+              Imeshindwa kupakia madaktari: {error.message}
             </p>
           </div>
         </div>
@@ -166,6 +179,9 @@ export default function DoctorsList() {
           <div className="flex flex-col sm:flex-row gap-2 text-xs sm:text-sm">
             <p className="text-blue-600">Madaktari {allDoctors.length}</p>
             <p className="text-gray-500">Jukumu lako: {userRole}</p>
+          </div>
+          <div className="mt-2 text-xs text-gray-400">
+            Debug: Jumla ya madaktari: {allDoctors.length} | Waliosafishwa: {filteredDoctors.length}
           </div>
         </div>
 
@@ -227,7 +243,7 @@ export default function DoctorsList() {
                 <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 px-4">
                   {searchTerm 
                     ? 'Jaribu kubadilisha masharti ya utafutaji'
-                    : 'Tunachukua data kutoka jedwali la wasifu na jukumu="daktari".'
+                    : `Jumla ya madaktari kwenye hifadhidata: ${allDoctors.length}. Angalia console kwa ufuatiliaji...`
                   }
                 </p>
               </div>
@@ -239,6 +255,7 @@ export default function DoctorsList() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 {validOnlineDoctors
                   .filter(online => 
+                    online.doctor && 
                     `${online.doctor.first_name || ''} ${online.doctor.last_name || ''}`
                       .toLowerCase()
                       .includes(searchTerm.toLowerCase())
@@ -270,6 +287,7 @@ export default function DoctorsList() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 {validSavedDoctors
                   .filter(saved => 
+                    saved.doctor &&
                     `${saved.doctor.first_name || ''} ${saved.doctor.last_name || ''}`
                       .toLowerCase()
                       .includes(searchTerm.toLowerCase())

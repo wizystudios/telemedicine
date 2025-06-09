@@ -70,22 +70,27 @@ export default function Patients() {
     );
   }
 
+  // Fetch ALL patients from profiles table
   const { data: allPatients = [], isLoading, error } = useQuery({
-    queryKey: ['patients-list'],
+    queryKey: ['all-patients-list'],
     queryFn: async () => {
-      console.log('🔍 Fetching patients from profiles table...');
+      console.log('🔍 Fetching ALL patients from profiles table...');
       
-      const { data, error } = await supabase
+      const { data, error, count } = await supabase
         .from('profiles')
-        .select('id, first_name, last_name, avatar_url, role, email, phone, country, created_at')
-        .eq('role', 'patient');
+        .select('id, first_name, last_name, avatar_url, role, email, phone, country, created_at', { count: 'exact' })
+        .eq('role', 'patient')
+        .order('created_at', { ascending: false });
       
       if (error) {
         console.error('❌ Error fetching patients:', error);
         throw error;
       }
       
-      console.log('✅ Patients fetched:', data?.length || 0);
+      console.log('✅ Total patients in database:', count);
+      console.log('✅ Patients data fetched:', data?.length || 0);
+      console.log('📊 Sample patient data:', data?.[0]);
+      
       return data as Patient[] || [];
     },
     retry: 2,
@@ -134,6 +139,13 @@ export default function Patients() {
     recentAppointments.map(apt => apt.patient_id).filter(Boolean)
   );
 
+  console.log('🔍 Debug Info:');
+  console.log('- Total patients in database:', allPatients.length);
+  console.log('- Filtered patients:', filteredPatients.length);
+  console.log('- Search term:', searchTerm);
+  console.log('- User role:', userRole);
+  console.log('- Patients with appointments:', patientsWithAppointments.size);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
@@ -179,6 +191,9 @@ export default function Patients() {
           <div className="flex flex-col sm:flex-row gap-2 text-xs sm:text-sm">
             <p className="text-blue-600">Wagonjwa {allPatients.length} waliojisajili</p>
             <p className="text-gray-500">Jukumu lako: {userRole}</p>
+          </div>
+          <div className="mt-2 text-xs text-gray-400">
+            Debug: Jumla ya wagonjwa: {allPatients.length} | Waliosafishwa: {filteredPatients.length}
           </div>
         </div>
 
@@ -268,7 +283,7 @@ export default function Patients() {
             <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 px-4">
               {searchTerm 
                 ? 'Jaribu kubadilisha masharti ya utafutaji'
-                : 'Tunachukua data kutoka jedwali la wasifu na jukumu="mgonjwa".'
+                : `Jumla ya wagonjwa kwenye hifadhidata: ${allPatients.length}. Angalia console kwa ufuatiliaji...`
               }
             </p>
           </div>
