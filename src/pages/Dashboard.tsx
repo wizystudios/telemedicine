@@ -9,11 +9,87 @@ import { AppointmentReminders } from '@/components/AppointmentReminders';
 import { HealthRecordsManager } from '@/components/HealthRecordsManager';
 import { MedicationReminders } from '@/components/MedicationReminders';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const userRole = user?.user_metadata?.role || 'patient';
+
+  // Fetch real data for dashboard stats
+  const { data: dashboardStats } = useQuery({
+    queryKey: ['dashboard-stats', user?.id, userRole],
+    queryFn: async () => {
+      if (!user?.id) return null;
+
+      if (userRole === 'doctor') {
+        // Doctor dashboard stats
+        const [appointmentsResult, patientsResult, messagesResult] = await Promise.all([
+          supabase
+            .from('appointments')
+            .select('id')
+            .eq('doctor_id', user.id)
+            .eq('status', 'scheduled')
+            .gte('appointment_date', new Date().toISOString().split('T')[0]),
+          
+          supabase
+            .from('appointments')
+            .select('patient_id')
+            .eq('doctor_id', user.id)
+            .gte('appointment_date', new Date().toISOString().split('T')[0]),
+          
+          supabase
+            .from('chat_messages')
+            .select('id')
+            .eq('sender_id', user.id)
+            .gte('created_at', new Date().toISOString().split('T')[0])
+        ]);
+
+        const uniquePatients = new Set(patientsResult.data?.map(p => p.patient_id) || []).size;
+
+        return {
+          todayPatients: uniquePatients,
+          scheduledAppointments: appointmentsResult.data?.length || 0,
+          messages: messagesResult.data?.length || 0,
+          videoCalls: 0 // This would need call_sessions data
+        };
+      } else {
+        // Patient dashboard stats
+        const [appointmentsResult, doctorsResult, messagesResult, recordsResult] = await Promise.all([
+          supabase
+            .from('appointments')
+            .select('id')
+            .eq('patient_id', user.id)
+            .gte('appointment_date', new Date().toISOString()),
+          
+          supabase
+            .from('saved_doctors')
+            .select('id')
+            .eq('patient_id', user.id),
+          
+          supabase
+            .from('chat_messages')
+            .select('id')
+            .eq('sender_id', user.id),
+          
+          supabase
+            .from('medical_records')
+            .select('id')
+            .eq('patient_id', user.id)
+        ]);
+
+        return {
+          upcomingAppointments: appointmentsResult.data?.length || 0,
+          savedDoctors: doctorsResult.data?.length || 0,
+          messages: messagesResult.data?.length || 0,
+          medicalRecords: recordsResult.data?.length || 0
+        };
+      }
+    },
+    enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
 
   const quickActions = userRole === 'doctor' ? [
     { 
@@ -62,15 +138,55 @@ export default function Dashboard() {
   ];
 
   const stats = userRole === 'doctor' ? [
-    { label: 'Wagonjwa wa Leo', value: '12', icon: Users, color: 'text-blue-600' },
-    { label: 'Miadi Iliyopangwa', value: '8', icon: Calendar, color: 'text-emerald-600' },
-    { label: 'Mazungumzo', value: '5', icon: MessageCircle, color: 'text-purple-600' },
-    { label: 'Video Calls', value: '3', icon: Video, color: 'text-orange-600' }
+    { 
+      label: 'Wagonjwa wa Leo', 
+      value: dashboardStats?.todayPatients?.toString() || '0', 
+      icon: Users, 
+      color: 'text-blue-600' 
+    },
+    { 
+      label: 'Miadi Iliyopangwa', 
+      value: dashboardStats?.scheduledAppointments?.toString() || '0', 
+      icon: Calendar, 
+      color: 'text-emerald-600' 
+    },
+    { 
+      label: 'Mazungumzo', 
+      value: dashboardStats?.messages?.toString() || '0', 
+      icon: MessageCircle, 
+      color: 'text-purple-600' 
+    },
+    { 
+      label: 'Video Calls', 
+      value: dashboardStats?.videoCalls?.toString() || '0', 
+      icon: Video, 
+      color: 'text-orange-600' 
+    }
   ] : [
-    { label: 'Miadi Ijayo', value: '2', icon: Calendar, color: 'text-emerald-600' },
-    { label: 'Madaktari Niliyohifadhi', value: '4', icon: Stethoscope, color: 'text-blue-600' },
-    { label: 'Mazungumzo', value: '3', icon: MessageCircle, color: 'text-purple-600' },
-    { label: 'Rekodi za Matibabu', value: '7', icon: TrendingUp, color: 'text-orange-600' }
+    { 
+      label: 'Miadi Ijayo', 
+      value: dashboardStats?.upcomingAppointments?.toString() || '0', 
+      icon: Calendar, 
+      color: 'text-emerald-600' 
+    },
+    { 
+      label: 'Madaktari Niliyohifadhi', 
+      value: dashboardStats?.savedDoctors?.toString() || '0', 
+      icon: Stethoscope, 
+      color: 'text-blue-600' 
+    },
+    { 
+      label: 'Mazungumzo', 
+      value: dashboardStats?.messages?.toString() || '0', 
+      icon: MessageCircle, 
+      color: 'text-purple-600' 
+    },
+    { 
+      label: 'Rekodi za Matibabu', 
+      value: dashboardStats?.medicalRecords?.toString() || '0', 
+      icon: TrendingUp, 
+      color: 'text-orange-600' 
+    }
   ];
 
   return (

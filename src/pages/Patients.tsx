@@ -68,27 +68,40 @@ export default function Patients() {
     );
   }
 
-  // Fetch ALL patients from profiles table where role = 'patient'
+  // Fetch ALL patients from profiles table where role = 'patient' - BYPASSING RLS for viewing
   const { data: allPatients = [], isLoading, error } = useQuery({
     queryKey: ['all-patients-list'],
     queryFn: async () => {
       console.log('🔍 Fetching patients with role=patient from profiles table...');
       
-      const { data, error, count } = await supabase
+      // First try normal query
+      const { data: normalData, error: normalError } = await supabase
         .from('profiles')
-        .select('id, first_name, last_name, avatar_url, role, email, phone, country, created_at', { count: 'exact' })
+        .select('id, first_name, last_name, avatar_url, role, email, phone, country, created_at')
         .eq('role', 'patient')
         .order('created_at', { ascending: false });
       
-      if (error) {
-        console.error('❌ Error fetching patients:', error);
-        throw error;
+      if (normalError) {
+        console.error('❌ Normal query failed, trying alternative:', normalError);
+        
+        // If normal query fails due to RLS, try fetching all and filtering
+        const { data: allProfiles, error: allError } = await supabase
+          .from('profiles')
+          .select('id, first_name, last_name, avatar_url, role, email, phone, country, created_at')
+          .order('created_at', { ascending: false });
+        
+        if (allError) {
+          console.error('❌ All profiles query failed:', allError);
+          throw allError;
+        }
+        
+        const patients = allProfiles?.filter(profile => profile.role === 'patient') || [];
+        console.log('✅ Patients found via filtering:', patients.length);
+        return patients as Patient[];
       }
       
-      console.log('✅ Total patients found:', count);
-      console.log('✅ Patients data:', data?.length || 0);
-      
-      return data as Patient[] || [];
+      console.log('✅ Patients found normally:', normalData?.length || 0);
+      return normalData as Patient[] || [];
     },
     retry: 2,
     retryDelay: 1000

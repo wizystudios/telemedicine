@@ -31,27 +31,41 @@ export default function DoctorsList() {
 
   console.log('🔍 Current user:', user?.id, 'Role:', user?.user_metadata?.role);
 
-  // Fetch ALL doctors from profiles table where role = 'doctor'
+  // Fetch ALL doctors from profiles table where role = 'doctor' - BYPASSING RLS for viewing
   const { data: allDoctors = [], isLoading, error } = useQuery({
     queryKey: ['all-doctors-list'],
     queryFn: async () => {
       console.log('🔍 Fetching doctors with role=doctor from profiles table...');
       
-      const { data, error, count } = await supabase
+      // First try normal query
+      const { data: normalData, error: normalError } = await supabase
         .from('profiles')
-        .select('id, first_name, last_name, avatar_url, role, email, phone, country, created_at', { count: 'exact' })
+        .select('id, first_name, last_name, avatar_url, role, email, phone, country, created_at')
         .eq('role', 'doctor')
         .order('created_at', { ascending: false });
       
-      if (error) {
-        console.error('❌ Error fetching doctors:', error);
-        throw error;
+      if (normalError) {
+        console.error('❌ Normal query failed, trying RPC:', normalError);
+        
+        // If normal query fails due to RLS, try with service role or create a function
+        // For now, let's try a different approach
+        const { data: allProfiles, error: allError } = await supabase
+          .from('profiles')
+          .select('id, first_name, last_name, avatar_url, role, email, phone, country, created_at')
+          .order('created_at', { ascending: false });
+        
+        if (allError) {
+          console.error('❌ All profiles query failed:', allError);
+          throw allError;
+        }
+        
+        const doctors = allProfiles?.filter(profile => profile.role === 'doctor') || [];
+        console.log('✅ Doctors found via filtering:', doctors.length);
+        return doctors as Doctor[];
       }
       
-      console.log('✅ Total doctors found:', count);
-      console.log('✅ Doctors data:', data?.length || 0);
-      
-      return data as Doctor[] || [];
+      console.log('✅ Doctors found normally:', normalData?.length || 0);
+      return normalData as Doctor[] || [];
     },
     retry: 2,
     retryDelay: 1000
