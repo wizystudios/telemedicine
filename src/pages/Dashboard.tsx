@@ -74,125 +74,128 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 pb-20">
-      <div className="max-w-6xl mx-auto space-y-6">
-        
-        {/* Quick Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {stats.map((stat, index) => {
-            const Icon = stat.icon;
-            return (
-              <Card key={index}>
-                <CardContent className="p-4">
-                  <div className="flex items-center space-x-3">
-                    <div className={`p-2 rounded-lg bg-gray-100 dark:bg-gray-800`}>
-                      <Icon className={`w-5 h-5 ${stat.color}`} />
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                        {stat.value}
-                      </p>
-                      <p className="text-xs text-gray-600 dark:text-gray-300">
-                        {stat.label}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Vitendo vya Haraka</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {quickActions.map((action, index) => {
-                const Icon = action.icon;
-                return (
-                  <Button
-                    key={index}
-                    onClick={() => navigate(action.path)}
-                    variant="outline"
-                    className="h-auto p-4 flex flex-col items-center space-y-2 hover:shadow-md transition-shadow"
-                  >
-                    <div className={`p-3 rounded-full ${action.color} text-white`}>
-                      <Icon className="w-6 h-6" />
-                    </div>
-                    <div className="text-center">
-                      <p className="font-medium">{action.label}</p>
-                      <p className="text-xs text-gray-600">{action.description}</p>
-                    </div>
-                  </Button>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="h-screen bg-gray-50 dark:bg-gray-900 flex flex-col overflow-hidden">
+      <div className="flex-1 overflow-y-auto p-3 pb-20">
+        <div className="max-w-6xl mx-auto space-y-4">
           
-          {/* Left Column */}
-          <div className="space-y-6">
-            <AppointmentReminders />
-            
-            {userRole === 'patient' && (
-              <MedicationReminders />
-            )}
+          {/* Quick Stats - Compact */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            {stats.map((stat, index) => {
+              const Icon = stat.icon;
+              return (
+                <Card key={index} className="p-2">
+                  <CardContent className="p-2">
+                    <div className="flex items-center space-x-2">
+                      <div className={`p-1.5 rounded-lg bg-gray-100 dark:bg-gray-800`}>
+                        <Icon className={`w-4 h-4 ${stat.color}`} />
+                      </div>
+                      <div>
+                        <p className="text-lg font-bold text-gray-900 dark:text-white">
+                          {stat.value}
+                        </p>
+                        <p className="text-xs text-gray-600 dark:text-gray-300 leading-tight">
+                          {stat.label}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
 
-          {/* Right Column */}
-          <div className="space-y-6">
-            <NotificationsList />
-            
-            {userRole === 'patient' && (
-              <HealthRecordsManager />
-            )}
-          </div>
-        </div>
+          {/* Quick Actions - Single vertical line */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Vitendo vya Haraka</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="flex space-x-2">
+                {quickActions.map((action, index) => {
+                  const Icon = action.icon;
+                  return (
+                    <Button
+                      key={index}
+                      onClick={() => navigate(action.path)}
+                      variant="outline"
+                      className="flex-1 h-16 flex flex-col items-center justify-center space-y-1 hover:shadow-md transition-shadow"
+                    >
+                      <div className={`p-2 rounded-full ${action.color} text-white`}>
+                        <Icon className="w-4 h-4" />
+                      </div>
+                      <span className="text-xs font-medium">{action.label}</span>
+                    </Button>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
 
-        {/* TeleMed Features Banner */}
-        <Card className="bg-gradient-to-r from-emerald-50 to-blue-50 dark:from-emerald-950 dark:to-blue-950 border-emerald-200 dark:border-emerald-800">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-emerald-800 dark:text-emerald-300 mb-2">
-                  TeleMed Tanzania - Huduma za Kiteknolojia
-                </h3>
-                <p className="text-sm text-emerald-700 dark:text-emerald-400 mb-3">
-                  Unganisha na madaktari popote ulipo. Mazungumzo ya video, rekodi za matibabu, na vikumbusho vya dawa.
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="secondary" className="bg-white/70">
-                    <Video className="w-3 h-3 mr-1" />
-                    Video Calls
-                  </Badge>
-                  <Badge variant="secondary" className="bg-white/70">
-                    <Phone className="w-3 h-3 mr-1" />
-                    Simu za Sauti
-                  </Badge>
-                  <Badge variant="secondary" className="bg-white/70">
-                    <MessageCircle className="w-3 h-3 mr-1" />
-                    Chat za Papo
-                  </Badge>
-                  <Badge variant="secondary" className="bg-white/70">
-                    <Clock className="w-3 h-3 mr-1" />
-                    Vikumbusho
-                  </Badge>
-                </div>
+          {/* Main Content - Compact Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            
+            {/* Left Column */}
+            <div className="space-y-4">
+              <div className="max-h-60 overflow-hidden">
+                <AppointmentReminders />
               </div>
-              <div className="hidden md:block">
-                <div className="w-16 h-16 bg-emerald-600 rounded-full flex items-center justify-center">
-                  <Stethoscope className="w-8 h-8 text-white" />
+              
+              {userRole === 'patient' && (
+                <div className="max-h-48 overflow-hidden">
+                  <MedicationReminders />
                 </div>
-              </div>
+              )}
             </div>
-          </CardContent>
-        </Card>
+
+            {/* Right Column */}
+            <div className="space-y-4">
+              <div className="max-h-60 overflow-hidden">
+                <NotificationsList />
+              </div>
+              
+              {userRole === 'patient' && (
+                <div className="max-h-48 overflow-hidden">
+                  <HealthRecordsManager />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* TeleMed Features Banner - Compact */}
+          <Card className="bg-gradient-to-r from-emerald-50 to-blue-50 dark:from-emerald-950 dark:to-blue-950 border-emerald-200 dark:border-emerald-800">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-base font-semibold text-emerald-800 dark:text-emerald-300 mb-1">
+                    TeleMed Tanzania
+                  </h3>
+                  <p className="text-xs text-emerald-700 dark:text-emerald-400 mb-2">
+                    Huduma za kiteknolojia kwa afya yako
+                  </p>
+                  <div className="flex flex-wrap gap-1">
+                    <Badge variant="secondary" className="bg-white/70 text-xs">
+                      <Video className="w-2 h-2 mr-1" />
+                      Video
+                    </Badge>
+                    <Badge variant="secondary" className="bg-white/70 text-xs">
+                      <Phone className="w-2 h-2 mr-1" />
+                      Simu
+                    </Badge>
+                    <Badge variant="secondary" className="bg-white/70 text-xs">
+                      <MessageCircle className="w-2 h-2 mr-1" />
+                      Chat
+                    </Badge>
+                  </div>
+                </div>
+                <div className="hidden md:block">
+                  <div className="w-12 h-12 bg-emerald-600 rounded-full flex items-center justify-center">
+                    <Stethoscope className="w-6 h-6 text-white" />
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

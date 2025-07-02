@@ -2,15 +2,14 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Search, Users, AlertCircle } from 'lucide-react';
+import { useState } from 'react';
+import { DoctorCard } from '@/components/DoctorCard';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import { useDoctorPosts } from '@/hooks/useDoctorPosts';
-import { DoctorCard } from '@/components/DoctorCard';
-import { CallInterface } from '@/components/CallInterface';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, Users, Heart, AlertCircle } from 'lucide-react';
-import { useState } from 'react';
-import { useSavedDoctors } from '@/hooks/useSavedDoctors';
 
 interface Doctor {
   id: string;
@@ -21,58 +20,16 @@ interface Doctor {
   email: string;
   phone?: string;
   country?: string;
+  created_at: string;
 }
 
 export default function DoctorsList() {
   const { user } = useAuth();
-  const { onlineDoctors } = useOnlineStatus();
-  const { posts } = useDoctorPosts();
-  const { savedDoctors } = useSavedDoctors();
   const [searchTerm, setSearchTerm] = useState('');
+  const { onlineDoctors } = useOnlineStatus();
+  const { doctorPosts } = useDoctorPosts();
 
-  // Get user profile to check role from database
-  const { data: userProfile } = useQuery({
-    queryKey: ['user-profile', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return null;
-      
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-      
-      if (error) {
-        console.error('Error fetching user profile:', error);
-        return null;
-      }
-      
-      return data;
-    },
-    enabled: !!user?.id
-  });
-
-  // Check role from either database profile or user metadata
-  const userRole = userProfile?.role || user?.user_metadata?.role;
-
-  // Only allow patients to access this page
-  if (userRole && userRole !== 'patient') {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center py-8">
-            <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-              Hairuhusiwi Kuingia
-            </h3>
-            <p className="text-gray-600 dark:text-gray-300">
-              Ukurasa huu unapatikana kwa wagonjwa tu.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  console.log('🔍 Current user:', user?.id, 'Role:', user?.user_metadata?.role);
 
   // Fetch ALL doctors from profiles table where role = 'doctor'
   const { data: allDoctors = [], isLoading, error } = useQuery({
@@ -82,7 +39,7 @@ export default function DoctorsList() {
       
       const { data, error, count } = await supabase
         .from('profiles')
-        .select('id, first_name, last_name, avatar_url, role, email, phone, country', { count: 'exact' })
+        .select('id, first_name, last_name, avatar_url, role, email, phone, country, created_at', { count: 'exact' })
         .eq('role', 'doctor')
         .order('created_at', { ascending: false });
       
@@ -100,36 +57,20 @@ export default function DoctorsList() {
     retryDelay: 1000
   });
 
-  // Filter doctors based on search term
+  console.log('📊 Doctors state:', { allDoctors: allDoctors.length, isLoading, error: error?.message });
+
   const filteredDoctors = allDoctors.filter(doctor =>
     `${doctor.first_name || ''} ${doctor.last_name || ''} ${doctor.email || ''}`
       .toLowerCase()
       .includes(searchTerm.toLowerCase())
   );
 
-  // Get doctors with recent posts
-  const doctorsWithPosts = new Set(posts.map(post => post.doctor_id));
-
-  // Get online doctor IDs for easy lookup
-  const onlineDoctorIds = new Set(onlineDoctors.map(online => online.doctor_id));
-
-  // Filter valid data that exists
-  const validOnlineDoctors = onlineDoctors.filter(online => 
-    online && online.doctor && online.doctor.id
-  );
-
-  const validSavedDoctors = savedDoctors.filter(saved => 
-    saved && saved.doctor && saved.doctor.id
-  );
-
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto"></div>
-            <p className="mt-2 text-gray-600 dark:text-gray-300">Inapakia madaktari...</p>
-          </div>
+      <div className="h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto"></div>
+          <p className="mt-2 text-gray-600 dark:text-gray-300">Inapakia madaktari...</p>
         </div>
       </div>
     );
@@ -138,34 +79,34 @@ export default function DoctorsList() {
   if (error) {
     console.error('🚨 Error in DoctorsList component:', error);
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center py-8">
-            <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-              Hitilafu katika Kupakia Madaktari
-            </h3>
-            <p className="text-gray-600 dark:text-gray-300">
-              Imeshindwa kupakia madaktari: {error.message}
-            </p>
-          </div>
+      <div className="h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
+        <div className="text-center">
+          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+            Hitilafu katika Kupakia Madaktari
+          </h3>
+          <p className="text-gray-600 dark:text-gray-300">
+            Imeshindwa kupakia madaktari: {error.message}
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 pb-20">
-      <CallInterface />
-      
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-            Madaktari ({allDoctors.length})
-          </h1>
-        </div>
+    <div className="h-screen bg-gray-50 dark:bg-gray-900 flex flex-col overflow-hidden">
+      {/* Header */}
+      <div className="p-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+              Madaktari ({allDoctors.length})
+            </h1>
+            <Badge variant="secondary">
+              {onlineDoctors.length} Online
+            </Badge>
+          </div>
 
-        <div className="mb-6">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <Input
@@ -176,115 +117,45 @@ export default function DoctorsList() {
             />
           </div>
         </div>
+      </div>
 
-        <Tabs defaultValue="all" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="all" className="flex items-center gap-2">
-              <Users className="w-4 h-4" />
-              Wote ({filteredDoctors.length})
-            </TabsTrigger>
-            <TabsTrigger value="online" className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              Mtandaoni ({validOnlineDoctors.length})
-            </TabsTrigger>
-            <TabsTrigger value="saved" className="flex items-center gap-2">
-              <Heart className="w-4 h-4" />
-              Vilivyohifadhiwa ({validSavedDoctors.length})
-            </TabsTrigger>
-          </TabsList>
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto p-4 pb-20">
+        <div className="max-w-4xl mx-auto">
+          {filteredDoctors.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredDoctors.map((doctor) => {
+                const isOnline = onlineDoctors.some(onlineDoc => onlineDoc.doctor_id === doctor.id);
+                const hasNewPosts = doctorPosts.some(post => 
+                  post.doctor_id === doctor.id && 
+                  new Date(post.created_at) > new Date(Date.now() - 24 * 60 * 60 * 1000)
+                );
 
-          <TabsContent value="all">
-            {filteredDoctors.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredDoctors.map((doctor) => (
+                return (
                   <DoctorCard
                     key={doctor.id}
                     doctor={doctor}
-                    isOnline={onlineDoctorIds.has(doctor.id)}
-                    hasNewPosts={doctorsWithPosts.has(doctor.id)}
+                    isOnline={isOnline}
+                    hasNewPosts={hasNewPosts}
                   />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                  {searchTerm ? 'Hakuna madaktari waliopatikana' : 'Hakuna madaktari'}
-                </h3>
-                <p className="text-gray-600 dark:text-gray-300">
-                  {searchTerm 
-                    ? 'Jaribu kubadilisha masharti ya utafutaji'
-                    : 'Hakuna madaktari waliosajiliwa bado.'
-                  }
-                </p>
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="online">
-            {validOnlineDoctors.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {validOnlineDoctors
-                  .filter(online => 
-                    online.doctor && 
-                    `${online.doctor.first_name || ''} ${online.doctor.last_name || ''}`
-                      .toLowerCase()
-                      .includes(searchTerm.toLowerCase())
-                  )
-                  .map((online) => (
-                    <DoctorCard
-                      key={online.doctor.id}
-                      doctor={online.doctor}
-                      isOnline={true}
-                      hasNewPosts={doctorsWithPosts.has(online.doctor.id)}
-                    />
-                  ))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <div className="w-2 h-2 bg-gray-400 rounded-full mx-auto mb-4"></div>
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                  Hakuna madaktari mtandaoni
-                </h3>
-                <p className="text-gray-600 dark:text-gray-300">
-                  Hakuna madaktari waliopo mtandaoni kwa sasa.
-                </p>
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="saved">
-            {validSavedDoctors.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {validSavedDoctors
-                  .filter(saved => 
-                    saved.doctor &&
-                    `${saved.doctor.first_name || ''} ${saved.doctor.last_name || ''}`
-                      .toLowerCase()
-                      .includes(searchTerm.toLowerCase())
-                  )
-                  .map((saved) => (
-                    <DoctorCard
-                      key={saved.doctor.id}
-                      doctor={saved.doctor}
-                      isOnline={onlineDoctorIds.has(saved.doctor.id)}
-                      hasNewPosts={doctorsWithPosts.has(saved.doctor.id)}
-                    />
-                  ))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <Heart className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                  Hakuna madaktari waliohifadhiwa
-                </h3>
-                <p className="text-gray-600 dark:text-gray-300">
-                  Bado hujahifadhi madaktari yoyote.
-                </p>
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                {searchTerm ? 'Hakuna madaktari waliopatikana' : 'Hakuna madaktari'}
+              </h3>
+              <p className="text-gray-600 dark:text-gray-300">
+                {searchTerm 
+                  ? 'Jaribu kubadilisha masharti ya utafutaji'
+                  : 'Hakuna madaktari waliosajiliwa bado.'
+                }
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
