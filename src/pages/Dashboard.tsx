@@ -1,316 +1,286 @@
 
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Calendar, Users, Stethoscope, MessageCircle, TrendingUp, Clock, Video, Phone } from 'lucide-react';
-import { NotificationsList } from '@/components/NotificationsList';
-import { AppointmentReminders } from '@/components/AppointmentReminders';
-import { HealthRecordsManager } from '@/components/HealthRecordsManager';
-import { MedicationReminders } from '@/components/MedicationReminders';
+import { 
+  Calendar, 
+  Users, 
+  MessageCircle, 
+  Video,
+  Clock,
+  Star,
+  TrendingUp,
+  Activity
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 
 export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const userRole = user?.user_metadata?.role || 'patient';
 
-  // Fetch real data for dashboard stats
-  const { data: dashboardStats } = useQuery({
-    queryKey: ['dashboard-stats', user?.id, userRole],
+  // Get user role from database
+  const { data: userProfile } = useQuery({
+    queryKey: ['user-profile', user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('role, first_name, last_name')
+        .eq('id', user.id)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching user profile:', error);
+        return null;
+      }
+      
+      return data;
+    },
+    enabled: !!user?.id
+  });
 
-      if (userRole === 'doctor') {
-        // Doctor dashboard stats
+  // Fetch real dashboard statistics
+  const { data: dashboardStats, isLoading } = useQuery({
+    queryKey: ['dashboard-stats', user?.id, userProfile?.role],
+    queryFn: async () => {
+      if (!user?.id || !userProfile?.role) return null;
+
+      const stats: any = {};
+
+      if (userProfile.role === 'doctor') {
+        // Fetch doctor-specific statistics
         const [appointmentsResult, patientsResult, messagesResult] = await Promise.all([
           supabase
             .from('appointments')
-            .select('id')
-            .eq('doctor_id', user.id)
-            .eq('status', 'scheduled')
-            .gte('appointment_date', new Date().toISOString().split('T')[0]),
-          
+            .select('id, status')
+            .eq('doctor_id', user.id),
           supabase
             .from('appointments')
             .select('patient_id')
             .eq('doctor_id', user.id)
-            .gte('appointment_date', new Date().toISOString().split('T')[0]),
-          
+            .not('patient_id', 'is', null),
           supabase
             .from('chat_messages')
             .select('id')
             .eq('sender_id', user.id)
-            .gte('created_at', new Date().toISOString().split('T')[0])
         ]);
 
-        const uniquePatients = new Set(patientsResult.data?.map(p => p.patient_id) || []).size;
-
-        return {
-          todayPatients: uniquePatients,
-          scheduledAppointments: appointmentsResult.data?.length || 0,
-          messages: messagesResult.data?.length || 0,
-          videoCalls: 0 // This would need call_sessions data
-        };
-      } else {
-        // Patient dashboard stats
+        // Get unique patients count
+        const uniquePatients = new Set(patientsResult.data?.map(a => a.patient_id) || []);
+        
+        stats.todayAppointments = appointmentsResult.data?.filter(apt => 
+          apt.status === 'scheduled' || apt.status === 'confirmed'
+        ).length || 0;
+        stats.totalPatients = uniquePatients.size;
+        stats.unreadMessages = messagesResult.data?.length || 0;
+        stats.videoCalls = appointmentsResult.data?.filter(apt => 
+          apt.status === 'completed'
+        ).length || 0;
+        
+      } else if (userProfile.role === 'patient') {
+        // Fetch patient-specific statistics
         const [appointmentsResult, doctorsResult, messagesResult, recordsResult] = await Promise.all([
           supabase
             .from('appointments')
-            .select('id')
-            .eq('patient_id', user.id)
-            .gte('appointment_date', new Date().toISOString()),
-          
+            .select('id, status, appointment_date')
+            .eq('patient_id', user.id),
           supabase
             .from('saved_doctors')
             .select('id')
             .eq('patient_id', user.id),
-          
           supabase
             .from('chat_messages')
             .select('id')
             .eq('sender_id', user.id),
-          
           supabase
             .from('medical_records')
             .select('id')
             .eq('patient_id', user.id)
         ]);
 
-        return {
-          upcomingAppointments: appointmentsResult.data?.length || 0,
-          savedDoctors: doctorsResult.data?.length || 0,
-          messages: messagesResult.data?.length || 0,
-          medicalRecords: recordsResult.data?.length || 0
-        };
+        const today = new Date().toISOString().split('T')[0];
+        
+        stats.todayAppointments = appointmentsResult.data?.filter(apt => 
+          apt.appointment_date && apt.appointment_date.startsWith(today)
+        ).length || 0;
+        stats.savedDoctors = doctorsResult.data?.length || 0;
+        stats.messages = messagesResult.data?.length || 0;
+        stats.medicalRecords = recordsResult.data?.length || 0;
       }
+
+      return stats;
     },
-    enabled: !!user?.id,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    enabled: !!user?.id && !!userProfile?.role
   });
 
-  const quickActions = userRole === 'doctor' ? [
-    { 
-      icon: Users, 
-      label: 'Wagonjwa', 
-      path: '/patients',
-      color: 'bg-blue-500',
-      description: 'Angalia wagonjwa wako'
-    },
-    { 
-      icon: Calendar, 
-      label: 'Miadi', 
-      path: '/appointments',
-      color: 'bg-emerald-500',
-      description: 'Miadi yako ya leo'
-    },
-    { 
-      icon: MessageCircle, 
-      label: 'Ujumbe', 
-      path: '/messages',
-      color: 'bg-purple-500',
-      description: 'Mawasiliano na wagonjwa'
-    }
-  ] : [
-    { 
-      icon: Stethoscope, 
-      label: 'Madaktari', 
-      path: '/doctors',
-      color: 'bg-emerald-500',
-      description: 'Tafuta madaktari'
-    },
-    { 
-      icon: Calendar, 
-      label: 'Miadi', 
-      path: '/appointments',
-      color: 'bg-blue-500',
-      description: 'Miadi yako'
-    },
-    { 
-      icon: MessageCircle, 
-      label: 'Ujumbe', 
-      path: '/messages',
-      color: 'bg-purple-500',
-      description: 'Mawasiliano na madaktari'
-    }
-  ];
+  const userRole = userProfile?.role || user?.user_metadata?.role;
+  const userName = userProfile?.first_name || user?.user_metadata?.first_name || 'Mtumiaji';
 
-  const stats = userRole === 'doctor' ? [
-    { 
-      label: 'Wagonjwa wa Leo', 
-      value: dashboardStats?.todayPatients?.toString() || '0', 
-      icon: Users, 
-      color: 'text-blue-600' 
-    },
-    { 
-      label: 'Miadi Iliyopangwa', 
-      value: dashboardStats?.scheduledAppointments?.toString() || '0', 
-      icon: Calendar, 
-      color: 'text-emerald-600' 
-    },
-    { 
-      label: 'Mazungumzo', 
-      value: dashboardStats?.messages?.toString() || '0', 
-      icon: MessageCircle, 
-      color: 'text-purple-600' 
-    },
-    { 
-      label: 'Video Calls', 
-      value: dashboardStats?.videoCalls?.toString() || '0', 
-      icon: Video, 
-      color: 'text-orange-600' 
-    }
-  ] : [
-    { 
-      label: 'Miadi Ijayo', 
-      value: dashboardStats?.upcomingAppointments?.toString() || '0', 
-      icon: Calendar, 
-      color: 'text-emerald-600' 
-    },
-    { 
-      label: 'Madaktari Niliyohifadhi', 
-      value: dashboardStats?.savedDoctors?.toString() || '0', 
-      icon: Stethoscope, 
-      color: 'text-blue-600' 
-    },
-    { 
-      label: 'Mazungumzo', 
-      value: dashboardStats?.messages?.toString() || '0', 
-      icon: MessageCircle, 
-      color: 'text-purple-600' 
-    },
-    { 
-      label: 'Rekodi za Matibabu', 
-      value: dashboardStats?.medicalRecords?.toString() || '0', 
-      icon: TrendingUp, 
-      color: 'text-orange-600' 
-    }
-  ];
+  if (isLoading) {
+    return (
+      <div className="h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto"></div>
+          <p className="mt-2 text-gray-600 dark:text-gray-300">Inapakia...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="h-screen bg-gray-50 dark:bg-gray-900 flex flex-col overflow-hidden">
-      <div className="flex-1 overflow-y-auto p-3 pb-20">
-        <div className="max-w-6xl mx-auto space-y-4">
-          
-          {/* Quick Stats - Compact */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-            {stats.map((stat, index) => {
-              const Icon = stat.icon;
-              return (
-                <Card key={index} className="p-2">
-                  <CardContent className="p-2">
-                    <div className="flex items-center space-x-2">
-                      <div className={`p-1.5 rounded-lg bg-gray-100 dark:bg-gray-800`}>
-                        <Icon className={`w-4 h-4 ${stat.color}`} />
-                      </div>
-                      <div>
-                        <p className="text-lg font-bold text-gray-900 dark:text-white">
-                          {stat.value}
-                        </p>
-                        <p className="text-xs text-gray-600 dark:text-gray-300 leading-tight">
-                          {stat.label}
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+    <div className="h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden">
+      <div className="h-full flex flex-col">
+        {/* Header */}
+        <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4">
+          <div className="max-w-4xl mx-auto">
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
+              Karibu, {userName}
+            </h1>
+            <p className="text-sm text-gray-600 dark:text-gray-300">
+              {userRole === 'doctor' ? 'Daktari Dashboard' : 'Mgonjwa Dashboard'}
+            </p>
           </div>
+        </div>
 
-          {/* Quick Actions - Single vertical line */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">Vitendo vya Haraka</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="flex space-x-2">
-                {quickActions.map((action, index) => {
-                  const Icon = action.icon;
-                  return (
-                    <Button
-                      key={index}
-                      onClick={() => navigate(action.path)}
-                      variant="outline"
-                      className="flex-1 h-16 flex flex-col items-center justify-center space-y-1 hover:shadow-md transition-shadow"
-                    >
-                      <div className={`p-2 rounded-full ${action.color} text-white`}>
-                        <Icon className="w-4 h-4" />
-                      </div>
-                      <span className="text-xs font-medium">{action.label}</span>
-                    </Button>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Main Content - Compact Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            
-            {/* Left Column */}
-            <div className="space-y-4">
-              <div className="max-h-60 overflow-hidden">
-                <AppointmentReminders />
-              </div>
-              
-              {userRole === 'patient' && (
-                <div className="max-h-48 overflow-hidden">
-                  <MedicationReminders />
-                </div>
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-4 pb-20">
+          <div className="max-w-4xl mx-auto space-y-4">
+            {/* Quick Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {userRole === 'doctor' ? (
+                <>
+                  <Card className="p-3">
+                    <CardContent className="p-0 text-center">
+                      <Calendar className="w-6 h-6 text-blue-600 mx-auto mb-1" />
+                      <p className="text-lg font-bold text-gray-900 dark:text-white">
+                        {dashboardStats?.todayAppointments || 0}
+                      </p>
+                      <p className="text-xs text-gray-600 dark:text-gray-300">Miadi ya Leo</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="p-3">
+                    <CardContent className="p-0 text-center">
+                      <Users className="w-6 h-6 text-green-600 mx-auto mb-1" />
+                      <p className="text-lg font-bold text-gray-900 dark:text-white">
+                        {dashboardStats?.totalPatients || 0}
+                      </p>
+                      <p className="text-xs text-gray-600 dark:text-gray-300">Wagonjwa</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="p-3">
+                    <CardContent className="p-0 text-center">
+                      <MessageCircle className="w-6 h-6 text-orange-600 mx-auto mb-1" />
+                      <p className="text-lg font-bold text-gray-900 dark:text-white">
+                        {dashboardStats?.unreadMessages || 0}
+                      </p>
+                      <p className="text-xs text-gray-600 dark:text-gray-300">Ujumbe</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="p-3">
+                    <CardContent className="p-0 text-center">
+                      <Video className="w-6 h-6 text-purple-600 mx-auto mb-1" />
+                      <p className="text-lg font-bold text-gray-900 dark:text-white">
+                        {dashboardStats?.videoCalls || 0}
+                      </p>
+                      <p className="text-xs text-gray-600 dark:text-gray-300">Video Calls</p>
+                    </CardContent>
+                  </Card>
+                </>
+              ) : (
+                <>
+                  <Card className="p-3">
+                    <CardContent className="p-0 text-center">
+                      <Calendar className="w-6 h-6 text-blue-600 mx-auto mb-1" />
+                      <p className="text-lg font-bold text-gray-900 dark:text-white">
+                        {dashboardStats?.todayAppointments || 0}
+                      </p>
+                      <p className="text-xs text-gray-600 dark:text-gray-300">Miadi ya Leo</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="p-3">
+                    <CardContent className="p-0 text-center">
+                      <Star className="w-6 h-6 text-yellow-600 mx-auto mb-1" />
+                      <p className="text-lg font-bold text-gray-900 dark:text-white">
+                        {dashboardStats?.savedDoctors || 0}
+                      </p>
+                      <p className="text-xs text-gray-600 dark:text-gray-300">Madaktari Niliyohifadhi</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="p-3">
+                    <CardContent className="p-0 text-center">
+                      <MessageCircle className="w-6 h-6 text-green-600 mx-auto mb-1" />
+                      <p className="text-lg font-bold text-gray-900 dark:text-white">
+                        {dashboardStats?.messages || 0}
+                      </p>
+                      <p className="text-xs text-gray-600 dark:text-gray-300">Mazungumzo</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="p-3">
+                    <CardContent className="p-0 text-center">
+                      <Activity className="w-6 h-6 text-red-600 mx-auto mb-1" />
+                      <p className="text-lg font-bold text-gray-900 dark:text-white">
+                        {dashboardStats?.medicalRecords || 0}
+                      </p>
+                      <p className="text-xs text-gray-600 dark:text-gray-300">Rekodi za Matibabu</p>
+                    </CardContent>
+                  </Card>
+                </>
               )}
             </div>
 
-            {/* Right Column */}
-            <div className="space-y-4">
-              <div className="max-h-60 overflow-hidden">
-                <NotificationsList />
-              </div>
-              
-              {userRole === 'patient' && (
-                <div className="max-h-48 overflow-hidden">
-                  <HealthRecordsManager />
+            {/* Quick Actions */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Vitendo vya Haraka</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="grid grid-cols-1 gap-2">
+                  <Button 
+                    variant="outline" 
+                    className="justify-start h-12"
+                    onClick={() => navigate(userRole === 'doctor' ? '/patients' : '/doctors')}
+                  >
+                    <Users className="w-4 h-4 mr-3" />
+                    {userRole === 'doctor' ? 'Ona Wagonjwa' : 'Tafuta Madaktari'}
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="justify-start h-12"
+                    onClick={() => navigate('/appointments')}
+                  >
+                    <Calendar className="w-4 h-4 mr-3" />
+                    Miadi
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="justify-start h-12"
+                    onClick={() => navigate('/messages')}
+                  >
+                    <MessageCircle className="w-4 h-4 mr-3" />
+                    Ujumbe
+                  </Button>
                 </div>
-              )}
-            </div>
-          </div>
+              </CardContent>
+            </Card>
 
-          {/* TeleMed Features Banner - Compact */}
-          <Card className="bg-gradient-to-r from-emerald-50 to-blue-50 dark:from-emerald-950 dark:to-blue-950 border-emerald-200 dark:border-emerald-800">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-base font-semibold text-emerald-800 dark:text-emerald-300 mb-1">
-                    TeleMed Tanzania
-                  </h3>
-                  <p className="text-xs text-emerald-700 dark:text-emerald-400 mb-2">
-                    Huduma za kiteknolojia kwa afya yako
+            {/* Recent Activity */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Shughuli za Hivi Karibuni</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8">
+                  <Clock className="w-12 h-12 text-gray-400 mx-auto mb-2" />
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
+                    Hakuna shughuli za hivi karibuni
                   </p>
-                  <div className="flex flex-wrap gap-1">
-                    <Badge variant="secondary" className="bg-white/70 text-xs">
-                      <Video className="w-2 h-2 mr-1" />
-                      Video
-                    </Badge>
-                    <Badge variant="secondary" className="bg-white/70 text-xs">
-                      <Phone className="w-2 h-2 mr-1" />
-                      Simu
-                    </Badge>
-                    <Badge variant="secondary" className="bg-white/70 text-xs">
-                      <MessageCircle className="w-2 h-2 mr-1" />
-                      Chat
-                    </Badge>
-                  </div>
                 </div>
-                <div className="hidden md:block">
-                  <div className="w-12 h-12 bg-emerald-600 rounded-full flex items-center justify-center">
-                    <Stethoscope className="w-6 h-6 text-white" />
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </div>
