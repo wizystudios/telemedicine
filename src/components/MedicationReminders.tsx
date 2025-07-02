@@ -12,6 +12,19 @@ import { Pill, Clock, Plus, Bell, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 
+interface MedicationReminder {
+  id: string;
+  patient_id: string;
+  name: string;
+  dosage: string;
+  frequency: string;
+  time: string;
+  is_active: boolean;
+  next_reminder?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export function MedicationReminders() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -27,25 +40,15 @@ export function MedicationReminders() {
   const { data: medications = [] } = useQuery({
     queryKey: ['medications', user?.id],
     queryFn: async () => {
-      try {
-        const { data, error } = await supabase
-          .from('medication_reminders')
-          .select('*')
-          .eq('patient_id', user?.id)
-          .eq('is_active', true)
-          .order('created_at', { ascending: false });
+      const { data, error } = await supabase
+        .from('medication_reminders')
+        .select('*')
+        .eq('patient_id', user?.id)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
 
-        if (error && error.code === '42P01') {
-          console.log('Medication reminders table needs to be created');
-          return [];
-        }
-
-        if (error) throw error;
-        return data || [];
-      } catch (error) {
-        console.log('Medication reminders feature needs database setup');
-        return [];
-      }
+      if (error) throw error;
+      return data || [];
     },
     enabled: !!user?.id
   });
@@ -74,10 +77,10 @@ export function MedicationReminders() {
       setNewMedication({ name: '', dosage: '', frequency: 'daily', time: '08:00' });
       queryClient.invalidateQueries({ queryKey: ['medications'] });
     },
-    onError: () => {
+    onError: (error) => {
       toast({
-        title: 'Vikumbusho vya Dawa',
-        description: 'Hii huduma inahitaji mfumo wa hifadhidata uongezwe',
+        title: 'Hitilafu',
+        description: 'Imeshindwa kuongeza kikumbusho cha dawa',
         variant: 'destructive'
       });
     }
@@ -111,28 +114,6 @@ export function MedicationReminders() {
     { value: 'as_needed', label: 'Inapohitajika' }
   ];
 
-  // Generate sample medication reminders for demo
-  const sampleMedications = [
-    {
-      id: 'sample-1',
-      name: 'Paracetamol 500mg',
-      dosage: '1 vidonge',
-      frequency: 'three_times_daily',
-      time: '08:00',
-      next_reminder: new Date().toISOString()
-    },
-    {
-      id: 'sample-2', 
-      name: 'Amoxicillin 250mg',
-      dosage: '2 vidonge',
-      frequency: 'twice_daily',
-      time: '09:00',
-      next_reminder: new Date().toISOString()
-    }
-  ];
-
-  const displayMedications = medications.length > 0 ? medications : sampleMedications;
-
   return (
     <Card>
       <CardHeader>
@@ -140,7 +121,7 @@ export function MedicationReminders() {
           <div className="flex items-center space-x-2">
             <Pill className="w-5 h-5 text-green-600" />
             <span>Vikumbusho vya Dawa</span>
-            <Badge variant="secondary">{displayMedications.length}</Badge>
+            <Badge variant="secondary">{medications.length}</Badge>
           </div>
           <Button
             size="sm"
@@ -209,9 +190,9 @@ export function MedicationReminders() {
           </div>
         )}
 
-        {displayMedications.length > 0 ? (
+        {medications.length > 0 ? (
           <div className="space-y-3 max-h-64 overflow-y-auto">
-            {displayMedications.map((medication: any) => (
+            {medications.map((medication: MedicationReminder) => (
               <div key={medication.id} className="p-3 border rounded-lg">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">

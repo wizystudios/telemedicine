@@ -391,6 +391,81 @@ export type Database = {
           },
         ]
       }
+      medical_records: {
+        Row: {
+          created_at: string
+          description: string | null
+          doctor_id: string | null
+          file_url: string | null
+          id: string
+          patient_id: string
+          record_type: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          doctor_id?: string | null
+          file_url?: string | null
+          id?: string
+          patient_id: string
+          record_type: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          doctor_id?: string | null
+          file_url?: string | null
+          id?: string
+          patient_id?: string
+          record_type?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      medication_reminders: {
+        Row: {
+          created_at: string
+          dosage: string
+          frequency: string
+          id: string
+          is_active: boolean
+          name: string
+          next_reminder: string | null
+          patient_id: string
+          time: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          dosage: string
+          frequency: string
+          id?: string
+          is_active?: boolean
+          name: string
+          next_reminder?: string | null
+          patient_id: string
+          time: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          dosage?: string
+          frequency?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          next_reminder?: string | null
+          patient_id?: string
+          time?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       notification_settings: {
         Row: {
           appointment_reminders: boolean

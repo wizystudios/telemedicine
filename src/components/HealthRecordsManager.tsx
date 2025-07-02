@@ -36,30 +36,17 @@ export function HealthRecordsManager() {
     record_type: 'prescription'
   });
 
-  // Create the medical_records table if it doesn't exist
   const { data: records = [], isLoading } = useQuery({
     queryKey: ['medical-records', user?.id],
     queryFn: async () => {
-      // First try to fetch records
-      try {
-        const { data, error } = await supabase
-          .from('medical_records')
-          .select('*')
-          .eq('patient_id', user?.id)
-          .order('created_at', { ascending: false });
+      const { data, error } = await supabase
+        .from('medical_records')
+        .select('*')
+        .eq('patient_id', user?.id)
+        .order('created_at', { ascending: false });
 
-        if (error && error.code === '42P01') {
-          // Table doesn't exist, create it
-          console.log('Medical records table needs to be created');
-          return [];
-        }
-
-        if (error) throw error;
-        return data || [];
-      } catch (error) {
-        console.log('Medical records feature needs database setup');
-        return [];
-      }
+      if (error) throw error;
+      return data || [];
     },
     enabled: !!user?.id
   });
@@ -87,10 +74,10 @@ export function HealthRecordsManager() {
       setNewRecord({ title: '', description: '', record_type: 'prescription' });
       queryClient.invalidateQueries({ queryKey: ['medical-records'] });
     },
-    onError: () => {
+    onError: (error) => {
       toast({
-        title: 'Rekodi za Matibabu',
-        description: 'Hii huduma inahitaji mfumo wa hifadhidata uongezwe',
+        title: 'Hitilafu',
+        description: 'Imeshindwa kuongeza rekodi ya matibabu',
         variant: 'destructive'
       });
     }
