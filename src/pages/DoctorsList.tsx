@@ -27,7 +27,7 @@ export default function DoctorsList() {
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const { onlineDoctors } = useOnlineStatus();
-  const { doctorPosts } = useDoctorPosts();
+  const { posts } = useDoctorPosts();
 
   console.log('🔍 Current user:', user?.id, 'Role:', user?.user_metadata?.role);
 
@@ -126,7 +126,7 @@ export default function DoctorsList() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredDoctors.map((doctor) => {
                 const isOnline = onlineDoctors.some(onlineDoc => onlineDoc.doctor_id === doctor.id);
-                const hasNewPosts = doctorPosts.some(post => 
+                const hasNewPosts = posts.some(post => 
                   post.doctor_id === doctor.id && 
                   new Date(post.created_at) > new Date(Date.now() - 24 * 60 * 60 * 1000)
                 );
