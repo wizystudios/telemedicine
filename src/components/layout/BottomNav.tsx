@@ -18,22 +18,22 @@ export function BottomNav() {
   // Different navigation items based on role
   const getNavItems = () => {
     const baseItems = [
-      { icon: Home, label: t('home'), path: '/dashboard' },
-      { icon: Calendar, label: t('appointments'), path: '/appointments' },
-      { icon: MessageCircle, label: t('messages'), path: '/messages' },
+      { icon: Home, label: 'Nyumbani', path: '/dashboard' },
+      { icon: Calendar, label: 'Miadi', path: '/appointments' },
+      { icon: MessageCircle, label: 'Ujumbe', path: '/messages' },
     ];
 
     if (userRole === 'doctor') {
       return [
         ...baseItems,
-        { icon: Stethoscope, label: 'Patients', path: '/patients' },
-        { icon: User, label: t('profile'), path: '/profile' },
+        { icon: Stethoscope, label: 'Wagonjwa', path: '/patients' },
+        { icon: User, label: 'Profile', path: '/profile' },
       ];
     } else {
       return [
         ...baseItems,
-        { icon: Users, label: t('doctors'), path: '/doctors' },
-        { icon: User, label: t('profile'), path: '/profile' },
+        { icon: Users, label: 'Madaktari', path: '/doctors-list' },
+        { icon: User, label: 'Profile', path: '/profile' },
       ];
     }
   };

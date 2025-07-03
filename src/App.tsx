@@ -105,6 +105,14 @@ function AppContent() {
             } 
           />
           <Route 
+            path="/doctors-list" 
+            element={
+              <ProtectedRoute>
+                <DoctorsList />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
             path="/patients" 
             element={
               <ProtectedRoute>
@@ -117,6 +125,14 @@ function AppContent() {
             element={
               <ProtectedRoute>
                 <Profile />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/book-appointment" 
+            element={
+              <ProtectedRoute>
+                <BookAppointment />
               </ProtectedRoute>
             } 
           />
