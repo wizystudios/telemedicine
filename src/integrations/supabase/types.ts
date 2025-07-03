@@ -813,6 +813,10 @@ export type Database = {
         Args: { username_to_check: string }
         Returns: boolean
       }
+      get_current_user_role: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       increment_post_views: {
         Args: { post_id_param: string }
         Returns: undefined
