@@ -48,49 +48,39 @@ export function PatientProblemPost() {
 
     setIsPosting(true);
     try {
-      // Insert patient problem using raw SQL approach to avoid typing issues
-      const { data: problemData, error: problemError } = await supabase.rpc('create_patient_problem', {
-        p_patient_id: user?.id,
-        p_problem_text: problemText,
-        p_category: selectedCategory,
-        p_urgency_level: urgencyLevel
-      });
+      // Insert patient problem directly
+      const { data: problemData, error: problemError } = await supabase
+        .from('patient_problems')
+        .insert({
+          patient_id: user?.id,
+          problem_text: problemText,
+          category: selectedCategory,
+          urgency_level: urgencyLevel,
+          status: 'open'
+        })
+        .select()
+        .single();
 
-      if (problemError) {
-        // Fallback to direct insert
-        const { data, error } = await supabase
-          .from('patient_problems' as any)
-          .insert({
-            patient_id: user?.id,
-            problem_text: problemText,
-            category: selectedCategory,
-            urgency_level: urgencyLevel,
-            status: 'open'
-          })
-          .select()
-          .single();
+      if (problemError) throw problemError;
 
-        if (error) throw error;
-        
-        // Create notifications for all online doctors
-        const { data: doctors } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('role', 'doctor');
+      // Create notifications for all online doctors
+      const { data: doctors } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('role', 'doctor');
 
-        if (doctors && doctors.length > 0) {
-          const notifications = doctors.map(doctor => ({
-            user_id: doctor.id,
-            title: 'Mgonjwa Anahitaji Msaada',
-            message: `Mgonjwa anahitaji msaada: ${problemText.substring(0, 100)}...`,
-            type: 'patient_problem',
-            related_id: data.id
-          }));
+      if (doctors && doctors.length > 0) {
+        const notifications = doctors.map(doctor => ({
+          user_id: doctor.id,
+          title: 'Mgonjwa Anahitaji Msaada',
+          message: `Mgonjwa anahitaji msaada: ${problemText.substring(0, 100)}...`,
+          type: 'patient_problem',
+          related_id: problemData.id
+        }));
 
-          await supabase
-            .from('notifications')
-            .insert(notifications);
-        }
+        await supabase
+          .from('notifications')
+          .insert(notifications);
       }
 
       toast({
@@ -103,6 +93,7 @@ export function PatientProblemPost() {
       setUrgencyLevel('normal');
 
     } catch (error: any) {
+      console.error('Error submitting problem:', error);
       toast({
         title: 'Hitilafu',
         description: 'Imeshindwa kutuma tatizo. Jaribu tena.',
