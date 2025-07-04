@@ -16,12 +16,26 @@ export default function DoctorProfile() {
   const { initiateCall } = useCallSession();
   const { toast } = useToast();
 
+  // Fetch doctor profile with additional info
   const { data: doctor, isLoading } = useQuery({
     queryKey: ['doctor-profile', doctorId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select(`
+          *,
+          doctor_profiles (
+            bio,
+            experience_years,
+            consultation_fee,
+            rating,
+            total_reviews,
+            education,
+            languages,
+            is_verified,
+            license_number
+          )
+        `)
         .eq('id', doctorId)
         .eq('role', 'doctor')
         .single();
@@ -52,7 +66,32 @@ export default function DoctorProfile() {
   };
 
   const handleMessage = () => {
-    navigate(`/messages?doctor=${doctorId}`);
+    // Create a new appointment first, then navigate to messages
+    const createAppointmentAndMessage = async () => {
+      const { data: appointment, error } = await supabase
+        .from('appointments')
+        .insert({
+          doctor_id: doctorId,
+          patient_id: (await supabase.auth.getUser()).data.user?.id,
+          appointment_date: new Date().toISOString(),
+          consultation_type: 'chat',
+          status: 'pending'
+        })
+        .select()
+        .single();
+
+      if (!error && appointment) {
+        navigate(`/messages?appointment=${appointment.id}`);
+      } else {
+        toast({
+          title: 'Hitilafu',
+          description: 'Imeshindwa kuanzisha mazungumzo',
+          variant: 'destructive'
+        });
+      }
+    };
+    
+    createAppointmentAndMessage();
   };
 
   const handleBookAppointment = () => {
@@ -75,12 +114,16 @@ export default function DoctorProfile() {
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <h3 className="text-lg font-medium text-gray-900 dark:text-white">Daktari hajapatikana</h3>
+          <Button onClick={() => navigate('/doctors-list')} className="mt-4">
+            Rudi kwenye Orodha ya Madaktari
+          </Button>
         </div>
       </div>
     );
   }
 
   const displayName = `Dkt. ${doctor.first_name || ''} ${doctor.last_name || ''}`.trim() || 'Daktari';
+  const doctorProfile = doctor.doctor_profiles?.[0];
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
@@ -115,16 +158,26 @@ export default function DoctorProfile() {
                   {displayName}
                 </h1>
                 <p className="text-lg text-gray-600 dark:text-gray-300 mb-2">
-                  Daktari wa Jumla
+                  {doctorProfile?.bio || 'Daktari wa Jumla'}
                 </p>
                 <div className="flex flex-wrap justify-center md:justify-start gap-2 mb-4">
                   <Badge variant="secondary">Daktari</Badge>
+                  {doctorProfile?.is_verified && (
+                    <Badge className="bg-blue-500">Amethibitishwa</Badge>
+                  )}
                   <Badge className="bg-green-500">Online</Badge>
                 </div>
-                <div className="flex items-center text-yellow-500 mb-2">
-                  <Star className="w-4 h-4 mr-1 fill-current" />
-                  <span className="text-sm">4.8 (125 mapitio)</span>
-                </div>
+                {doctorProfile?.rating && (
+                  <div className="flex items-center text-yellow-500 mb-2">
+                    <Star className="w-4 h-4 mr-1 fill-current" />
+                    <span className="text-sm">{doctorProfile.rating} ({doctorProfile.total_reviews || 0} mapitio)</span>
+                  </div>
+                )}
+                {doctorProfile?.consultation_fee && (
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
+                    Ada ya ushauri: TSh {doctorProfile.consultation_fee.toLocaleString()}
+                  </p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -150,30 +203,46 @@ export default function DoctorProfile() {
               <MapPin className="w-5 h-5 text-gray-500" />
               <span>{doctor.country || 'Tanzania'}</span>
             </div>
-            <div className="flex items-center space-x-3">
-              <Building className="w-5 h-5 text-gray-500" />
-              <span>Hospitali ya Mkoa</span>
-            </div>
-            <div className="flex items-center space-x-3">
-              <Clock className="w-5 h-5 text-gray-500" />
-              <span>10 miaka ya uzoefu</span>
-            </div>
+            {doctorProfile?.experience_years && (
+              <div className="flex items-center space-x-3">
+                <Clock className="w-5 h-5 text-gray-500" />
+                <span>{doctorProfile.experience_years} miaka ya uzoefu</span>
+              </div>
+            )}
+            {doctorProfile?.license_number && (
+              <div className="flex items-center space-x-3">
+                <Building className="w-5 h-5 text-gray-500" />
+                <span>Leseni: {doctorProfile.license_number}</span>
+              </div>
+            )}
           </CardContent>
         </Card>
 
         {/* Professional Info */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Maelezo ya Kitaaluma</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-gray-600 dark:text-gray-300">
-              Daktari mwenye uzoefu wa miaka 10 katika huduma za afya za jumla. 
-              Anafanya kazi hospitali ya mkoa na anasaidia wagonjwa wengi kila siku.
-              Ana uzoefu mkubwa katika matibabu ya magonjwa ya kawaida na ya dharura.
-            </p>
-          </CardContent>
-        </Card>
+        {(doctorProfile?.bio || doctorProfile?.education) && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Maelezo ya Kitaaluma</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {doctorProfile?.bio && (
+                <p className="text-gray-600 dark:text-gray-300 mb-4">
+                  {doctorProfile.bio}
+                </p>
+              )}
+              {doctorProfile?.education && (
+                <div>
+                  <h4 className="font-semibold mb-2">Elimu:</h4>
+                  <ul className="list-disc list-inside text-gray-600 dark:text-gray-300">
+                    {doctorProfile.education.map((edu: string, index: number) => (
+                      <li key={index}>{edu}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Action Buttons */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
