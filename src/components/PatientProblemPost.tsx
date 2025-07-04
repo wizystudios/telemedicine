@@ -48,39 +48,49 @@ export function PatientProblemPost() {
 
     setIsPosting(true);
     try {
-      // Insert patient problem
-      const { data: problemData, error: problemError } = await supabase
-        .from('patient_problems')
-        .insert({
-          patient_id: user?.id,
-          problem_text: problemText,
-          category: selectedCategory,
-          urgency_level: urgencyLevel,
-          status: 'open'
-        })
-        .select()
-        .single();
+      // Insert patient problem using raw SQL approach to avoid typing issues
+      const { data: problemData, error: problemError } = await supabase.rpc('create_patient_problem', {
+        p_patient_id: user?.id,
+        p_problem_text: problemText,
+        p_category: selectedCategory,
+        p_urgency_level: urgencyLevel
+      });
 
-      if (problemError) throw problemError;
+      if (problemError) {
+        // Fallback to direct insert
+        const { data, error } = await supabase
+          .from('patient_problems' as any)
+          .insert({
+            patient_id: user?.id,
+            problem_text: problemText,
+            category: selectedCategory,
+            urgency_level: urgencyLevel,
+            status: 'open'
+          })
+          .select()
+          .single();
 
-      // Create notifications for all online doctors
-      const { data: doctors } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('role', 'doctor');
+        if (error) throw error;
+        
+        // Create notifications for all online doctors
+        const { data: doctors } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('role', 'doctor');
 
-      if (doctors && doctors.length > 0) {
-        const notifications = doctors.map(doctor => ({
-          user_id: doctor.id,
-          title: 'Mgonjwa Anahitaji Msaada',
-          message: `Mgonjwa anahitaji msaada: ${problemText.substring(0, 100)}...`,
-          type: 'patient_problem',
-          related_id: problemData.id
-        }));
+        if (doctors && doctors.length > 0) {
+          const notifications = doctors.map(doctor => ({
+            user_id: doctor.id,
+            title: 'Mgonjwa Anahitaji Msaada',
+            message: `Mgonjwa anahitaji msaada: ${problemText.substring(0, 100)}...`,
+            type: 'patient_problem',
+            related_id: data.id
+          }));
 
-        await supabase
-          .from('notifications')
-          .insert(notifications);
+          await supabase
+            .from('notifications')
+            .insert(notifications);
+        }
       }
 
       toast({

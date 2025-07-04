@@ -517,6 +517,7 @@ export type Database = {
           id: string
           is_read: boolean | null
           message: string
+          related_id: string | null
           title: string
           type: string | null
           user_id: string | null
@@ -527,6 +528,7 @@ export type Database = {
           id?: string
           is_read?: boolean | null
           message: string
+          related_id?: string | null
           title: string
           type?: string | null
           user_id?: string | null
@@ -537,6 +539,7 @@ export type Database = {
           id?: string
           is_read?: boolean | null
           message?: string
+          related_id?: string | null
           title?: string
           type?: string | null
           user_id?: string | null
@@ -552,6 +555,60 @@ export type Database = {
           {
             foreignKeyName: "notifications_user_id_fkey"
             columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_problems: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          patient_id: string
+          problem_text: string
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+          updated_at: string
+          urgency_level: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          id?: string
+          patient_id: string
+          problem_text: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          updated_at?: string
+          urgency_level?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          patient_id?: string
+          problem_text?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          updated_at?: string
+          urgency_level?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_problems_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_problems_resolved_by_fkey"
+            columns: ["resolved_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]

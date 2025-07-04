@@ -124,7 +124,7 @@ export default function DoctorsList() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredDoctors.map((doctor) => {
                 const isOnline = onlineDoctors.some(onlineDoc => onlineDoc.doctor_id === doctor.id);
-                const hasNewPosts = posts.some(post => 
+                const hasPatientProblem = posts.some(post => 
                   post.doctor_id === doctor.id && 
                   new Date(post.created_at) > new Date(Date.now() - 24 * 60 * 60 * 1000)
                 );
@@ -134,7 +134,7 @@ export default function DoctorsList() {
                     key={doctor.id}
                     doctor={doctor}
                     isOnline={isOnline}
-                    hasNewPosts={hasNewPosts}
+                    hasPatientProblem={hasPatientProblem}
                   />
                 );
               })}
