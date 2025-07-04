@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -20,6 +19,7 @@ import Messages from "./pages/Messages";
 import Profile from "./pages/Profile";
 import BookAppointment from "./pages/BookAppointment";
 import NotFound from "./pages/NotFound";
+import DoctorProfile from "./pages/DoctorProfile";
 
 const queryClient = new QueryClient();
 
@@ -77,6 +77,14 @@ function AppContent() {
             element={
               <ProtectedRoute>
                 <Dashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/doctor-profile/:doctorId" 
+            element={
+              <ProtectedRoute>
+                <DoctorProfile />
               </ProtectedRoute>
             } 
           />

@@ -14,7 +14,6 @@ import {
   Activity,
   AlertCircle
 } from 'lucide-react';
-import { NotificationsList } from '@/components/NotificationsList';
 import { PatientProblemPost } from '@/components/PatientProblemPost';
 
 export default function Dashboard() {
@@ -85,10 +84,10 @@ export default function Dashboard() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                Karibu, {user?.user_metadata?.first_name || 'Mtumiaji'}
+                TeleMed Tanzania
               </h1>
               <p className="text-gray-600 dark:text-gray-300 text-sm">
-                {userRole === 'doctor' ? 'Unaweza kuona na kusaidia wagonjwa' : 'Unaweza kupata msaada wa kiafya'}
+                {userRole === 'doctor' ? 'Unaweza kusaidia wagonjwa' : 'Unaweza kupata msaada wa kiafya'}
               </p>
             </div>
             <div className="text-right">
@@ -128,49 +127,43 @@ export default function Dashboard() {
           <PatientProblemPost />
         )}
 
-        {/* Stats and Notifications Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Quick Stats */}
-          <Card className="dark:bg-gray-800 dark:border-gray-700">
-            <CardHeader>
-              <CardTitle className="text-gray-900 dark:text-gray-100">Takwimu za Haraka</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="text-center p-3">
-                  <Calendar className="w-8 h-8 text-emerald-600 dark:text-emerald-400 mx-auto mb-2" />
-                  <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats.appointments}</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">Miadi</p>
-                </div>
-                
-                <div className="text-center p-3">
-                  <Users className="w-8 h-8 text-blue-600 dark:text-blue-400 mx-auto mb-2" />
-                  <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                    {userRole === 'doctor' ? stats.patients : stats.doctors}
-                  </p>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">
-                    {userRole === 'doctor' ? 'Wagonjwa' : 'Madaktari'}
-                  </p>
-                </div>
-                
-                <div className="text-center p-3">
-                  <MessageCircle className="w-8 h-8 text-purple-600 dark:text-purple-400 mx-auto mb-2" />
-                  <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats.messages}</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">Ujumbe</p>
-                </div>
-                
-                <div className="text-center p-3">
-                  <Video className="w-8 h-8 text-red-600 dark:text-red-400 mx-auto mb-2" />
-                  <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">0</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">Video</p>
-                </div>
+        {/* Quick Stats */}
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
+          <CardHeader>
+            <CardTitle className="text-gray-900 dark:text-gray-100">Takwimu za Haraka</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="text-center p-3">
+                <Calendar className="w-8 h-8 text-emerald-600 dark:text-emerald-400 mx-auto mb-2" />
+                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats.appointments}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Miadi</p>
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Notifications */}
-          <NotificationsList />
-        </div>
+              
+              <div className="text-center p-3">
+                <Users className="w-8 h-8 text-blue-600 dark:text-blue-400 mx-auto mb-2" />
+                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                  {userRole === 'doctor' ? stats.patients : stats.doctors}
+                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">
+                  {userRole === 'doctor' ? 'Wagonjwa' : 'Madaktari'}
+                </p>
+              </div>
+              
+              <div className="text-center p-3">
+                <MessageCircle className="w-8 h-8 text-purple-600 dark:text-purple-400 mx-auto mb-2" />
+                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats.messages}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Ujumbe</p>
+              </div>
+              
+              <div className="text-center p-3">
+                <Video className="w-8 h-8 text-red-600 dark:text-red-400 mx-auto mb-2" />
+                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">0</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Video</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Doctor-specific: Patient Problems Alert */}
         {userRole === 'doctor' && (
