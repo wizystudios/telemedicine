@@ -9,11 +9,13 @@ import {
   Users, 
   MessageCircle, 
   Video, 
-  Activity,
   UserPlus,
   Stethoscope,
-  Clock
+  Activity,
+  AlertCircle
 } from 'lucide-react';
+import { NotificationsList } from '@/components/NotificationsList';
+import { PatientProblemPost } from '@/components/PatientProblemPost';
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -78,13 +80,15 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6">
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">TeleMed</h1>
-              <p className="text-gray-600 dark:text-gray-300 mt-1">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                 Karibu, {user?.user_metadata?.first_name || 'Mtumiaji'}
+              </h1>
+              <p className="text-gray-600 dark:text-gray-300 text-sm">
+                {userRole === 'doctor' ? 'Unaweza kuona na kusaidia wagonjwa' : 'Unaweza kupata msaada wa kiafya'}
               </p>
             </div>
             <div className="text-right">
@@ -96,99 +100,98 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto p-6 space-y-8">
+      <div className="max-w-4xl mx-auto p-4 space-y-6">
         {/* Main Actions Grid */}
         <Card className="dark:bg-gray-800 dark:border-gray-700">
           <CardHeader>
-            <CardTitle className="text-gray-900 dark:text-gray-100 text-xl">Vitendo Vikuu</CardTitle>
+            <CardTitle className="text-gray-900 dark:text-gray-100">Vitendo Vikuu</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {quickActions.map((action, index) => (
                 <Button
                   key={index}
                   variant="outline"
-                  className="h-24 flex flex-col items-center justify-center space-y-2 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700 hover:shadow-lg transition-all"
+                  className="h-20 flex flex-col items-center justify-center space-y-1 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700 hover:shadow-lg transition-all"
                   onClick={() => window.location.href = action.href}
                 >
-                  <action.icon className={`w-8 h-8 ${action.color}`} />
-                  <span className="text-sm font-medium text-center">{action.label}</span>
+                  <action.icon className={`w-6 h-6 ${action.color}`} />
+                  <span className="text-xs font-medium text-center">{action.label}</span>
                 </Button>
               ))}
             </div>
           </CardContent>
         </Card>
 
-        {/* Stats Overview */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card className="dark:bg-gray-800 dark:border-gray-700">
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-3">
-                <Calendar className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">Miadi</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats.appointments}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Patient Problem Posting - Only for Patients */}
+        {userRole === 'patient' && (
+          <PatientProblemPost />
+        )}
 
+        {/* Stats and Notifications Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Quick Stats */}
           <Card className="dark:bg-gray-800 dark:border-gray-700">
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-3">
-                <Users className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">
-                    {userRole === 'doctor' ? 'Wagonjwa' : 'Madaktari'}
-                  </p>
+            <CardHeader>
+              <CardTitle className="text-gray-900 dark:text-gray-100">Takwimu za Haraka</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center p-3">
+                  <Calendar className="w-8 h-8 text-emerald-600 dark:text-emerald-400 mx-auto mb-2" />
+                  <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats.appointments}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">Miadi</p>
+                </div>
+                
+                <div className="text-center p-3">
+                  <Users className="w-8 h-8 text-blue-600 dark:text-blue-400 mx-auto mb-2" />
                   <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                     {userRole === 'doctor' ? stats.patients : stats.doctors}
                   </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
+                    {userRole === 'doctor' ? 'Wagonjwa' : 'Madaktari'}
+                  </p>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="dark:bg-gray-800 dark:border-gray-700">
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-3">
-                <MessageCircle className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">Ujumbe</p>
+                
+                <div className="text-center p-3">
+                  <MessageCircle className="w-8 h-8 text-purple-600 dark:text-purple-400 mx-auto mb-2" />
                   <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats.messages}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">Ujumbe</p>
+                </div>
+                
+                <div className="text-center p-3">
+                  <Video className="w-8 h-8 text-red-600 dark:text-red-400 mx-auto mb-2" />
+                  <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">0</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">Video</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="dark:bg-gray-800 dark:border-gray-700">
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-3">
-                <Video className="w-6 h-6 text-red-600 dark:text-red-400" />
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">Video</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">0</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Notifications */}
+          <NotificationsList />
         </div>
 
-        {/* Recent Activity */}
-        <Card className="dark:bg-gray-800 dark:border-gray-700">
-          <CardHeader>
-            <CardTitle className="text-gray-900 dark:text-gray-100 flex items-center">
-              <Clock className="w-5 h-5 mr-2" />
-              Shughuli za Hivi Karibuni
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center py-8">
-              <Activity className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-3" />
-              <p className="text-gray-500 dark:text-gray-400">Hakuna shughuli za hivi karibuni</p>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Doctor-specific: Patient Problems Alert */}
+        {userRole === 'doctor' && (
+          <Card className="dark:bg-gray-800 dark:border-gray-700">
+            <CardHeader>
+              <CardTitle className="text-gray-900 dark:text-gray-100 flex items-center">
+                <AlertCircle className="w-5 h-5 mr-2 text-red-500" />
+                Wagonjwa Wanahitaji Msaada
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-6">
+                <AlertCircle className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-3" />
+                <p className="text-gray-500 dark:text-gray-400 mb-4">Hakuna matatizo ya wagonjwa kwa sasa</p>
+                <Button variant="outline" size="sm" onClick={() => window.location.href = '/patient-problems'}>
+                  Ona Matatizo Yote
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );

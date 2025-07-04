@@ -5,7 +5,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Bell, MessageCircle, Calendar, Phone, CheckCircle, Clock, UserPlus } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Bell, MessageCircle, Calendar, Phone, CheckCircle, Clock, UserPlus, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 
@@ -18,10 +19,17 @@ export function NotificationsList() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('notifications')
-        .select('*')
+        .select(`
+          *,
+          appointment:appointments(
+            id,
+            patient_profile:profiles!appointments_patient_id_fkey(first_name, last_name, avatar_url),
+            doctor_profile:profiles!appointments_doctor_id_fkey(first_name, last_name, avatar_url)
+          )
+        `)
         .eq('user_id', user?.id)
         .order('created_at', { ascending: false })
-        .limit(10);
+        .limit(15);
       
       if (error) throw error;
       return data || [];
@@ -47,6 +55,29 @@ export function NotificationsList() {
     }
   };
 
+  const handleNotificationClick = (notification: any) => {
+    markAsRead(notification.id);
+    
+    // Navigate based on notification type
+    switch (notification.type) {
+      case 'appointment':
+        window.location.href = '/appointments';
+        break;
+      case 'message':
+        window.location.href = '/messages';
+        break;
+      case 'call':
+        // Handle call notification
+        break;
+      case 'patient_problem':
+        // Navigate to patient problems view
+        window.location.href = `/patient-problems`;
+        break;
+      default:
+        break;
+    }
+  };
+
   const getIcon = (type: string) => {
     switch (type) {
       case 'message':
@@ -61,20 +92,10 @@ export function NotificationsList() {
         return <Clock className="w-4 h-4 text-orange-600" />;
       case 'registration':
         return <UserPlus className="w-4 h-4 text-indigo-600" />;
+      case 'patient_problem':
+        return <AlertCircle className="w-4 h-4 text-red-600" />;
       default:
         return <Bell className="w-4 h-4 text-gray-600" />;
-    }
-  };
-
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'message': return 'text-blue-600';
-      case 'appointment': return 'text-green-600';
-      case 'call': return 'text-purple-600';
-      case 'booking': return 'text-emerald-600';
-      case 'reminder': return 'text-orange-600';
-      case 'registration': return 'text-indigo-600';
-      default: return 'text-gray-600';
     }
   };
 
@@ -92,9 +113,6 @@ export function NotificationsList() {
             <Bell className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-600 dark:text-gray-300 text-center">
               Hakuna arifa bado
-            </p>
-            <p className="text-sm text-gray-500 mt-2">
-              Utapokea arifa kuhusu miadi, ujumbe, na shughuli nyingine hapa
             </p>
           </div>
         </CardContent>
@@ -119,11 +137,12 @@ export function NotificationsList() {
         {notifications.map((notification) => (
           <div
             key={notification.id}
-            className={`p-3 rounded-lg border transition-colors ${
+            className={`p-3 rounded-lg border cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-gray-700 ${
               !notification.is_read 
                 ? 'bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800' 
                 : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 opacity-75'
             }`}
+            onClick={() => handleNotificationClick(notification)}
           >
             <div className="flex items-start space-x-3">
               <div className="flex-shrink-0 mt-1">
@@ -138,35 +157,20 @@ export function NotificationsList() {
                     {!notification.is_read && (
                       <Badge variant="default" className="text-xs">Mpya</Badge>
                     )}
-                    {!notification.is_read && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => markAsRead(notification.id)}
-                        className="text-xs px-2 py-1 h-6"
-                      >
-                        Imesomwa
-                      </Button>
-                    )}
                   </div>
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
                   {notification.message}
                 </p>
-                <div className="flex items-center justify-between mt-2">
-                  <p className="text-xs text-gray-500">
-                    {format(new Date(notification.created_at), 'MMM dd, h:mm a')}
-                  </p>
-                  <span className={`text-xs font-medium ${getTypeColor(notification.type)}`}>
-                    {notification.type.charAt(0).toUpperCase() + notification.type.slice(1)}
-                  </span>
-                </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  {format(new Date(notification.created_at), 'MMM dd, h:mm a')}
+                </p>
               </div>
             </div>
           </div>
         ))}
         
-        {notifications.length >= 10 && (
+        {notifications.length >= 15 && (
           <div className="text-center pt-3 border-t">
             <Button variant="ghost" size="sm" className="text-xs">
               Ona arifa zote
