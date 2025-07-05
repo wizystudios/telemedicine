@@ -2,158 +2,149 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Search, Users, AlertCircle } from 'lucide-react';
-import { useState } from 'react';
 import { DoctorCard } from '@/components/DoctorCard';
-import { useOnlineStatus } from '@/hooks/useOnlineStatus';
-import { useDoctorPosts } from '@/hooks/useDoctorPosts';
-
-interface Doctor {
-  id: string;
-  first_name: string;
-  last_name: string;
-  avatar_url?: string;
-  role: string;
-  email: string;
-  phone?: string;
-  country?: string;
-  created_at: string;
-}
+import { Input } from '@/components/ui/input';
+import { Search } from 'lucide-react';
+import { useState } from 'react';
 
 export default function DoctorsList() {
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
-  const { onlineDoctors } = useOnlineStatus();
-  const { posts } = useDoctorPosts();
 
-  console.log('🔍 Current user:', user?.id, 'Role:', user?.user_metadata?.role);
-
-  // Fetch doctors from profiles table with proper RLS
-  const { data: allDoctors = [], isLoading, error } = useQuery({
-    queryKey: ['doctors-list'],
+  // Fetch doctors with their profiles
+  const { data: doctors = [], isLoading } = useQuery({
+    queryKey: ['doctors', searchTerm],
     queryFn: async () => {
-      console.log('🔍 Fetching doctors from profiles table...');
-      
-      const { data, error } = await supabase
+      let query = supabase
         .from('profiles')
-        .select('id, first_name, last_name, avatar_url, role, email, phone, country, created_at')
-        .eq('role', 'doctor')
-        .order('created_at', { ascending: false });
+        .select(`
+          *,
+          doctor_profiles(
+            specialization:specialties(name),
+            bio,
+            experience_years,
+            consultation_fee,
+            education,
+            languages
+          ),
+          doctor_online_status(is_online, last_seen)
+        `)
+        .eq('role', 'doctor');
+
+      if (searchTerm) {
+        query = query.or(`first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%`);
+      }
+
+      const { data, error } = await query;
       
       if (error) {
-        console.error('❌ Error fetching doctors:', error);
-        throw error;
+        console.error('Error fetching doctors:', error);
+        return [];
       }
-      
-      console.log('✅ Doctors fetched successfully:', data?.length || 0);
-      return data as Doctor[] || [];
+
+      return data?.map(doctor => ({
+        ...doctor,
+        specialization: doctor.doctor_profiles?.[0]?.specialization?.name || 'Mfanyakazi wa Afya',
+        bio: doctor.doctor_profiles?.[0]?.bio,
+        experience_years: doctor.doctor_profiles?.[0]?.experience_years,
+        consultation_fee: doctor.doctor_profiles?.[0]?.consultation_fee,
+        education: doctor.doctor_profiles?.[0]?.education,
+        languages: doctor.doctor_profiles?.[0]?.languages,
+        isOnline: doctor.doctor_online_status?.[0]?.is_online || false
+      })) || [];
     },
-    retry: 2,
-    retryDelay: 1000
+    enabled: !!user
   });
 
-  console.log('📊 Doctors state:', { allDoctors: allDoctors.length, isLoading, error: error?.message });
+  // Fetch patients with problems for doctors
+  const { data: patientsWithProblems = [] } = useQuery({
+    queryKey: ['patients-with-problems'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('patient_problems')
+        .select('patient_id')
+        .eq('status', 'open');
+      
+      if (error) {
+        console.error('Error fetching patient problems:', error);
+        return [];
+      }
+      
+      return data?.map(p => p.patient_id) || [];
+    },
+    enabled: !!user
+  });
 
-  const filteredDoctors = allDoctors.filter(doctor =>
-    `${doctor.first_name || ''} ${doctor.last_name || ''} ${doctor.email || ''}`
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase())
-  );
+  // Group doctors into rows of 20
+  const groupedDoctors = [];
+  for (let i = 0; i < doctors.length; i += 20) {
+    groupedDoctors.push(doctors.slice(i, i + 20));
+  }
 
   if (isLoading) {
     return (
-      <div className="h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto"></div>
-          <p className="mt-2 text-gray-600 dark:text-gray-300">Inapakia madaktari...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    console.error('🚨 Error in DoctorsList component:', error);
-    return (
-      <div className="h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
-        <div className="text-center">
-          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-            Hitilafu katika Kupakia Madaktari
-          </h3>
-          <p className="text-gray-600 dark:text-gray-300">
-            Imeshindwa kupakia madaktari: {error.message}
-          </p>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto"></div>
+            <p className="mt-2 text-gray-600 dark:text-gray-400">Inapakia madaktari...</p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="h-screen bg-gray-50 dark:bg-gray-900 flex flex-col overflow-hidden">
-      {/* Header */}
-      <div className="p-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-              Madaktari ({allDoctors.length})
-            </h1>
-            <Badge variant="secondary">
-              {onlineDoctors.length} Online
-            </Badge>
-          </div>
-
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <Input
-              placeholder="Tafuta madaktari kwa jina..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
+      <div className="max-w-6xl mx-auto p-4 space-y-6">
+        
+        {/* Header */}
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+            Madaktari
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400">
+            Chagua daktari unayemtaka
+          </p>
         </div>
-      </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto p-4 pb-20">
-        <div className="max-w-4xl mx-auto">
-          {filteredDoctors.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredDoctors.map((doctor) => {
-                const isOnline = onlineDoctors.some(onlineDoc => onlineDoc.doctor_id === doctor.id);
-                const hasPatientProblem = posts.some(post => 
-                  post.doctor_id === doctor.id && 
-                  new Date(post.created_at) > new Date(Date.now() - 24 * 60 * 60 * 1000)
-                );
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+          <Input
+            placeholder="Tafuta daktari..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
 
-                return (
+        {/* Doctors Grid */}
+        <div className="space-y-4">
+          {groupedDoctors.map((doctorRow, rowIndex) => (
+            <div key={rowIndex} className="overflow-x-auto">
+              <div className="flex space-x-4 min-w-max pb-2">
+                {doctorRow.map((doctor) => (
                   <DoctorCard
                     key={doctor.id}
                     doctor={doctor}
-                    isOnline={isOnline}
-                    hasPatientProblem={hasPatientProblem}
+                    isOnline={doctor.isOnline}
+                    hasPatientProblem={patientsWithProblems.includes(doctor.id)}
                   />
-                );
-              })}
+                ))}
+              </div>
             </div>
-          ) : (
-            <div className="text-center py-12">
-              <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                {searchTerm ? 'Hakuna madaktari waliopatikana' : 'Hakuna madaktari'}
-              </h3>
-              <p className="text-gray-600 dark:text-gray-300">
-                {searchTerm 
-                  ? 'Jaribu kubadilisha masharti ya utafutaji'
-                  : 'Hakuna madaktari waliosajiliwa bado.'
-                }
-              </p>
-            </div>
-          )}
+          ))}
         </div>
+
+        {doctors.length === 0 && (
+          <div className="text-center py-8">
+            <p className="text-gray-600 dark:text-gray-400">
+              {searchTerm ? 'Hakuna daktari aliyepatikana' : 'Hakuna madaktari kwa sasa'}
+            </p>
+          </div>
+        )}
+        
       </div>
     </div>
   );
