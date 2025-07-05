@@ -66,32 +66,7 @@ export default function DoctorProfile() {
   };
 
   const handleMessage = () => {
-    // Create a new appointment first, then navigate to messages
-    const createAppointmentAndMessage = async () => {
-      const { data: appointment, error } = await supabase
-        .from('appointments')
-        .insert({
-          doctor_id: doctorId,
-          patient_id: (await supabase.auth.getUser()).data.user?.id,
-          appointment_date: new Date().toISOString(),
-          consultation_type: 'chat',
-          status: 'pending'
-        })
-        .select()
-        .single();
-
-      if (!error && appointment) {
-        navigate(`/messages?appointment=${appointment.id}`);
-      } else {
-        toast({
-          title: 'Hitilafu',
-          description: 'Imeshindwa kuanzisha mazungumzo',
-          variant: 'destructive'
-        });
-      }
-    };
-    
-    createAppointmentAndMessage();
+    navigate(`/messages?doctor=${doctorId}`);
   };
 
   const handleBookAppointment = () => {

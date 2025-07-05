@@ -92,9 +92,9 @@ export default function BookAppointment() {
           patient_id: user.id,
           appointment_date: appointmentDateTimeISO,
           consultation_type: appointmentData.consultation_type,
-          symptoms: appointmentData.symptoms,
+          symptoms: appointmentData.symptoms || 'General consultation',
           notes: appointmentData.notes,
-          status: 'pending',
+          status: 'scheduled',
           fee: doctor?.doctor_profiles?.[0]?.consultation_fee || 0
         });
 

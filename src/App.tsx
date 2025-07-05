@@ -20,6 +20,7 @@ import Profile from "./pages/Profile";
 import BookAppointment from "./pages/BookAppointment";
 import NotFound from "./pages/NotFound";
 import DoctorProfile from "./pages/DoctorProfile";
+import PatientProfile from "./pages/PatientProfile";
 
 const queryClient = new QueryClient();
 
@@ -85,6 +86,14 @@ function AppContent() {
             element={
               <ProtectedRoute>
                 <DoctorProfile />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/patient-profile/:patientId" 
+            element={
+              <ProtectedRoute>
+                <PatientProfile />
               </ProtectedRoute>
             } 
           />
