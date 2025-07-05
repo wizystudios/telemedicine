@@ -49,6 +49,19 @@ export default function BookAppointment() {
     enabled: !!doctorId
   });
 
+  // Check for appointment conflicts
+  const checkAppointmentConflict = async (dateTime: string) => {
+    const { data, error } = await supabase
+      .from('appointments')
+      .select('id')
+      .eq('doctor_id', doctorId)
+      .eq('appointment_date', dateTime)
+      .neq('status', 'cancelled');
+
+    if (error) throw error;
+    return data && data.length > 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!doctorId || !user) return;
@@ -58,13 +71,26 @@ export default function BookAppointment() {
     try {
       // Combine date and time
       const appointmentDateTime = new Date(`${appointmentData.date}T${appointmentData.time}`);
+      const appointmentDateTimeISO = appointmentDateTime.toISOString();
+
+      // Check for conflicts
+      const hasConflict = await checkAppointmentConflict(appointmentDateTimeISO);
+      if (hasConflict) {
+        toast({
+          title: 'Muda Umechukuliwa',
+          description: 'Muda huu umeshachukuliwa. Tafadhali chagua muda mwingine.',
+          variant: 'destructive'
+        });
+        setIsSubmitting(false);
+        return;
+      }
 
       const { error } = await supabase
         .from('appointments')
         .insert({
           doctor_id: doctorId,
           patient_id: user.id,
-          appointment_date: appointmentDateTime.toISOString(),
+          appointment_date: appointmentDateTimeISO,
           consultation_type: appointmentData.consultation_type,
           symptoms: appointmentData.symptoms,
           notes: appointmentData.notes,
@@ -72,7 +98,10 @@ export default function BookAppointment() {
           fee: doctor?.doctor_profiles?.[0]?.consultation_fee || 0
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Appointment creation error:', error);
+        throw error;
+      }
 
       toast({
         title: 'Miadi Imepangwa',
@@ -81,6 +110,7 @@ export default function BookAppointment() {
 
       navigate('/appointments');
     } catch (error: any) {
+      console.error('Full error:', error);
       toast({
         title: 'Hitilafu',
         description: error.message || 'Imeshindwa kupanga miadi',

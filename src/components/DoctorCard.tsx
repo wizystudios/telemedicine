@@ -45,11 +45,12 @@ export function DoctorCard({ doctor, isOnline = false, hasPatientProblem = false
       
       <div className="flex flex-col items-center space-y-2">
         <div className="relative">
-          <Avatar className="w-16 h-16 ring-2 ring-emerald-200 dark:ring-emerald-800">
+          <Avatar className="w-16 h-16 ring-2 ring-emerald-200 dark:ring-emerald-800 border-2 border-white dark:border-gray-800">
             {doctor.avatar_url ? (
               <AvatarImage 
                 src={doctor.avatar_url} 
                 alt={displayName}
+                className="object-cover w-full h-full rounded-full"
               />
             ) : null}
             <AvatarFallback className="text-sm bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200">

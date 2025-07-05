@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useRef } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -14,7 +14,8 @@ import { format } from 'date-fns';
 
 export default function Messages() {
   const [searchParams] = useSearchParams();
-  const appointmentId = searchParams.get('appointment');
+  const navigate = useNavigate();
+  const doctorId = searchParams.get('doctor');
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -23,54 +24,100 @@ export default function Messages() {
   const [message, setMessage] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-  // Fetch appointment details
-  const { data: appointment } = useQuery({
-    queryKey: ['appointment', appointmentId],
+  // Create or get appointment for messaging
+  const { data: appointment, isLoading: appointmentLoading } = useQuery({
+    queryKey: ['messaging-appointment', doctorId],
     queryFn: async () => {
-      if (!appointmentId) return null;
-      const { data, error } = await supabase
+      if (!doctorId || !user) return null;
+      
+      // Check if there's an existing appointment for messaging
+      let { data: existingAppointment } = await supabase
         .from('appointments')
         .select(`
           *,
           patient:profiles!appointments_patient_id_fkey(first_name, last_name, avatar_url),
           doctor:profiles!appointments_doctor_id_fkey(first_name, last_name, avatar_url)
         `)
-        .eq('id', appointmentId)
+        .eq('patient_id', user.id)
+        .eq('doctor_id', doctorId)
+        .order('created_at', { ascending: false })
+        .limit(1)
         .single();
 
-      if (error) throw error;
-      return data;
+      // If no appointment exists, create one for messaging
+      if (!existingAppointment) {
+        const { data: newAppointment, error: createError } = await supabase
+          .from('appointments')
+          .insert({
+            patient_id: user.id,
+            doctor_id: doctorId,
+            appointment_date: new Date().toISOString(),
+            consultation_type: 'chat',
+            status: 'pending',
+            symptoms: 'Chat consultation'
+          })
+          .select(`
+            *,
+            patient:profiles!appointments_patient_id_fkey(first_name, last_name, avatar_url),
+            doctor:profiles!appointments_doctor_id_fkey(first_name, last_name, avatar_url)
+          `)
+          .single();
+
+        if (createError) {
+          console.error('Error creating appointment for chat:', createError);
+          throw createError;
+        }
+        
+        existingAppointment = newAppointment;
+      } else {
+        // Get the appointment with profile details
+        const { data: fullAppointment } = await supabase
+          .from('appointments')
+          .select(`
+            *,
+            patient:profiles!appointments_patient_id_fkey(first_name, last_name, avatar_url),
+            doctor:profiles!appointments_doctor_id_fkey(first_name, last_name, avatar_url)
+          `)
+          .eq('id', existingAppointment.id)
+          .single();
+        
+        existingAppointment = fullAppointment;
+      }
+
+      return existingAppointment;
     },
-    enabled: !!appointmentId
+    enabled: !!doctorId && !!user
   });
 
   // Fetch messages
   const { data: messages = [] } = useQuery({
-    queryKey: ['messages', appointmentId],
+    queryKey: ['messages', appointment?.id],
     queryFn: async () => {
-      if (!appointmentId) return [];
+      if (!appointment?.id) return [];
       const { data, error } = await supabase
         .from('chat_messages')
         .select(`
           *,
           sender:profiles(first_name, last_name, avatar_url)
         `)
-        .eq('appointment_id', appointmentId)
+        .eq('appointment_id', appointment.id)
         .order('created_at', { ascending: true });
 
       if (error) throw error;
       return data;
     },
-    enabled: !!appointmentId
+    enabled: !!appointment?.id
   });
 
   // Send message mutation
   const sendMessageMutation = useMutation({
     mutationFn: async ({ message, fileUrl }: { message: string; fileUrl?: string }) => {
+      if (!appointment?.id) throw new Error('No appointment found');
+      
       const { error } = await supabase
         .from('chat_messages')
         .insert({
-          appointment_id: appointmentId,
+          appointment_id: appointment.id,
           sender_id: user!.id,
           message,
           file_url: fileUrl,
@@ -80,7 +127,7 @@ export default function Messages() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['messages', appointmentId] });
+      queryClient.invalidateQueries({ queryKey: ['messages', appointment?.id] });
       setMessage('');
       setSelectedFile(null);
     },
@@ -99,12 +146,8 @@ export default function Messages() {
     let fileUrl = '';
     
     if (selectedFile) {
-      // Upload file to Supabase storage (you'll need to set up storage bucket)
-      const fileExt = selectedFile.name.split('.').pop();
-      const fileName = `${Date.now()}.${fileExt}`;
-      
       // For now, we'll just use a placeholder URL
-      fileUrl = `https://placeholder.com/files/${fileName}`;
+      fileUrl = `https://placeholder.com/files/${selectedFile.name}`;
       
       toast({
         title: 'Faili Imepakiwa',
@@ -129,20 +172,20 @@ export default function Messages() {
 
   // Real-time subscription
   useEffect(() => {
-    if (!appointmentId) return;
+    if (!appointment?.id) return;
 
     const channel = supabase
-      .channel(`messages:${appointmentId}`)
+      .channel(`messages:${appointment.id}`)
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
           table: 'chat_messages',
-          filter: `appointment_id=eq.${appointmentId}`
+          filter: `appointment_id=eq.${appointment.id}`
         },
         () => {
-          queryClient.invalidateQueries({ queryKey: ['messages', appointmentId] });
+          queryClient.invalidateQueries({ queryKey: ['messages', appointment.id] });
         }
       )
       .subscribe();
@@ -150,19 +193,27 @@ export default function Messages() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [appointmentId, queryClient]);
+  }, [appointment?.id, queryClient]);
 
-  if (!appointmentId || !appointment) {
+  if (appointmentLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto"></div>
+          <p className="mt-2 text-gray-600 dark:text-gray-300">Inaanzisha mazungumzo...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!doctorId || !appointment) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
-            Hakuna mazungumzo bado
+            Hitilafu katika kuanzisha mazungumzo
           </h3>
-          <p className="text-gray-600 dark:text-gray-300 mb-4">
-            Anza mazungumzo kwa kupanga miadi
-          </p>
-          <Button onClick={() => window.location.href = '/doctors-list'}>
+          <Button onClick={() => navigate('/doctors-list')}>
             Chagua Daktari
           </Button>
         </div>
@@ -179,7 +230,7 @@ export default function Messages() {
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="sm" onClick={() => window.history.back()}>
+            <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
               <ArrowLeft className="w-4 h-4" />
             </Button>
             <Avatar className="w-10 h-10">
