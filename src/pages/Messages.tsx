@@ -44,6 +44,23 @@ export default function Messages() {
     enabled: !!otherUserId
   });
 
+  // Get current user profile for notifications
+  const { data: currentUserProfile } = useQuery({
+    queryKey: ['current-user-profile', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id
+  });
+
   // Create or get conversation
   const { data: conversation, isLoading: conversationLoading } = useQuery({
     queryKey: ['conversation', otherUserId],
@@ -126,14 +143,16 @@ export default function Messages() {
       if (error) throw error;
 
       // Create notification for the other user
-      await supabase
-        .from('notifications')
-        .insert({
-          user_id: otherUserId,
-          type: 'message',
-          title: 'Ujumbe Mpya',
-          message: `Umepokea ujumbe kutoka ${user?.first_name} ${user?.last_name}`,
-        });
+      if (currentUserProfile) {
+        await supabase
+          .from('notifications')
+          .insert({
+            user_id: otherUserId,
+            type: 'message',
+            title: 'Ujumbe Mpya',
+            message: `Umepokea ujumbe kutoka ${currentUserProfile.first_name} ${currentUserProfile.last_name}`,
+          });
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['messages', conversation?.id] });
