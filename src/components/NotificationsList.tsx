@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Bell, MessageCircle, Calendar, Phone, CheckCircle, Clock, UserPlus, AlertCircle } from 'lucide-react';
+import { Bell, MessageCircle, Calendar, Phone, CheckCircle, Clock, UserPlus, AlertCircle, X, CheckCheck } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 
@@ -50,6 +50,53 @@ export function NotificationsList() {
       toast({
         title: 'Hitilafu',
         description: 'Imeshindwa kuweka arifa kama imesomwa',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const markAllAsRead = async () => {
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ is_read: true })
+        .eq('user_id', user?.id)
+        .eq('is_read', false);
+
+      if (error) throw error;
+      refetch();
+      toast({
+        title: 'Imefanikiwa',
+        description: 'Arifa zote zimewekwa kama zimesomwa',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Hitilafu',
+        description: 'Imeshindwa kuweka arifa kama zimesomwa',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const deleteNotification = async (notificationId: string, event: React.MouseEvent) => {
+    event.stopPropagation();
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .delete()
+        .eq('id', notificationId)
+        .eq('user_id', user?.id);
+
+      if (error) throw error;
+      refetch();
+      toast({
+        title: 'Imefanikiwa',
+        description: 'Arifa imefutwa',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Hitilafu',
+        description: 'Imeshindwa kufuta arifa',
         variant: 'destructive'
       });
     }
@@ -128,9 +175,22 @@ export function NotificationsList() {
             <Bell className="w-5 h-5" />
             <span>Arifa</span>
           </div>
-          <Badge variant="secondary">
-            {notifications.filter(n => !n.is_read).length} mpya
-          </Badge>
+          <div className="flex items-center space-x-2">
+            <Badge variant="secondary">
+              {notifications.filter(n => !n.is_read).length} mpya
+            </Badge>
+            {notifications.filter(n => !n.is_read).length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={markAllAsRead}
+                className="text-xs"
+              >
+                <CheckCheck className="w-3 h-3 mr-1" />
+                Soma zote
+              </Button>
+            )}
+          </div>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3 max-h-96 overflow-y-auto">
@@ -157,6 +217,14 @@ export function NotificationsList() {
                     {!notification.is_read && (
                       <Badge variant="default" className="text-xs">Mpya</Badge>
                     )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => deleteNotification(notification.id, e)}
+                      className="h-6 w-6 p-0 hover:bg-red-100 hover:text-red-600"
+                    >
+                      <X className="w-3 h-3" />
+                    </Button>
                   </div>
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">

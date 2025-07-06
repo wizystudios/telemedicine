@@ -39,8 +39,8 @@ export function AppointmentNotificationHandler() {
             description: `${patient?.first_name} ${patient?.last_name} ameomba miadi`,
           });
 
-          // Create notification
-          await supabase
+          // Create notification for doctor
+          const { error: doctorNotificationError } = await supabase
             .from('notifications')
             .insert({
               user_id: user.id,
@@ -49,6 +49,25 @@ export function AppointmentNotificationHandler() {
               message: `${patient?.first_name} ${patient?.last_name} ameomba miadi`,
               appointment_id: payload.new.id
             });
+
+          if (doctorNotificationError) {
+            console.error('Failed to create doctor notification:', doctorNotificationError);
+          }
+
+          // Create confirmation notification for patient
+          const { error: patientNotificationError } = await supabase
+            .from('notifications')
+            .insert({
+              user_id: payload.new.patient_id,
+              type: 'appointment',
+              title: 'Ombi la Miadi Limetumwa',
+              message: 'Ombi lako la miadi limetumwa. Subiri jibu la daktari.',
+              appointment_id: payload.new.id
+            });
+
+          if (patientNotificationError) {
+            console.error('Failed to create patient notification:', patientNotificationError);
+          }
 
           queryClient.invalidateQueries({ queryKey: ['appointments'] });
           queryClient.invalidateQueries({ queryKey: ['notifications'] });

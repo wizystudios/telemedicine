@@ -25,6 +25,7 @@ export type Database = {
           prescription: string | null
           specialty_id: string | null
           status: string | null
+          suggested_time: string | null
           symptoms: string | null
           updated_at: string | null
         }
@@ -43,6 +44,7 @@ export type Database = {
           prescription?: string | null
           specialty_id?: string | null
           status?: string | null
+          suggested_time?: string | null
           symptoms?: string | null
           updated_at?: string | null
         }
@@ -61,6 +63,7 @@ export type Database = {
           prescription?: string | null
           specialty_id?: string | null
           status?: string | null
+          suggested_time?: string | null
           symptoms?: string | null
           updated_at?: string | null
         }

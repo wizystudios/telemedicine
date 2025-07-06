@@ -56,7 +56,7 @@ export function AppointmentApprovalDialog({
         message += `. Muda uliependekezwa: ${format(new Date(suggestedDateTime), 'dd/MM/yyyy HH:mm')}`;
       }
 
-      await supabase
+      const { error: notificationError } = await supabase
         .from('notifications')
         .insert({
           user_id: appointment.patient_id,
@@ -65,6 +65,10 @@ export function AppointmentApprovalDialog({
           message,
           appointment_id: appointment.id
         });
+
+      if (notificationError) {
+        console.error('Failed to create notification:', notificationError);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
