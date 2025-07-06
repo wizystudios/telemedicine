@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,6 +10,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { WelcomePages } from "@/components/welcome/WelcomePages";
+import { AppointmentNotificationHandler } from "@/components/AppointmentNotificationHandler";
 import { useState, useEffect } from "react";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -67,6 +69,7 @@ function AppContent() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
       {user && <Navbar />}
+      {user && <AppointmentNotificationHandler />}
       <main className={user ? "min-h-[calc(100vh-64px)]" : "min-h-screen"}>
         <Routes>
           <Route path="/auth" element={user ? <Navigate to="/dashboard" replace /> : <Auth />} />

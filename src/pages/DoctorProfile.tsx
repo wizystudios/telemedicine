@@ -122,9 +122,9 @@ export default function DoctorProfile() {
           <CardContent className="p-6">
             <div className="flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-6">
               <Avatar className="w-32 h-32 ring-4 ring-emerald-200 dark:ring-emerald-800">
-                <AvatarImage src={doctor.avatar_url} alt={displayName} />
+                <AvatarImage src={doctor?.avatar_url} alt={displayName} />
                 <AvatarFallback className="text-2xl bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200">
-                  {doctor.first_name?.[0]}{doctor.last_name?.[0]}
+                  {doctor?.first_name?.[0]}{doctor?.last_name?.[0]}
                 </AvatarFallback>
               </Avatar>
               
@@ -166,9 +166,9 @@ export default function DoctorProfile() {
           <CardContent className="space-y-4">
             <div className="flex items-center space-x-3">
               <Mail className="w-5 h-5 text-gray-500" />
-              <span>{doctor.email}</span>
+              <span>{doctor?.email}</span>
             </div>
-            {doctor.phone && (
+            {doctor?.phone && (
               <div className="flex items-center space-x-3">
                 <Phone className="w-5 h-5 text-gray-500" />
                 <span>{doctor.phone}</span>
@@ -176,7 +176,7 @@ export default function DoctorProfile() {
             )}
             <div className="flex items-center space-x-3">
               <MapPin className="w-5 h-5 text-gray-500" />
-              <span>{doctor.country || 'Tanzania'}</span>
+              <span>{doctor?.country || 'Tanzania'}</span>
             </div>
             {doctorProfile?.experience_years && (
               <div className="flex items-center space-x-3">
@@ -197,7 +197,7 @@ export default function DoctorProfile() {
         {(doctorProfile?.bio || doctorProfile?.education) && (
           <Card>
             <CardHeader>
-              <CardTitle>Maelezo ya Kitaaluma</CardTitle>
+              <CardTitle>Maelezo ya Kitaalamu</CardTitle>
             </CardHeader>
             <CardContent>
               {doctorProfile?.bio && (

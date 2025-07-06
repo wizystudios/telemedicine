@@ -16,6 +16,7 @@ export default function Messages() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const doctorId = searchParams.get('doctor');
+  const patientId = searchParams.get('patient');
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -24,100 +25,98 @@ export default function Messages() {
   const [message, setMessage] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-  // Create or get appointment for messaging
-  const { data: appointment, isLoading: appointmentLoading } = useQuery({
-    queryKey: ['messaging-appointment', doctorId],
+  const otherUserId = doctorId || patientId;
+
+  // Get other user details
+  const { data: otherUser } = useQuery({
+    queryKey: ['user-profile', otherUserId],
     queryFn: async () => {
-      if (!doctorId || !user) return null;
+      if (!otherUserId) return null;
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', otherUserId)
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!otherUserId
+  });
+
+  // Create or get conversation
+  const { data: conversation, isLoading: conversationLoading } = useQuery({
+    queryKey: ['conversation', otherUserId],
+    queryFn: async () => {
+      if (!otherUserId || !user) return null;
       
-      // Check if there's an existing appointment for messaging
+      // Try to find existing appointment between users
       let { data: existingAppointment } = await supabase
         .from('appointments')
-        .select(`
-          *,
-          patient:profiles!appointments_patient_id_fkey(first_name, last_name, avatar_url),
-          doctor:profiles!appointments_doctor_id_fkey(first_name, last_name, avatar_url)
-        `)
-        .eq('patient_id', user.id)
-        .eq('doctor_id', doctorId)
+        .select('*')
+        .or(`and(patient_id.eq.${user.id},doctor_id.eq.${otherUserId}),and(patient_id.eq.${otherUserId},doctor_id.eq.${user.id})`)
         .order('created_at', { ascending: false })
         .limit(1)
         .single();
 
       // If no appointment exists, create one for messaging
       if (!existingAppointment) {
+        const isUserDoctor = user.id === doctorId;
         const { data: newAppointment, error: createError } = await supabase
           .from('appointments')
           .insert({
-            patient_id: user.id,
-            doctor_id: doctorId,
+            patient_id: isUserDoctor ? otherUserId : user.id,
+            doctor_id: isUserDoctor ? user.id : otherUserId,
             appointment_date: new Date().toISOString(),
             consultation_type: 'chat',
-            status: 'pending',
+            status: 'approved',
             symptoms: 'Chat consultation'
           })
-          .select(`
-            *,
-            patient:profiles!appointments_patient_id_fkey(first_name, last_name, avatar_url),
-            doctor:profiles!appointments_doctor_id_fkey(first_name, last_name, avatar_url)
-          `)
+          .select('*')
           .single();
 
         if (createError) {
-          console.error('Error creating appointment for chat:', createError);
+          console.error('Error creating chat appointment:', createError);
           throw createError;
         }
         
         existingAppointment = newAppointment;
-      } else {
-        // Get the appointment with profile details
-        const { data: fullAppointment } = await supabase
-          .from('appointments')
-          .select(`
-            *,
-            patient:profiles!appointments_patient_id_fkey(first_name, last_name, avatar_url),
-            doctor:profiles!appointments_doctor_id_fkey(first_name, last_name, avatar_url)
-          `)
-          .eq('id', existingAppointment.id)
-          .single();
-        
-        existingAppointment = fullAppointment;
       }
 
       return existingAppointment;
     },
-    enabled: !!doctorId && !!user
+    enabled: !!otherUserId && !!user
   });
 
   // Fetch messages
   const { data: messages = [] } = useQuery({
-    queryKey: ['messages', appointment?.id],
+    queryKey: ['messages', conversation?.id],
     queryFn: async () => {
-      if (!appointment?.id) return [];
+      if (!conversation?.id) return [];
       const { data, error } = await supabase
         .from('chat_messages')
         .select(`
           *,
           sender:profiles(first_name, last_name, avatar_url)
         `)
-        .eq('appointment_id', appointment.id)
+        .eq('appointment_id', conversation.id)
         .order('created_at', { ascending: true });
 
       if (error) throw error;
       return data;
     },
-    enabled: !!appointment?.id
+    enabled: !!conversation?.id
   });
 
   // Send message mutation
   const sendMessageMutation = useMutation({
     mutationFn: async ({ message, fileUrl }: { message: string; fileUrl?: string }) => {
-      if (!appointment?.id) throw new Error('No appointment found');
+      if (!conversation?.id) throw new Error('No conversation found');
       
       const { error } = await supabase
         .from('chat_messages')
         .insert({
-          appointment_id: appointment.id,
+          appointment_id: conversation.id,
           sender_id: user!.id,
           message,
           file_url: fileUrl,
@@ -125,13 +124,24 @@ export default function Messages() {
         });
 
       if (error) throw error;
+
+      // Create notification for the other user
+      await supabase
+        .from('notifications')
+        .insert({
+          user_id: otherUserId,
+          type: 'message',
+          title: 'Ujumbe Mpya',
+          message: `Umepokea ujumbe kutoka ${user?.first_name} ${user?.last_name}`,
+        });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['messages', appointment?.id] });
+      queryClient.invalidateQueries({ queryKey: ['messages', conversation?.id] });
       setMessage('');
       setSelectedFile(null);
     },
     onError: (error: any) => {
+      console.error('Send message error:', error);
       toast({
         title: 'Hitilafu',
         description: error.message || 'Imeshindwa kutuma ujumbe',
@@ -146,7 +156,6 @@ export default function Messages() {
     let fileUrl = '';
     
     if (selectedFile) {
-      // For now, we'll just use a placeholder URL
       fileUrl = `https://placeholder.com/files/${selectedFile.name}`;
       
       toast({
@@ -172,20 +181,20 @@ export default function Messages() {
 
   // Real-time subscription
   useEffect(() => {
-    if (!appointment?.id) return;
+    if (!conversation?.id) return;
 
     const channel = supabase
-      .channel(`messages:${appointment.id}`)
+      .channel(`messages:${conversation.id}`)
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
           table: 'chat_messages',
-          filter: `appointment_id=eq.${appointment.id}`
+          filter: `appointment_id=eq.${conversation.id}`
         },
         () => {
-          queryClient.invalidateQueries({ queryKey: ['messages', appointment.id] });
+          queryClient.invalidateQueries({ queryKey: ['messages', conversation.id] });
         }
       )
       .subscribe();
@@ -193,9 +202,9 @@ export default function Messages() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [appointment?.id, queryClient]);
+  }, [conversation?.id, queryClient]);
 
-  if (appointmentLoading) {
+  if (conversationLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
@@ -206,22 +215,21 @@ export default function Messages() {
     );
   }
 
-  if (!doctorId || !appointment) {
+  if (!otherUserId || !otherUser) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
-            Hitilafu katika kuanzisha mazungumzo
+            Mtumiaji hajapatikana
           </h3>
-          <Button onClick={() => navigate('/doctors-list')}>
-            Chagua Daktari
+          <Button onClick={() => navigate(-1)}>
+            Rudi Nyuma
           </Button>
         </div>
       </div>
     );
   }
 
-  const otherUser = user?.id === appointment.patient_id ? appointment.doctor : appointment.patient;
   const otherUserName = `${otherUser?.first_name || ''} ${otherUser?.last_name || ''}`.trim();
 
   return (
@@ -241,7 +249,7 @@ export default function Messages() {
             </Avatar>
             <div>
               <h2 className="font-semibold text-gray-900 dark:text-white">
-                {otherUserName}
+                {otherUser.role === 'doctor' ? 'Dkt. ' : ''}{otherUserName}
               </h2>
               <p className="text-sm text-gray-500">Online</p>
             </div>

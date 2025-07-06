@@ -1,4 +1,5 @@
 
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -12,14 +13,19 @@ import {
   Video, 
   Phone, 
   MessageCircle,
-  MapPin
+  MapPin,
+  CheckCircle,
+  XCircle
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
+import { AppointmentApprovalDialog } from '@/components/AppointmentApprovalDialog';
 
 export default function Appointments() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
+  const [showApprovalDialog, setShowApprovalDialog] = useState(false);
 
   const { data: appointments = [], isLoading } = useQuery({
     queryKey: ['appointments', user?.id],
@@ -49,13 +55,34 @@ export default function Appointments() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'scheduled':
-        return 'bg-blue-100 text-blue-800';
-      case 'completed':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'approved':
         return 'bg-green-100 text-green-800';
-      case 'cancelled':
+      case 'rejected':
         return 'bg-red-100 text-red-800';
+      case 'completed':
+        return 'bg-blue-100 text-blue-800';
+      case 'cancelled':
+        return 'bg-gray-100 text-gray-800';
       default:
         return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'scheduled':
+        return 'Inasubiri';
+      case 'approved':
+        return 'Imekubaliwa';
+      case 'rejected':
+        return 'Imekataliwa';
+      case 'completed':
+        return 'Imekamilika';
+      case 'cancelled':
+        return 'Imeghairiwa';
+      default:
+        return status;
     }
   };
 
@@ -73,6 +100,13 @@ export default function Appointments() {
         return <Video className="w-4 h-4" />;
     }
   };
+
+  const handleApprovalClick = (appointment: any) => {
+    setSelectedAppointment(appointment);
+    setShowApprovalDialog(true);
+  };
+
+  const isDoctor = user?.id && appointments.some(apt => apt.doctor_id === user.id);
 
   if (isLoading) {
     return (
@@ -98,12 +132,14 @@ export default function Appointments() {
               Miadi
             </h1>
           </div>
-          <Button 
-            onClick={() => navigate('/doctors-list')}
-            className="bg-emerald-600 hover:bg-emerald-700"
-          >
-            Panga Miadi
-          </Button>
+          {!isDoctor && (
+            <Button 
+              onClick={() => navigate('/doctors-list')}
+              className="bg-emerald-600 hover:bg-emerald-700"
+            >
+              Panga Miadi
+            </Button>
+          )}
         </div>
 
         {/* Appointments List */}
@@ -129,9 +165,7 @@ export default function Appointments() {
                             {isPatient ? 'Dkt.' : ''} {otherUser?.first_name} {otherUser?.last_name}
                           </h3>
                           <Badge className={getStatusColor(appointment.status)}>
-                            {appointment.status === 'scheduled' ? 'Imepangwa' : 
-                             appointment.status === 'completed' ? 'Imekamilika' : 
-                             appointment.status === 'cancelled' ? 'Imeghairiwa' : appointment.status}
+                            {getStatusText(appointment.status)}
                           </Badge>
                         </div>
                         
@@ -155,16 +189,37 @@ export default function Appointments() {
                             <strong>Matatizo:</strong> {appointment.symptoms}
                           </p>
                         )}
+
+                        {appointment.notes && (
+                          <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">
+                            <strong>Maelezo:</strong> {appointment.notes}
+                          </p>
+                        )}
                       </div>
                     </div>
                     
                     <div className="flex flex-col space-y-2">
-                      {appointment.status === 'scheduled' && (
+                      {/* Doctor actions for pending appointments */}
+                      {!isPatient && appointment.status === 'scheduled' && (
+                        <div className="flex space-x-2">
+                          <Button 
+                            size="sm" 
+                            onClick={() => handleApprovalClick(appointment)}
+                            className="bg-emerald-600 hover:bg-emerald-700"
+                          >
+                            <CheckCircle className="w-4 h-4 mr-1" />
+                            Jibu
+                          </Button>
+                        </div>
+                      )}
+
+                      {/* Common actions for approved appointments */}
+                      {appointment.status === 'approved' && (
                         <>
                           <Button 
                             size="sm" 
                             variant="outline"
-                            onClick={() => navigate(`/messages?appointment=${appointment.id}`)}
+                            onClick={() => navigate(`/messages?doctor=${isPatient ? appointment.doctor_id : appointment.patient_id}`)}
                           >
                             Ujumbe
                           </Button>
@@ -190,18 +245,30 @@ export default function Appointments() {
               Hakuna miadi bado
             </h3>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
-              Panga miadi yako ya kwanza na daktari
+              {isDoctor ? 'Miadi zitaonekana hapa baada ya wagonjwa kupanga' : 'Panga miadi yako ya kwanza na daktari'}
             </p>
-            <Button 
-              onClick={() => navigate('/doctors-list')}
-              className="bg-emerald-600 hover:bg-emerald-700"
-            >
-              Tafuta Daktari
-            </Button>
+            {!isDoctor && (
+              <Button 
+                onClick={() => navigate('/doctors-list')}
+                className="bg-emerald-600 hover:bg-emerald-700"
+              >
+                Tafuta Daktari
+              </Button>
+            )}
           </div>
         )}
         
       </div>
+
+      {/* Approval Dialog */}
+      <AppointmentApprovalDialog
+        appointment={selectedAppointment}
+        isOpen={showApprovalDialog}
+        onClose={() => {
+          setShowApprovalDialog(false);
+          setSelectedAppointment(null);
+        }}
+      />
     </div>
   );
 }
