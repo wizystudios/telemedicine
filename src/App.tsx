@@ -8,10 +8,13 @@ import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { Navbar } from "@/components/layout/Navbar";
 import { BottomNav } from "@/components/layout/BottomNav";
+import { Sidebar } from "@/components/layout/Sidebar";
+import { NotificationSidebar } from "@/components/layout/NotificationSidebar";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { WelcomePages } from "@/components/welcome/WelcomePages";
 import { AppointmentNotificationHandler } from "@/components/AppointmentNotificationHandler";
 import { useState, useEffect } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import DoctorsList from "./pages/DoctorsList";
@@ -42,7 +45,10 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 function AppContent() {
   const { user, loading } = useAuth();
+  const isMobile = useIsMobile();
   const [showWelcome, setShowWelcome] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
   
   useEffect(() => {
     // Check if user has seen welcome pages before
@@ -51,6 +57,18 @@ function AppContent() {
       setShowWelcome(true);
     }
   }, [user]);
+
+  useEffect(() => {
+    // Listen for notification toggle event
+    const handleToggleNotifications = () => {
+      setShowNotifications(!showNotifications);
+    };
+
+    window.addEventListener('toggleNotifications', handleToggleNotifications);
+    return () => {
+      window.removeEventListener('toggleNotifications', handleToggleNotifications);
+    };
+  }, [showNotifications]);
 
   const handleWelcomeComplete = () => {
     localStorage.setItem('hasSeenWelcome', 'true');
@@ -70,8 +88,18 @@ function AppContent() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
       {user && <Navbar />}
       {user && <AppointmentNotificationHandler />}
-      <main className={user ? "min-h-[calc(100vh-64px)]" : "min-h-screen"}>
-        <Routes>
+      
+      <div className="flex">
+        {/* Desktop Sidebar */}
+        {user && !isMobile && (
+          <div className="flex-shrink-0">
+            <Sidebar isCollapsed={sidebarCollapsed} />
+          </div>
+        )}
+        
+        {/* Main Content */}
+        <main className={`flex-1 ${user ? (isMobile ? "min-h-[calc(100vh-64px)]" : "min-h-[calc(100vh-64px)]") : "min-h-screen"}`}>
+          <Routes>
           <Route path="/auth" element={user ? <Navigate to="/dashboard" replace /> : <Auth />} />
           <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Navigate to="/auth" replace />} />
           
@@ -161,7 +189,18 @@ function AppContent() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
-      {user && <BottomNav />}
+      
+      {/* Mobile Bottom Navigation */}
+      {user && isMobile && <BottomNav />}
+      
+      {/* Notification Sidebar */}
+      {user && (
+        <NotificationSidebar 
+          isOpen={showNotifications} 
+          onClose={() => setShowNotifications(false)} 
+        />
+      )}
+    </div>
     </div>
   );
 }

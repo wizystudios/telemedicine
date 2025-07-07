@@ -316,13 +316,16 @@ export default function Messages() {
             <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
               <ArrowLeft className="w-4 h-4" />
             </Button>
-            <Avatar className="w-10 h-10">
-              <AvatarImage src={otherUser?.avatar_url} alt={otherUserName} />
-              <AvatarFallback>
-                {otherUser?.first_name?.[0]}{otherUser?.last_name?.[0]}
-              </AvatarFallback>
-            </Avatar>
-            <div>
+            <div className="relative">
+              <Avatar className="w-10 h-10">
+                <AvatarImage src={otherUser?.avatar_url} alt={otherUserName} />
+                <AvatarFallback>
+                  {otherUser?.first_name?.[0]}{otherUser?.last_name?.[0]}
+                </AvatarFallback>
+              </Avatar>
+              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
+            </div>
+            <div className="hidden md:block">
               <h2 className="font-semibold text-gray-900 dark:text-white">
                 {otherUser.role === 'doctor' ? 'Dkt. ' : ''}{otherUserName}
               </h2>
@@ -370,9 +373,20 @@ export default function Messages() {
                     </div>
                   )}
                   {!msg.file_url && <p>{msg.message}</p>}
-                  <p className={`text-xs mt-1 ${isMe ? 'text-emerald-100' : 'text-gray-500'}`}>
-                    {format(new Date(msg.created_at), 'HH:mm')}
-                  </p>
+                  <div className={`flex items-center justify-between mt-1 ${isMe ? 'text-emerald-100' : 'text-gray-500'}`}>
+                    <p className="text-xs">
+                      {format(new Date(msg.created_at), 'HH:mm')}
+                    </p>
+                    {isMe && (
+                      <div className="flex items-center space-x-1 text-xs">
+                        {msg.is_read ? (
+                          <span className="text-green-400">✓✓</span>
+                        ) : (
+                          <span className="text-gray-400">✓</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             );
@@ -382,7 +396,7 @@ export default function Messages() {
       </div>
 
       {/* Message Input */}
-      <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 flex-shrink-0">
+      <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 flex-shrink-0 pb-20 md:pb-4">
         <div className="max-w-4xl mx-auto">
           {selectedFile && (
             <div className="mb-2 p-2 bg-gray-100 dark:bg-gray-700 rounded flex items-center justify-between">

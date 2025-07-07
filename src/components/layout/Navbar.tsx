@@ -78,17 +78,19 @@ export function Navbar() {
             <ThemeToggle />
             
             {/* Notifications */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="relative">
-                  <Bell className="w-5 h-5" />
-                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-80">
-                <NotificationsList />
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="relative"
+              onClick={() => {
+                // This will be handled by the parent component
+                const event = new CustomEvent('toggleNotifications');
+                window.dispatchEvent(event);
+              }}
+            >
+              <Bell className="w-5 h-5" />
+              <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+            </Button>
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

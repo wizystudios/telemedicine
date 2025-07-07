@@ -41,7 +41,7 @@ export function BottomNav() {
   const navItems = getNavItems();
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-4 py-2 md:hidden">
+    <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-2 py-2 md:hidden z-50">
       <div className="flex justify-around">
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -52,14 +52,14 @@ export function BottomNav() {
               key={item.path}
               onClick={() => navigate(item.path)}
               className={cn(
-                "flex flex-col items-center py-2 px-3 rounded-lg transition-colors",
+                "flex flex-col items-center py-2 px-2 rounded-lg transition-colors min-w-0",
                 isActive 
                   ? "text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-950" 
                   : "text-gray-600 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400"
               )}
             >
               <Icon className="w-5 h-5" />
-              <span className="text-xs mt-1">{item.label}</span>
+              <span className="text-xs mt-1 truncate max-w-[4rem] sm:hidden">{item.label}</span>
             </button>
           );
         })}
