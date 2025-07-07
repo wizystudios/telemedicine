@@ -69,39 +69,39 @@ export default function Messages() {
       if (!otherUserId || !user) return null;
       
       // Try to find existing appointment between users
-      let { data: existingAppointment } = await supabase
+      const { data: existingAppointments } = await supabase
         .from('appointments')
         .select('*')
         .or(`and(patient_id.eq.${user.id},doctor_id.eq.${otherUserId}),and(patient_id.eq.${otherUserId},doctor_id.eq.${user.id})`)
         .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
+        .limit(1);
 
-      // If no appointment exists, create one for messaging
-      if (!existingAppointment) {
-        const isUserDoctor = user.id === doctorId;
-        const { data: newAppointment, error: createError } = await supabase
-          .from('appointments')
-          .insert({
-            patient_id: isUserDoctor ? otherUserId : user.id,
-            doctor_id: isUserDoctor ? user.id : otherUserId,
-            appointment_date: new Date().toISOString(),
-            consultation_type: 'chat',
-            status: 'approved',
-            symptoms: 'Chat consultation'
-          })
-          .select('*')
-          .single();
-
-        if (createError) {
-          console.error('Error creating chat appointment:', createError);
-          throw createError;
-        }
-        
-        existingAppointment = newAppointment;
+      // If appointment exists, return it
+      if (existingAppointments && existingAppointments.length > 0) {
+        return existingAppointments[0];
       }
 
-      return existingAppointment;
+      // If no appointment exists, create one for messaging
+      const isUserDoctor = user.id === doctorId;
+      const { data: newAppointment, error: createError } = await supabase
+        .from('appointments')
+        .insert({
+          patient_id: isUserDoctor ? otherUserId : user.id,
+          doctor_id: isUserDoctor ? user.id : otherUserId,
+          appointment_date: new Date().toISOString(),
+          consultation_type: 'chat',
+          status: 'approved',
+          symptoms: 'Chat consultation'
+        })
+        .select('*')
+        .single();
+
+      if (createError) {
+        console.error('Error creating chat appointment:', createError);
+        throw createError;
+      }
+      
+      return newAppointment;
     },
     enabled: !!otherUserId && !!user
   });
