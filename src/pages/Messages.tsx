@@ -25,6 +25,8 @@ export default function Messages() {
   
   const [message, setMessage] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
 
   const otherUserId = doctorId || patientId;
 
@@ -128,7 +130,7 @@ export default function Messages() {
 
   // Send message mutation
   const sendMessageMutation = useMutation({
-    mutationFn: async ({ message, fileUrl }: { message: string; fileUrl?: string }) => {
+    mutationFn: async ({ message, fileUrl, messageType }: { message: string; fileUrl?: string; messageType?: string }) => {
       if (!conversation?.id) throw new Error('No conversation found');
       
       const { error } = await supabase
@@ -138,7 +140,7 @@ export default function Messages() {
           sender_id: user!.id,
           message,
           file_url: fileUrl,
-          message_type: fileUrl ? 'file' : 'text'
+          message_type: messageType || (fileUrl ? 'file' : 'text')
         });
 
       if (error) throw error;
@@ -174,9 +176,23 @@ export default function Messages() {
     if (!message.trim() && !selectedFile) return;
 
     let fileUrl = '';
+    let messageType = 'text';
+    let messageText = message;
     
     if (selectedFile) {
       fileUrl = `https://placeholder.com/files/${selectedFile.name}`;
+      
+      // Determine message type based on file type
+      if (selectedFile.type.startsWith('image/')) {
+        messageType = 'image';
+        messageText = messageText || 'Picha';
+      } else if (selectedFile.type.startsWith('audio/')) {
+        messageType = 'voice';
+        messageText = messageText || 'Ujumbe wa sauti';
+      } else {
+        messageType = 'file';
+        messageText = messageText || 'Faili';
+      }
       
       toast({
         title: 'Faili Imepakiwa',
@@ -184,13 +200,51 @@ export default function Messages() {
       });
     }
 
-    sendMessageMutation.mutate({ message: message || 'Faili', fileUrl });
+    sendMessageMutation.mutate({ message: messageText, fileUrl, messageType });
   };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       setSelectedFile(file);
+    }
+  };
+
+  const handleVoiceRecord = async () => {
+    if (isRecording) {
+      // Stop recording
+      if (mediaRecorder) {
+        mediaRecorder.stop();
+        setIsRecording(false);
+      }
+    } else {
+      // Start recording
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const recorder = new MediaRecorder(stream);
+        const audioChunks: BlobPart[] = [];
+
+        recorder.ondataavailable = (event) => {
+          audioChunks.push(event.data);
+        };
+
+        recorder.onstop = () => {
+          const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+          const audioFile = new File([audioBlob], `voice-${Date.now()}.wav`, { type: 'audio/wav' });
+          setSelectedFile(audioFile);
+          stream.getTracks().forEach(track => track.stop());
+        };
+
+        recorder.start();
+        setMediaRecorder(recorder);
+        setIsRecording(true);
+      } catch (error) {
+        toast({
+          title: 'Hitilafu',
+          description: 'Imeshindwa kuanza kurekodi sauti',
+          variant: 'destructive'
+        });
+      }
     }
   };
 
@@ -254,9 +308,9 @@ export default function Messages() {
   const otherUserName = `${otherUser?.first_name || ''} ${otherUser?.last_name || ''}`.trim();
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
+    <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4">
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 flex-shrink-0">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
@@ -287,7 +341,7 @@ export default function Messages() {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 pb-20">
+      <div className="flex-1 overflow-y-auto p-4">
         <div className="max-w-4xl mx-auto space-y-4">
           {messages.map((msg) => {
             const isMe = msg.sender_id === user?.id;
@@ -300,13 +354,22 @@ export default function Messages() {
                 }`}>
                   {msg.file_url && (
                     <div className="mb-2">
-                      <a href={msg.file_url} target="_blank" rel="noopener noreferrer" 
-                         className="text-blue-300 underline">
-                        Faili
-                      </a>
+                      {msg.message_type === 'image' ? (
+                        <img src={msg.file_url} alt="Picha" className="max-w-full h-auto rounded" />
+                      ) : msg.message_type === 'voice' ? (
+                        <audio controls className="w-full">
+                          <source src={msg.file_url} type="audio/wav" />
+                          Kivinjari hakikubaliki
+                        </audio>
+                      ) : (
+                        <a href={msg.file_url} target="_blank" rel="noopener noreferrer" 
+                           className="text-blue-300 underline">
+                          📄 {msg.message}
+                        </a>
+                      )}
                     </div>
                   )}
-                  <p>{msg.message}</p>
+                  {!msg.file_url && <p>{msg.message}</p>}
                   <p className={`text-xs mt-1 ${isMe ? 'text-emerald-100' : 'text-gray-500'}`}>
                     {format(new Date(msg.created_at), 'HH:mm')}
                   </p>
@@ -319,13 +382,22 @@ export default function Messages() {
       </div>
 
       {/* Message Input */}
-      <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4">
+      <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 flex-shrink-0">
         <div className="max-w-4xl mx-auto">
           {selectedFile && (
-            <div className="mb-2 p-2 bg-gray-100 dark:bg-gray-700 rounded">
-              <p className="text-sm">Faili: {selectedFile.name}</p>
+            <div className="mb-2 p-2 bg-gray-100 dark:bg-gray-700 rounded flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                {selectedFile.type.startsWith('image/') ? (
+                  <span>🖼️</span>
+                ) : selectedFile.type.startsWith('audio/') ? (
+                  <span>🎵</span>
+                ) : (
+                  <span>📄</span>
+                )}
+                <p className="text-sm">{selectedFile.name}</p>
+              </div>
               <Button variant="ghost" size="sm" onClick={() => setSelectedFile(null)}>
-                Ondoa
+                ✕
               </Button>
             </div>
           )}
@@ -334,14 +406,40 @@ export default function Messages() {
               type="file"
               id="file-upload"
               className="hidden"
+              accept="image/*,audio/*,.pdf,.doc,.docx"
+              onChange={handleFileSelect}
+            />
+            <input
+              type="file"
+              id="image-upload"
+              className="hidden"
+              accept="image/*"
               onChange={handleFileSelect}
             />
             <Button
               variant="outline"
               size="sm"
+              onClick={() => document.getElementById('image-upload')?.click()}
+              title="Picha"
+            >
+              📷
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => document.getElementById('file-upload')?.click()}
+              title="Faili"
             >
               <Paperclip className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleVoiceRecord}
+              title="Sauti"
+              className={isRecording ? 'bg-red-500 text-white' : ''}
+            >
+              🎤
             </Button>
             <Input
               value={message}
