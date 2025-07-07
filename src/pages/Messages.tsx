@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Send, Paperclip, Phone, Video, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import ContactsList from '@/components/ContactsList';
 
 export default function Messages() {
   const [searchParams] = useSearchParams();
@@ -234,19 +235,9 @@ export default function Messages() {
     );
   }
 
+  // Show contact list if no specific user is selected
   if (!otherUserId) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
-            Mtumiaji hajapatikana
-          </h3>
-          <Button onClick={() => navigate(-1)}>
-            Rudi Nyuma
-          </Button>
-        </div>
-      </div>
-    );
+    return <ContactsList />;
   }
 
   if (!otherUser) {
