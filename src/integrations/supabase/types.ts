@@ -160,6 +160,7 @@ export type Database = {
         Row: {
           appointment_id: string | null
           created_at: string | null
+          delivered_at: string | null
           file_url: string | null
           id: string
           is_read: boolean
@@ -171,6 +172,7 @@ export type Database = {
         Insert: {
           appointment_id?: string | null
           created_at?: string | null
+          delivered_at?: string | null
           file_url?: string | null
           id?: string
           is_read?: boolean
@@ -182,6 +184,7 @@ export type Database = {
         Update: {
           appointment_id?: string | null
           created_at?: string | null
+          delivered_at?: string | null
           file_url?: string | null
           id?: string
           is_read?: boolean
