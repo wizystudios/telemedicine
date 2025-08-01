@@ -143,7 +143,8 @@ export default function Appointments() {
         </div>
 
         {/* Appointments List */}
-        <div className="space-y-4">
+        <div className="space-y-4 overflow-x-auto">
+          <div className="min-w-full">
           {appointments.map((appointment) => {
             const isPatient = appointment.patient_id === user?.id;
             const otherUser = isPatient ? appointment.doctor : appointment.patient;
@@ -151,17 +152,17 @@ export default function Appointments() {
             return (
               <Card key={appointment.id} className="dark:bg-gray-800 dark:border-gray-700">
                 <CardContent className="p-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start space-x-4">
+                  <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between space-y-4 lg:space-y-0">
+                    <div className="flex items-start space-x-4 flex-1">
                       <div className="flex-shrink-0">
                         <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900 rounded-full flex items-center justify-center">
                           <User className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
                         </div>
                       </div>
                       
-                      <div className="flex-1">
+                      <div className="flex-1 min-w-0">
                         <div className="flex items-center space-x-2 mb-2">
-                          <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+                          <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate">
                             {isPatient ? 'Dkt.' : ''} {otherUser?.first_name} {otherUser?.last_name}
                           </h3>
                           <Badge className={getStatusColor(appointment.status)}>
@@ -169,10 +170,10 @@ export default function Appointments() {
                           </Badge>
                         </div>
                         
-                        <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm text-gray-600 dark:text-gray-400">
                           <div className="flex items-center space-x-1">
                             <Calendar className="w-4 h-4" />
-                            <span>{format(new Date(appointment.appointment_date), 'dd/MM/yyyy')}</span>
+                            <span className="truncate">{format(new Date(appointment.appointment_date), 'dd/MM/yyyy')}</span>
                           </div>
                           <div className="flex items-center space-x-1">
                             <Clock className="w-4 h-4" />
@@ -180,7 +181,7 @@ export default function Appointments() {
                           </div>
                           <div className="flex items-center space-x-1">
                             {getConsultationIcon(appointment.consultation_type)}
-                            <span className="capitalize">{appointment.consultation_type}</span>
+                            <span className="capitalize truncate">{appointment.consultation_type}</span>
                           </div>
                         </div>
                         
@@ -198,7 +199,7 @@ export default function Appointments() {
                       </div>
                     </div>
                     
-                    <div className="flex flex-col space-y-2">
+                    <div className="flex flex-col space-y-2 lg:ml-4">
                       {/* Doctor actions for pending appointments */}
                       {!isPatient && appointment.status === 'scheduled' && (
                         <div className="flex space-x-2">
@@ -221,11 +222,13 @@ export default function Appointments() {
                             variant="outline"
                             onClick={() => navigate(`/messages?doctor=${isPatient ? appointment.doctor_id : appointment.patient_id}`)}
                           >
-                            Ujumbe
+                            <MessageCircle className="w-4 h-4 md:mr-2" />
+                            <span className="hidden md:inline">Ujumbe</span>
                           </Button>
                           {appointment.consultation_type === 'video' && (
                             <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700">
-                              Jiunge
+                              <Video className="w-4 h-4 md:mr-2" />
+                              <span className="hidden md:inline">Jiunge</span>
                             </Button>
                           )}
                         </>
@@ -236,6 +239,7 @@ export default function Appointments() {
               </Card>
             );
           })}
+          </div>
         </div>
 
         {appointments.length === 0 && (

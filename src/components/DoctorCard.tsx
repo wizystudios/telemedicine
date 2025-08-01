@@ -39,10 +39,6 @@ export function DoctorCard({ doctor, isOnline = false, hasPatientProblem = false
   
   return (
     <div className="flex-shrink-0 w-20 cursor-pointer" onClick={handleProfileClick}>
-      {hasPatientProblem && (
-        <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 border-2 border-white dark:border-gray-800 rounded-full animate-pulse z-10"></div>
-      )}
-      
       <div className="flex flex-col items-center space-y-2">
         <div className="relative">
           <Avatar className="w-16 h-16 ring-2 ring-emerald-200 dark:ring-emerald-800 border-2 border-white dark:border-gray-800">
@@ -57,6 +53,9 @@ export function DoctorCard({ doctor, isOnline = false, hasPatientProblem = false
               {doctor.first_name?.[0] || 'D'}{doctor.last_name?.[0] || ''}
             </AvatarFallback>
           </Avatar>
+          {hasPatientProblem && (
+            <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 border-2 border-white dark:border-gray-800 rounded-full animate-pulse z-10"></div>
+          )}
           {isOnline && (
             <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white dark:border-gray-800 rounded-full"></div>
           )}

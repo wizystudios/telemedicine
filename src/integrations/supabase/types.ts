@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instanciate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "12.2.3 (519615d)"
+    PostgrestVersion: "12.2.12 (cd3cf9e)"
   }
   public: {
     Tables: {
@@ -161,6 +161,7 @@ export type Database = {
           appointment_id: string | null
           created_at: string | null
           delivered_at: string | null
+          file_type: string | null
           file_url: string | null
           id: string
           is_read: boolean
@@ -173,6 +174,7 @@ export type Database = {
           appointment_id?: string | null
           created_at?: string | null
           delivered_at?: string | null
+          file_type?: string | null
           file_url?: string | null
           id?: string
           is_read?: boolean
@@ -185,6 +187,7 @@ export type Database = {
           appointment_id?: string | null
           created_at?: string | null
           delivered_at?: string | null
+          file_type?: string | null
           file_url?: string | null
           id?: string
           is_read?: boolean
@@ -568,6 +571,48 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_problem_indicators: {
+        Row: {
+          created_at: string | null
+          has_urgent_problem: boolean | null
+          id: string
+          patient_id: string
+          problem_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          has_urgent_problem?: boolean | null
+          id?: string
+          patient_id: string
+          problem_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          has_urgent_problem?: boolean | null
+          id?: string
+          patient_id?: string
+          problem_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_problem_indicators_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_problem_indicators_problem_id_fkey"
+            columns: ["problem_id"]
+            isOneToOne: false
+            referencedRelation: "patient_problems"
             referencedColumns: ["id"]
           },
         ]

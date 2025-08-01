@@ -19,9 +19,10 @@ interface Patient {
 
 interface PatientCardProps {
   patient: Patient;
+  hasUrgentProblem?: boolean;
 }
 
-export function PatientCard({ patient }: PatientCardProps) {
+export function PatientCard({ patient, hasUrgentProblem = false }: PatientCardProps) {
   const navigate = useNavigate();
   
   const displayName = `${patient.first_name || ''} ${patient.last_name || ''}`.trim() || 'Mgonjwa';
@@ -64,6 +65,9 @@ export function PatientCard({ patient }: PatientCardProps) {
               {patient.first_name?.[0] || 'M'}{patient.last_name?.[0] || ''}
             </AvatarFallback>
           </Avatar>
+          {hasUrgentProblem && (
+            <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 border-2 border-white dark:border-gray-800 rounded-full animate-pulse z-10"></div>
+          )}
         </div>
         
         <div className="text-center w-full">

@@ -23,6 +23,7 @@ import Appointments from "./pages/Appointments";
 import Messages from "./pages/Messages";
 import Profile from "./pages/Profile";
 import BookAppointment from "./pages/BookAppointment";
+import PatientProblems from "./pages/PatientProblems";
 import NotFound from "./pages/NotFound";
 import DoctorProfile from "./pages/DoctorProfile";
 import PatientProfile from "./pages/PatientProfile";
@@ -176,17 +177,25 @@ function AppContent() {
               </ProtectedRoute>
             } 
           />
-          <Route 
+           <Route 
             path="/book-appointment" 
             element={
               <ProtectedRoute>
                 <BookAppointment />
               </ProtectedRoute>
             } 
-          />
-          
-          {/* Catch all route */}
-          <Route path="*" element={<NotFound />} />
+           />
+           <Route 
+            path="/patient-problems" 
+            element={
+              <ProtectedRoute>
+                <PatientProblems />
+              </ProtectedRoute>
+            } 
+           />
+           
+           {/* Catch all route */}
+           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
       

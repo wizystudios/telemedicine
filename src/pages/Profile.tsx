@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { ProfileImageUpload } from '@/components/ProfileImageUpload';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -131,12 +132,12 @@ export default function Profile() {
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="flex flex-col items-center space-y-4">
-                  <Avatar className="w-24 h-24">
-                    <AvatarImage src={profileData.avatar_url} />
-                    <AvatarFallback className="text-lg">
-                      {profileData.first_name?.[0]}{profileData.last_name?.[0]}
-                    </AvatarFallback>
-                  </Avatar>
+                  <ProfileImageUpload
+                    currentImageUrl={profileData.avatar_url}
+                    userId={user?.id || ''}
+                    userName={`${profileData.first_name} ${profileData.last_name}`}
+                    onImageUpdate={(url) => setProfileData({...profileData, avatar_url: url})}
+                  />
                   <Badge variant="secondary" className="capitalize">
                     {userRole === 'doctor' ? '🩺 Doctor' : '👤 Patient'}
                   </Badge>
