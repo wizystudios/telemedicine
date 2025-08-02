@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Search, ArrowLeft } from 'lucide-react';
+import { Search, ArrowLeft, MessageCircle, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function ContactsList() {
@@ -80,9 +80,10 @@ export default function ContactsList() {
           <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
             <ArrowLeft className="w-4 h-4" />
           </Button>
-          <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-            Chagua Mtu wa Kuzungumza Naye
-          </h1>
+          <div className="flex items-center space-x-2">
+            <MessageCircle className="w-6 h-6 text-emerald-600" />
+            <Users className="w-6 h-6 text-blue-600" />
+          </div>
         </div>
       </div>
 

@@ -48,10 +48,10 @@ export function ProfileImageUpload({
 
     setIsUploading(true);
     try {
-      // Create unique filename
+      // Create unique filename with proper folder structure for RLS
       const fileExt = file.name.split('.').pop();
-      const fileName = `${userId}-${Date.now()}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
+      const fileName = `avatar.${fileExt}`;
+      const filePath = `${userId}/${fileName}`;
 
       // Upload file to Supabase Storage
       const { error: uploadError } = await supabase.storage

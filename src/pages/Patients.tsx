@@ -65,7 +65,7 @@ export default function Patients() {
     );
   }
 
-  // Fetch patients from profiles table with proper RLS
+  // Fetch patients with urgent problem indicators
   const { data: allPatients = [], isLoading, error } = useQuery({
     queryKey: ['patients-list', searchTerm],
     queryFn: async () => {
@@ -73,7 +73,10 @@ export default function Patients() {
       
       let query = supabase
         .from('profiles')
-        .select('id, first_name, last_name, avatar_url, role, email, phone, country, created_at')
+        .select(`
+          id, first_name, last_name, avatar_url, role, email, phone, country, created_at,
+          patient_problem_indicators(has_urgent_problem)
+        `)
         .eq('role', 'patient')
         .order('created_at', { ascending: false });
 
@@ -89,7 +92,7 @@ export default function Patients() {
       }
       
       console.log('✅ Patients fetched successfully:', data?.length || 0);
-      return data as Patient[] || [];
+      return data || [];
     },
     retry: 2,
     retryDelay: 1000
@@ -165,6 +168,7 @@ export default function Patients() {
                   <PatientCard
                     key={patient.id}
                     patient={patient}
+                    hasUrgentProblem={patient.patient_problem_indicators?.[0]?.has_urgent_problem || false}
                   />
                 ))}
               </div>

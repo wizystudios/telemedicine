@@ -58,8 +58,7 @@ export function BottomNav() {
                   : "text-gray-600 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400"
               )}
             >
-              <Icon className="w-5 h-5" />
-              <span className="text-xs mt-1 truncate max-w-[4rem] sm:hidden">{item.label}</span>
+              <Icon className="w-6 h-6" />
             </button>
           );
         })}
