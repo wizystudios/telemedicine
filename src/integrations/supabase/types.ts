@@ -619,6 +619,7 @@ export type Database = {
       }
       patient_problems: {
         Row: {
+          attachments: Json | null
           category: string
           created_at: string
           id: string
@@ -631,6 +632,7 @@ export type Database = {
           urgency_level: string
         }
         Insert: {
+          attachments?: Json | null
           category: string
           created_at?: string
           id?: string
@@ -643,6 +645,7 @@ export type Database = {
           urgency_level?: string
         }
         Update: {
+          attachments?: Json | null
           category?: string
           created_at?: string
           id?: string
