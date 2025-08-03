@@ -15,6 +15,7 @@ import { WelcomePages } from "@/components/welcome/WelcomePages";
 import { AppointmentNotificationHandler } from "@/components/AppointmentNotificationHandler";
 import { useState, useEffect } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useLocation } from "react-router-dom";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import DoctorsList from "./pages/DoctorsList";
@@ -47,9 +48,13 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function AppContent() {
   const { user, loading } = useAuth();
   const isMobile = useIsMobile();
+  const location = useLocation();
   const [showWelcome, setShowWelcome] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  
+  // Check if current route is messages page
+  const isMessagesPage = location.pathname === '/messages';
   
   useEffect(() => {
     // Check if user has seen welcome pages before
@@ -87,7 +92,7 @@ function AppContent() {
   
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
-      {user && <Navbar />}
+      {user && !isMessagesPage && <Navbar />}
       {user && <AppointmentNotificationHandler />}
       
       <div className="flex">
@@ -99,7 +104,7 @@ function AppContent() {
         )}
         
         {/* Main Content */}
-        <main className={`flex-1 ${user ? (isMobile ? "min-h-[calc(100vh-64px)]" : "min-h-[calc(100vh-64px)]") : "min-h-screen"}`}>
+        <main className={`flex-1 ${user ? (isMessagesPage ? "min-h-screen" : (isMobile ? "min-h-[calc(100vh-64px)]" : "min-h-[calc(100vh-64px)]")) : "min-h-screen"}`}>
           <Routes>
           <Route path="/auth" element={user ? <Navigate to="/dashboard" replace /> : <Auth />} />
           <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Navigate to="/auth" replace />} />

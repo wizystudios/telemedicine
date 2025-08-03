@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -6,12 +5,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Send, Paperclip, Phone, Video, ArrowLeft } from 'lucide-react';
+import { Phone, Video, ArrowLeft, Download, Play, Pause, FileText, Image as ImageIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import ContactsList from '@/components/ContactsList';
+import { EnhancedChatInput } from '@/components/EnhancedChatInput';
 
 export default function Messages() {
   const [searchParams] = useSearchParams();
@@ -24,7 +23,7 @@ export default function Messages() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const [message, setMessage] = useState('');
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
 
@@ -64,213 +63,235 @@ export default function Messages() {
     enabled: !!user?.id
   });
 
-  // Create or get conversation
-  const { data: conversation, isLoading: conversationLoading } = useQuery({
-    queryKey: ['conversation', otherUserId],
+  // Get or create conversation (appointment)
+  const { data: conversation } = useQuery({
+    queryKey: ['conversation', user?.id, otherUserId],
     queryFn: async () => {
-      if (!otherUserId || !user) return null;
-      
-      // Try to find existing appointment between users
-      const { data: existingAppointments } = await supabase
+      if (!user?.id || !otherUserId) return null;
+
+      // First, try to find existing appointment between these users
+      const { data: existingAppointment, error: appointmentError } = await supabase
         .from('appointments')
         .select('*')
         .or(`and(patient_id.eq.${user.id},doctor_id.eq.${otherUserId}),and(patient_id.eq.${otherUserId},doctor_id.eq.${user.id})`)
         .order('created_at', { ascending: false })
-        .limit(1);
+        .limit(1)
+        .maybeSingle();
 
-      // If appointment exists, return it
-      if (existingAppointments && existingAppointments.length > 0) {
-        return existingAppointments[0];
+      if (appointmentError && appointmentError.code !== 'PGRST116') {
+        throw appointmentError;
+      }
+
+      if (existingAppointment) {
+        return existingAppointment;
       }
 
       // If no appointment exists, create one for messaging
-      const isUserDoctor = user.id === doctorId;
+      const isUserPatient = currentUserProfile?.role === 'patient';
       const { data: newAppointment, error: createError } = await supabase
         .from('appointments')
         .insert({
-          patient_id: isUserDoctor ? otherUserId : user.id,
-          doctor_id: isUserDoctor ? user.id : otherUserId,
+          patient_id: isUserPatient ? user.id : otherUserId,
+          doctor_id: isUserPatient ? otherUserId : user.id,
           appointment_date: new Date().toISOString(),
+          status: 'scheduled',
           consultation_type: 'chat',
-          status: 'approved',
-          symptoms: 'Chat consultation'
+          notes: 'Chat conversation'
         })
-        .select('*')
+        .select()
         .single();
 
-      if (createError) {
-        console.error('Error creating chat appointment:', createError);
-        throw createError;
-      }
-      
+      if (createError) throw createError;
       return newAppointment;
     },
-    enabled: !!otherUserId && !!user
+    enabled: !!user?.id && !!otherUserId && !!currentUserProfile
   });
 
-  // Fetch messages
+  // Get messages for this conversation
   const { data: messages = [] } = useQuery({
     queryKey: ['messages', conversation?.id],
     queryFn: async () => {
       if (!conversation?.id) return [];
+      
       const { data, error } = await supabase
         .from('chat_messages')
-        .select(`
-          *,
-          sender:profiles(first_name, last_name, avatar_url)
-        `)
+        .select('*')
         .eq('appointment_id', conversation.id)
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      return data;
+      return data || [];
     },
     enabled: !!conversation?.id
   });
 
   // Send message mutation
   const sendMessageMutation = useMutation({
-    mutationFn: async ({ message, fileUrl, messageType }: { message: string; fileUrl?: string; messageType?: string }) => {
-      if (!conversation?.id) throw new Error('No conversation found');
-      
-      const { error } = await supabase
-        .from('chat_messages')
-        .insert({
+    mutationFn: async ({ messageText, files }: { messageText: string; files: File[] }) => {
+      if (!conversation?.id || (!messageText.trim() && files.length === 0)) return;
+
+      const messagesToSend = [];
+
+      // Send text message if exists
+      if (messageText.trim()) {
+        messagesToSend.push({
           appointment_id: conversation.id,
-          sender_id: user!.id,
-          message,
-          file_url: fileUrl,
-          message_type: messageType || (fileUrl ? 'file' : 'text')
+          sender_id: user?.id,
+          message: messageText.trim(),
+          message_type: 'text'
         });
+      }
+
+      // Upload files and create messages for each
+      for (const file of files) {
+        try {
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${user?.id}/${Date.now()}.${fileExt}`;
+          
+          const { error: uploadError, data: uploadData } = await supabase.storage
+            .from('avatars')
+            .upload(fileName, file);
+
+          if (uploadError) throw uploadError;
+
+          const { data: { publicUrl } } = supabase.storage
+            .from('avatars')
+            .getPublicUrl(fileName);
+
+          let messageType = 'file';
+          if (file.type.startsWith('image/')) messageType = 'image';
+          else if (file.type.startsWith('video/')) messageType = 'video';
+          else if (file.type.startsWith('audio/')) messageType = 'audio';
+
+          messagesToSend.push({
+            appointment_id: conversation.id,
+            sender_id: user?.id,
+            message: file.name,
+            message_type: messageType,
+            file_url: publicUrl,
+            file_type: file.type
+          });
+        } catch (error) {
+          console.error('Error uploading file:', error);
+          toast({
+            title: 'Hitilafu',
+            description: `Imeshindwa kupakia faili: ${file.name}`,
+            variant: 'destructive'
+          });
+        }
+      }
+
+      // Insert all messages
+      const { data, error } = await supabase
+        .from('chat_messages')
+        .insert(messagesToSend)
+        .select();
 
       if (error) throw error;
 
-      // Create notification for the other user
-      if (currentUserProfile) {
-        await supabase
-          .from('notifications')
-          .insert({
-            user_id: otherUserId,
-            type: 'message',
-            title: 'Ujumbe Mpya',
-            message: `Umepokea ujumbe kutoka ${currentUserProfile.first_name} ${currentUserProfile.last_name}`,
-          });
-      }
+      // Create notification for the recipient
+      const notificationTitle = currentUserProfile?.role === 'doctor' 
+        ? 'Ujumbe Mpya wa Daktari'
+        : 'Ujumbe Mpya wa Mgonjwa';
+      
+      const notificationMessage = messageText.trim() 
+        ? `${currentUserProfile?.first_name || 'Mtu'} amekutumia ujumbe: "${messageText.slice(0, 50)}${messageText.length > 50 ? '...' : ''}"`
+        : `${currentUserProfile?.first_name || 'Mtu'} amekutumia faili`;
+
+      await supabase
+        .from('notifications')
+        .insert({
+          user_id: otherUserId,
+          title: notificationTitle,
+          message: notificationMessage,
+          type: 'message',
+          related_id: conversation.id
+        });
+
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['messages', conversation?.id] });
       setMessage('');
-      setSelectedFile(null);
+      setSelectedFiles([]);
     },
     onError: (error: any) => {
-      console.error('Send message error:', error);
       toast({
         title: 'Hitilafu',
-        description: error.message || 'Imeshindwa kutuma ujumbe',
+        description: 'Imeshindwa kutuma ujumbe',
         variant: 'destructive'
       });
+      console.error('Error sending message:', error);
     }
   });
 
-  const handleSendMessage = async () => {
-    if (!message.trim() && !selectedFile) return;
-
-    let fileUrl = '';
-    let messageType = 'text';
-    let messageText = message;
-    
-    if (selectedFile) {
-      fileUrl = `https://placeholder.com/files/${selectedFile.name}`;
-      
-      // Determine message type based on file type
-      if (selectedFile.type.startsWith('image/')) {
-        messageType = 'image';
-        messageText = messageText || 'Picha';
-      } else if (selectedFile.type.startsWith('audio/')) {
-        messageType = 'voice';
-        messageText = messageText || 'Ujumbe wa sauti';
-      } else {
-        messageType = 'file';
-        messageText = messageText || 'Faili';
-      }
-      
-      toast({
-        title: 'Faili Imepakiwa',
-        description: 'Faili imepakiwa kikamilifu',
-      });
-    }
-
-    sendMessageMutation.mutate({ message: messageText, fileUrl, messageType });
+  const handleSendMessage = () => {
+    sendMessageMutation.mutate({ 
+      messageText: message, 
+      files: selectedFiles 
+    });
   };
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-    }
+  const handleFileSelect = (files: FileList) => {
+    const newFiles = Array.from(files);
+    setSelectedFiles(prev => [...prev, ...newFiles]);
+  };
+
+  const handleRemoveFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleVoiceRecord = async () => {
     if (isRecording) {
-      // Stop recording
-      if (mediaRecorder) {
-        mediaRecorder.stop();
-        setIsRecording(false);
-      }
+      mediaRecorder?.stop();
+      setIsRecording(false);
     } else {
-      // Start recording
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         const recorder = new MediaRecorder(stream);
-        const audioChunks: BlobPart[] = [];
-
-        recorder.ondataavailable = (event) => {
-          audioChunks.push(event.data);
-        };
-
-        recorder.onstop = () => {
-          const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-          const audioFile = new File([audioBlob], `voice-${Date.now()}.wav`, { type: 'audio/wav' });
-          setSelectedFile(audioFile);
-          stream.getTracks().forEach(track => track.stop());
+        
+        recorder.ondataavailable = async (event) => {
+          if (event.data.size > 0) {
+            const audioFile = new File([event.data], `voice-${Date.now()}.webm`, {
+              type: 'audio/webm'
+            });
+            setSelectedFiles(prev => [...prev, audioFile]);
+          }
         };
 
         recorder.start();
         setMediaRecorder(recorder);
         setIsRecording(true);
       } catch (error) {
+        console.error('Error accessing microphone:', error);
         toast({
           title: 'Hitilafu',
-          description: 'Imeshindwa kuanza kurekodi sauti',
+          description: 'Imeshindwa kufikia kipaza sauti',
           variant: 'destructive'
         });
       }
     }
   };
 
-  // Auto scroll to bottom
+  // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Real-time subscription
+  // Real-time subscription for new messages
   useEffect(() => {
     if (!conversation?.id) return;
 
     const channel = supabase
-      .channel(`messages:${conversation.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'chat_messages',
-          filter: `appointment_id=eq.${conversation.id}`
-        },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ['messages', conversation.id] });
-        }
-      )
+      .channel('chat_messages')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'chat_messages',
+        filter: `appointment_id=eq.${conversation.id}`
+      }, () => {
+        queryClient.invalidateQueries({ queryKey: ['messages', conversation.id] });
+      })
       .subscribe();
 
     return () => {
@@ -278,199 +299,166 @@ export default function Messages() {
     };
   }, [conversation?.id, queryClient]);
 
-  if (conversationLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto"></div>
-          <p className="mt-2 text-gray-600 dark:text-gray-300">Inaanzisha mazungumzo...</p>
-        </div>
-      </div>
-    );
-  }
+  const renderMessageContent = (msg: any) => {
+    switch (msg.message_type) {
+      case 'image':
+        return (
+          <div className="max-w-sm">
+            <img 
+              src={msg.file_url} 
+              alt={msg.message}
+              className="rounded-lg max-w-full h-auto cursor-pointer"
+              onClick={() => window.open(msg.file_url, '_blank')}
+            />
+            <p className="text-xs text-gray-500 mt-1">{msg.message}</p>
+          </div>
+        );
+      case 'video':
+        return (
+          <div className="max-w-sm">
+            <video 
+              controls
+              className="rounded-lg max-w-full h-auto"
+              preload="metadata"
+            >
+              <source src={msg.file_url} type={msg.file_type} />
+              Video haiwezi kuonyeshwa
+            </video>
+            <p className="text-xs text-gray-500 mt-1">{msg.message}</p>
+          </div>
+        );
+      case 'audio':
+        return (
+          <div className="flex items-center space-x-2 bg-gray-100 dark:bg-gray-700 rounded-lg p-3">
+            <audio controls className="max-w-xs">
+              <source src={msg.file_url} type={msg.file_type} />
+              Sauti haiwezi kuchezwa
+            </audio>
+          </div>
+        );
+      case 'file':
+        return (
+          <div className="flex items-center space-x-2 bg-gray-100 dark:bg-gray-700 rounded-lg p-3 max-w-xs">
+            <FileText className="w-8 h-8 text-blue-600" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium truncate">{msg.message}</p>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => window.open(msg.file_url, '_blank')}
+                className="text-xs text-blue-600 p-0 h-auto"
+              >
+                <Download className="w-3 h-3 mr-1" />
+                Pakua
+              </Button>
+            </div>
+          </div>
+        );
+      default:
+        return <p className="whitespace-pre-wrap">{msg.message}</p>;
+    }
+  };
 
-  // Show contact list if no specific user is selected
+  // If no specific user selected, show contacts list
   if (!otherUserId) {
     return <ContactsList />;
   }
 
-  if (!otherUser) {
+  // Loading state
+  if (!otherUser || !conversation) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="flex items-center justify-center h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto"></div>
-          <p className="mt-2 text-gray-600 dark:text-gray-300">Inapakia taarifa za mtumiaji...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-300">Inapakia mazungumzo...</p>
         </div>
       </div>
     );
   }
 
-  const otherUserName = `${otherUser?.first_name || ''} ${otherUser?.last_name || ''}`.trim();
+  const displayName = `${otherUser.first_name || ''} ${otherUser.last_name || ''}`.trim() || 
+    (otherUser.role === 'doctor' ? 'Daktari' : 'Mgonjwa');
 
   return (
     <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 flex-shrink-0">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
-              <ArrowLeft className="w-4 h-4" />
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => navigate(-1)}
+              className="lg:hidden"
+            >
+              <ArrowLeft className="w-5 h-5" />
             </Button>
-            <div className="relative">
-              <Avatar className="w-10 h-10">
-                <AvatarImage src={otherUser?.avatar_url} alt={otherUserName} />
-                <AvatarFallback>
-                  {otherUser?.first_name?.[0]}{otherUser?.last_name?.[0]}
-                </AvatarFallback>
-              </Avatar>
-              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
-            </div>
-            <div className="hidden md:block">
+            
+            <Avatar className="w-10 h-10">
+              <AvatarImage src={otherUser.avatar_url} />
+              <AvatarFallback>
+                {otherUser.first_name?.[0] || otherUser.email?.[0]?.toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            
+            <div>
               <h2 className="font-semibold text-gray-900 dark:text-white">
-                {otherUser.role === 'doctor' ? 'Dkt. ' : ''}{otherUserName}
+                {displayName}
               </h2>
-              <p className="text-sm text-gray-500">Online</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {otherUser.role === 'doctor' ? 'Daktari' : 'Mgonjwa'}
+              </p>
             </div>
           </div>
-          <div className="flex space-x-2">
-            <Button variant="outline" size="sm">
-              <Phone className="w-4 h-4" />
+
+          <div className="flex items-center space-x-2">
+            <Button variant="ghost" size="icon">
+              <Phone className="w-5 h-5" />
             </Button>
-            <Button variant="outline" size="sm">
-              <Video className="w-4 h-4" />
+            <Button variant="ghost" size="icon">
+              <Video className="w-5 h-5" />
             </Button>
           </div>
         </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4">
-        <div className="max-w-4xl mx-auto space-y-4">
-          {messages.map((msg) => {
-            const isMe = msg.sender_id === user?.id;
-            return (
-              <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                  isMe 
-                    ? 'bg-emerald-500 text-white' 
-                    : 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white'
-                }`}>
-                  {msg.file_url && (
-                    <div className="mb-2">
-                      {msg.message_type === 'image' ? (
-                        <img src={msg.file_url} alt="Picha" className="max-w-full h-auto rounded" />
-                      ) : msg.message_type === 'voice' ? (
-                        <audio controls className="w-full">
-                          <source src={msg.file_url} type="audio/wav" />
-                          Kivinjari hakikubaliki
-                        </audio>
-                      ) : (
-                        <a href={msg.file_url} target="_blank" rel="noopener noreferrer" 
-                           className="text-blue-300 underline">
-                          📄 {msg.message}
-                        </a>
-                      )}
-                    </div>
-                  )}
-                  {!msg.file_url && <p>{msg.message}</p>}
-                  <div className={`flex items-center justify-between mt-1 ${isMe ? 'text-emerald-100' : 'text-gray-500'}`}>
-                    <p className="text-xs">
-                      {format(new Date(msg.created_at), 'HH:mm')}
-                    </p>
-                    {isMe && (
-                      <div className="flex items-center space-x-1 text-xs">
-                        {msg.is_read ? (
-                          <span className="text-green-400">✓✓</span>
-                        ) : (
-                          <span className="text-gray-400">✓</span>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-          <div ref={messagesEndRef} />
-        </div>
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {messages.map((msg) => (
+          <div
+            key={msg.id}
+            className={`flex ${msg.sender_id === user?.id ? 'justify-end' : 'justify-start'}`}
+          >
+            <div
+              className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                msg.sender_id === user?.id
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white border'
+              }`}
+            >
+              {renderMessageContent(msg)}
+              <p className={`text-xs mt-1 ${
+                msg.sender_id === user?.id ? 'text-emerald-100' : 'text-gray-500'
+              }`}>
+                {format(new Date(msg.created_at), 'HH:mm')}
+              </p>
+            </div>
+          </div>
+        ))}
+        <div ref={messagesEndRef} />
       </div>
 
-      {/* Message Input */}
-      <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 flex-shrink-0 pb-24 md:pb-4">
-        <div className="max-w-4xl mx-auto">
-          {selectedFile && (
-            <div className="mb-2 p-2 bg-gray-100 dark:bg-gray-700 rounded flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                {selectedFile.type.startsWith('image/') ? (
-                  <span>🖼️</span>
-                ) : selectedFile.type.startsWith('audio/') ? (
-                  <span>🎵</span>
-                ) : (
-                  <span>📄</span>
-                )}
-                <p className="text-sm">{selectedFile.name}</p>
-              </div>
-              <Button variant="ghost" size="sm" onClick={() => setSelectedFile(null)}>
-                ✕
-              </Button>
-            </div>
-          )}
-          <div className="flex items-center space-x-2">
-            <input
-              type="file"
-              id="file-upload"
-              className="hidden"
-              accept="image/*,audio/*,.pdf,.doc,.docx"
-              onChange={handleFileSelect}
-            />
-            <input
-              type="file"
-              id="image-upload"
-              className="hidden"
-              accept="image/*"
-              onChange={handleFileSelect}
-            />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => document.getElementById('image-upload')?.click()}
-              title="Picha"
-            >
-              📷
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => document.getElementById('file-upload')?.click()}
-              title="Faili"
-            >
-              <Paperclip className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleVoiceRecord}
-              title="Sauti"
-              className={isRecording ? 'bg-red-500 text-white' : ''}
-            >
-              🎤
-            </Button>
-            <Input
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Andika ujumbe..."
-              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-              className="flex-1"
-            />
-            <Button 
-              onClick={handleSendMessage}
-              disabled={sendMessageMutation.isPending}
-            >
-              <Send className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-      </div>
+      {/* Enhanced Chat Input */}
+      <EnhancedChatInput
+        message={message}
+        setMessage={setMessage}
+        onSendMessage={handleSendMessage}
+        onFileSelect={handleFileSelect}
+        onVoiceRecord={handleVoiceRecord}
+        selectedFiles={selectedFiles}
+        onRemoveFile={handleRemoveFile}
+        isRecording={isRecording}
+      />
     </div>
   );
 }

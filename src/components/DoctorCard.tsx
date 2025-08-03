@@ -38,10 +38,10 @@ export function DoctorCard({ doctor, isOnline = false, hasPatientProblem = false
   };
   
   return (
-    <div className="flex-shrink-0 w-20 cursor-pointer" onClick={handleProfileClick}>
-      <div className="flex flex-col items-center space-y-2">
+    <div className="flex-shrink-0 w-16 cursor-pointer" onClick={handleProfileClick}>
+      <div className="flex flex-col items-center space-y-1">
         <div className="relative">
-          <Avatar className="w-16 h-16 ring-2 ring-emerald-200 dark:ring-emerald-800 border-2 border-white dark:border-gray-800">
+          <Avatar className="w-12 h-12 ring-2 ring-emerald-200 dark:ring-emerald-800 border-2 border-white dark:border-gray-800">
             {doctor.avatar_url ? (
               <AvatarImage 
                 src={doctor.avatar_url} 
@@ -49,45 +49,39 @@ export function DoctorCard({ doctor, isOnline = false, hasPatientProblem = false
                 className="object-cover w-full h-full rounded-full"
               />
             ) : null}
-            <AvatarFallback className="text-sm bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200">
+            <AvatarFallback className="text-xs bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200">
               {doctor.first_name?.[0] || 'D'}{doctor.last_name?.[0] || ''}
             </AvatarFallback>
           </Avatar>
           {hasPatientProblem && (
-            <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 border-2 border-white dark:border-gray-800 rounded-full animate-pulse z-10"></div>
+            <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 border-2 border-white dark:border-gray-800 rounded-full animate-pulse z-10"></div>
           )}
           {isOnline && (
-            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white dark:border-gray-800 rounded-full"></div>
+            <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 border-2 border-white dark:border-gray-800 rounded-full"></div>
           )}
         </div>
         
         <div className="text-center w-full">
-          <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-xs truncate">
+          <h3 className="font-medium text-gray-900 dark:text-gray-100 text-xs truncate leading-tight">
             {displayName}
           </h3>
           {doctor.specialization && (
-            <p className="text-xs text-gray-600 dark:text-gray-300 truncate">
+            <p className="text-xs text-gray-600 dark:text-gray-300 truncate leading-tight">
               {doctor.specialization}
             </p>
           )}
           <div className="flex justify-center items-center gap-1 mt-1">
             {isOnline && (
-              <Badge variant="default" className="text-xs bg-green-500 dark:bg-green-600 px-1 py-0">
+              <Badge variant="default" className="text-xs bg-green-500 dark:bg-green-600 px-1 py-0 h-4">
                 Online
               </Badge>
             )}
             {hasPatientProblem && (
-              <Badge variant="destructive" className="text-xs animate-pulse px-1 py-0">
+              <Badge variant="destructive" className="text-xs animate-pulse px-1 py-0 h-4">
                 Msaada
               </Badge>
             )}
           </div>
-          {doctor.country && (
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 flex items-center justify-center">
-              <MapPin className="w-2 h-2 mr-1" />
-              <span className="truncate">{doctor.country}</span>
-            </p>
-          )}
         </div>
       </div>
     </div>
