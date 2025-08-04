@@ -146,24 +146,24 @@ export default function PatientProblems() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
+    <div className="min-h-screen bg-background pb-20">
       <div className="max-w-4xl mx-auto p-4 space-y-6">
         
         {/* Header */}
         <div className="flex items-center space-x-3">
-          <AlertCircle className="w-8 h-8 text-red-500" />
+          <AlertCircle className="w-6 h-6 text-red-500 md:w-8 md:h-8" />
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-              Matatizo ya Wagonjwa
+            <h1 className="text-xl font-bold text-foreground md:text-2xl">
+              Wagonjwa Wanahitaji Msaada
             </h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              Wagonjwa wanahitaji msaada wako
+            <p className="text-sm text-muted-foreground md:text-base">
+              Bonyeza kutazama matatizo yao
             </p>
           </div>
         </div>
 
-        {/* Problems List */}
-        <div className="space-y-4">
+        {/* Problems List - Mobile Optimized */}
+        <div className="space-y-3">
           {problems
             .filter(problem => problem.status === 'open' || problem.status === 'in_progress')
             .map((problem) => {
@@ -171,79 +171,78 @@ export default function PatientProblems() {
               const patientName = `${patient?.first_name || ''} ${patient?.last_name || ''}`.trim() || 'Mgonjwa';
               
               return (
-                <Card key={problem.id} className="dark:bg-gray-800 dark:border-gray-700">
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start space-x-4">
+                <Card key={problem.id} className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-4">
+                    <div className="flex items-start space-x-3">
+                      <div className="relative">
                         <Avatar className="w-12 h-12">
                           <AvatarImage src={patient?.avatar_url} />
-                          <AvatarFallback>
+                          <AvatarFallback className="bg-primary text-primary-foreground">
                             {patient?.first_name?.[0]}{patient?.last_name?.[0]}
                           </AvatarFallback>
                         </Avatar>
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-2 mb-2">
-                            <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+                        {(problem.urgency_level === 'urgent' || problem.urgency_level === 'high') && (
+                          <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full animate-pulse border-2 border-background z-10"></div>
+                        )}
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-foreground text-sm">
                               {patientName}
                             </h3>
-                            <Badge className={getUrgencyColor(problem.urgency_level)}>
-                              {getUrgencyText(problem.urgency_level)}
-                            </Badge>
+                            <div className="flex items-center space-x-2 mt-1">
+                              <p className="text-xs text-muted-foreground">
+                                {format(new Date(problem.created_at), 'dd/MM/yyyy HH:mm')}
+                              </p>
+                              <Badge variant="outline" className={`text-xs ${getUrgencyColor(problem.urgency_level)}`}>
+                                {getUrgencyText(problem.urgency_level)}
+                              </Badge>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {problem.category}
+                            </p>
                           </div>
-                          <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
-                            <div className="flex items-center space-x-1">
-                              <Clock className="w-4 h-4" />
-                              <span>{format(new Date(problem.created_at), 'dd/MM/yyyy HH:mm')}</span>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              <AlertCircle className="w-4 h-4" />
-                              <span className="capitalize">{problem.category}</span>
-                            </div>
+                          
+                          <div className="flex flex-col space-y-1 ml-2">
+                            {problem.status === 'open' && (
+                              <Button 
+                                size="sm" 
+                                onClick={() => handleHelpPatient(problem.id, problem.patient_id)}
+                                className="text-xs h-7 px-2"
+                                disabled={helpPatientMutation.isPending}
+                              >
+                                Nisaidie
+                              </Button>
+                            )}
+                            
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => navigate(`/messages?patient=${problem.patient_id}`)}
+                              className="text-xs h-7 px-2"
+                            >
+                              Ujumbe
+                            </Button>
                           </div>
                         </div>
-                      </div>
-                      
-                      <div className="flex flex-col space-y-2">
-                        {problem.status === 'open' && (
-                          <Button 
-                            size="sm" 
-                            onClick={() => handleHelpPatient(problem.id, problem.patient_id)}
-                            className="bg-emerald-600 hover:bg-emerald-700"
-                            disabled={helpPatientMutation.isPending}
-                          >
-                            <CheckCircle className="w-4 h-4 mr-1" />
-                            Nisaidie
-                          </Button>
-                        )}
                         
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => navigate(`/messages?patient=${problem.patient_id}`)}
-                        >
-                          <MessageCircle className="w-4 h-4 mr-1" />
-                          Ujumbe
-                        </Button>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  
-                  <CardContent>
-                    <div className="space-y-3">
-                      <div>
-                        <p className="font-medium text-gray-900 dark:text-gray-100 mb-2">Tatizo:</p>
-                        <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                          {problem.problem_text}
-                        </p>
-                      </div>
-                      
-                      {problem.status === 'in_progress' && problem.resolved_by === user?.id && (
-                        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-3">
-                          <p className="text-blue-800 dark:text-blue-200 text-sm">
-                            ✓ Umejibu tatizo hili. Endelea na mazungumzo ili kumsaidia mgonjwa.
+                        <div className="mt-2">
+                          <p className="text-xs font-medium text-foreground mb-1">Tatizo:</p>
+                          <p className="text-xs text-muted-foreground line-clamp-2">
+                            {problem.problem_text}
                           </p>
                         </div>
-                      )}
+                        
+                        {problem.status === 'in_progress' && problem.resolved_by === user?.id && (
+                          <div className="bg-primary/10 border border-primary/20 rounded-lg p-2 mt-2">
+                            <p className="text-primary text-xs">
+                              ✓ Umejibu tatizo hili. Endelea na mazungumzo.
+                            </p>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -252,12 +251,12 @@ export default function PatientProblems() {
         </div>
 
         {problems.filter(p => p.status === 'open' || p.status === 'in_progress').length === 0 && (
-          <div className="text-center py-12">
-            <AlertCircle className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
-              Hakuna matatizo ya wagonjwa
+          <div className="text-center py-8">
+            <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-foreground mb-2">
+              Hakuna matatizo ya wagonjwa kwa sasa
             </h3>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-sm text-muted-foreground">
               Matatizo ya wagonjwa yataonekana hapa wakati wanahitaji msaada
             </p>
           </div>

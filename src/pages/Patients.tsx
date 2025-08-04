@@ -139,13 +139,16 @@ export default function Patients() {
       <div className="max-w-6xl mx-auto p-4 space-y-6">
         
         {/* Header */}
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-            Wagonjwa
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Chagua mgonjwa unayemtaka
-          </p>
+        <div className="flex items-center space-x-3">
+          <Search className="w-6 h-6 text-primary" />
+          <div>
+            <h1 className="text-xl font-bold text-foreground md:text-2xl">
+              Wagonjwa
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Bonyeza mgonjwa kutazama maelezo yake
+            </p>
+          </div>
         </div>
 
         {/* Search */}
@@ -159,22 +162,24 @@ export default function Patients() {
           />
         </div>
 
-        {/* Patients Grid */}
-        <div className="space-y-4">
-          {groupedPatients.map((patientRow, rowIndex) => (
-            <div key={rowIndex} className="overflow-x-auto">
-              <div className="flex space-x-4 min-w-max pb-2">
-                {patientRow.map((patient) => (
-                  <PatientCard
-                    key={patient.id}
-                    patient={patient}
-                    hasUrgentProblem={patient.patient_problem_indicators?.[0]?.has_urgent_problem || false}
-                  />
-                ))}
-              </div>
-            </div>
+        {/* Patients Grid - Mobile Optimized */}
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          {allPatients.slice(0, 20).map((patient) => (
+            <PatientCard
+              key={patient.id}
+              patient={patient}
+              hasUrgentProblem={patient.patient_problem_indicators?.[0]?.has_urgent_problem || false}
+            />
           ))}
         </div>
+        
+        {allPatients.length > 20 && (
+          <div className="text-center">
+            <p className="text-sm text-muted-foreground">
+              Kuonyesha wagonjwa 20 wa kwanza. Tumia utafutaji kupata zaidi.
+            </p>
+          </div>
+        )}
 
         {allPatients.length === 0 && (
           <div className="text-center py-8">

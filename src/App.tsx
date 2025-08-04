@@ -25,6 +25,8 @@ import Messages from "./pages/Messages";
 import Profile from "./pages/Profile";
 import BookAppointment from "./pages/BookAppointment";
 import PatientProblems from "./pages/PatientProblems";
+import PatientDetail from "./pages/PatientDetail";
+import PatientProblemForm from "./pages/PatientProblemForm";
 import NotFound from "./pages/NotFound";
 import DoctorProfile from "./pages/DoctorProfile";
 import PatientProfile from "./pages/PatientProfile";
@@ -54,7 +56,7 @@ function AppContent() {
   const [showNotifications, setShowNotifications] = useState(false);
   
   // Check if current route is messages page
-  const isMessagesPage = location.pathname === '/messages';
+  const isMessagesPage = location.pathname.startsWith('/messages');
   
   useEffect(() => {
     // Check if user has seen welcome pages before
@@ -166,14 +168,22 @@ function AppContent() {
               </ProtectedRoute>
             } 
           />
-          <Route 
+           <Route 
             path="/patients" 
             element={
               <ProtectedRoute>
                 <Patients />
               </ProtectedRoute>
             } 
-          />
+           />
+           <Route 
+            path="/patient/:patientId" 
+            element={
+              <ProtectedRoute>
+                <PatientDetail />
+              </ProtectedRoute>
+            } 
+           />
           <Route 
             path="/profile" 
             element={
@@ -190,11 +200,19 @@ function AppContent() {
               </ProtectedRoute>
             } 
            />
-           <Route 
+            <Route 
             path="/patient-problems" 
             element={
               <ProtectedRoute>
                 <PatientProblems />
+              </ProtectedRoute>
+            } 
+           />
+           <Route 
+            path="/post-problem" 
+            element={
+              <ProtectedRoute>
+                <PatientProblemForm />
               </ProtectedRoute>
             } 
            />

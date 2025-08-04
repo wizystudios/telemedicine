@@ -380,9 +380,9 @@ export default function Messages() {
     (otherUser.role === 'doctor' ? 'Daktari' : 'Mgonjwa');
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="flex flex-col h-screen bg-background">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3">
+      <div className="bg-card border-b px-4 py-3 flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <Button 
@@ -396,16 +396,16 @@ export default function Messages() {
             
             <Avatar className="w-10 h-10">
               <AvatarImage src={otherUser.avatar_url} />
-              <AvatarFallback>
+              <AvatarFallback className="bg-emerald-500 text-white">
                 {otherUser.first_name?.[0] || otherUser.email?.[0]?.toUpperCase()}
               </AvatarFallback>
             </Avatar>
             
             <div>
-              <h2 className="font-semibold text-gray-900 dark:text-white">
+              <h2 className="font-semibold text-foreground">
                 {displayName}
               </h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-muted-foreground">
                 {otherUser.role === 'doctor' ? 'Daktari' : 'Mgonjwa'}
               </p>
             </div>
@@ -423,42 +423,53 @@ export default function Messages() {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-4">
         {messages.map((msg) => (
           <div
             key={msg.id}
             className={`flex ${msg.sender_id === user?.id ? 'justify-end' : 'justify-start'}`}
           >
-            <div
-              className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                msg.sender_id === user?.id
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white border'
-              }`}
-            >
-              {renderMessageContent(msg)}
-              <p className={`text-xs mt-1 ${
-                msg.sender_id === user?.id ? 'text-emerald-100' : 'text-gray-500'
-              }`}>
-                {format(new Date(msg.created_at), 'HH:mm')}
-              </p>
-            </div>
+            {msg.sender_id === user?.id ? (
+              <div className="bg-primary text-primary-foreground rounded-2xl rounded-tr-md px-4 py-2 max-w-[80%] md:max-w-md">
+                {renderMessageContent(msg)}
+                <p className="text-xs mt-1 opacity-70">
+                  {format(new Date(msg.created_at), 'HH:mm')}
+                </p>
+              </div>
+            ) : (
+              <div className="flex items-start space-x-2 max-w-[80%] md:max-w-md">
+                <Avatar className="w-8 h-8 flex-shrink-0">
+                  <AvatarImage src={otherUser.avatar_url} />
+                  <AvatarFallback className="bg-emerald-500 text-white text-xs">
+                    {otherUser.first_name?.[0] || otherUser.email?.[0]?.toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="bg-muted rounded-2xl rounded-tl-md px-4 py-2">
+                  {renderMessageContent(msg)}
+                  <p className="text-xs mt-1 text-muted-foreground">
+                    {format(new Date(msg.created_at), 'HH:mm')}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         ))}
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Enhanced Chat Input */}
-      <EnhancedChatInput
-        message={message}
-        setMessage={setMessage}
-        onSendMessage={handleSendMessage}
-        onFileSelect={handleFileSelect}
-        onVoiceRecord={handleVoiceRecord}
-        selectedFiles={selectedFiles}
-        onRemoveFile={handleRemoveFile}
-        isRecording={isRecording}
-      />
+      {/* Enhanced Chat Input - Fixed for mobile */}
+      <div className="flex-shrink-0">
+        <EnhancedChatInput
+          message={message}
+          setMessage={setMessage}
+          onSendMessage={handleSendMessage}
+          onFileSelect={handleFileSelect}
+          onVoiceRecord={handleVoiceRecord}
+          selectedFiles={selectedFiles}
+          onRemoveFile={handleRemoveFile}
+          isRecording={isRecording}
+        />
+      </div>
     </div>
   );
 }

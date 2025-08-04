@@ -81,14 +81,14 @@ export function EnhancedChatInput({
   };
 
   return (
-    <div className="border-t bg-white dark:bg-gray-800 p-4">
+    <div className="border-t bg-card p-4 safe-area-inset-bottom">
       {/* Selected Files Display */}
       {selectedFiles.length > 0 && (
         <div className="mb-3 flex flex-wrap gap-2">
           {selectedFiles.map((file, index) => (
             <div
               key={index}
-              className="flex items-center gap-2 bg-gray-100 dark:bg-gray-700 rounded-lg p-2 text-sm"
+              className="flex items-center gap-2 bg-muted rounded-lg p-2 text-sm"
             >
               {file.type.startsWith('image/') ? (
                 <Image className="w-4 h-4 text-blue-600" />
@@ -100,12 +100,12 @@ export function EnhancedChatInput({
                 <FileText className="w-4 h-4 text-orange-600" />
               )}
               <span className="max-w-32 truncate">{file.name}</span>
-              <span className="text-xs text-gray-500">({formatFileSize(file.size)})</span>
+              <span className="text-xs text-muted-foreground">({formatFileSize(file.size)})</span>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => onRemoveFile(index)}
-                className="h-4 w-4 p-0 hover:bg-red-100 hover:text-red-600"
+                className="h-4 w-4 p-0 hover:bg-destructive/10 hover:text-destructive"
               >
                 <X className="w-3 h-3" />
               </Button>
@@ -122,12 +122,12 @@ export function EnhancedChatInput({
             <Button 
               variant="ghost" 
               size="icon"
-              className="flex-shrink-0 h-10 w-10 rounded-full bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-900 dark:hover:bg-emerald-800"
+              className="flex-shrink-0 h-10 w-10 rounded-full bg-primary/10 hover:bg-primary/20"
             >
-              <Plus className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+              <Plus className="w-5 h-5 text-primary" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-48">
+          <DropdownMenuContent align="start" className="w-48" side="top">
             <DropdownMenuItem onClick={() => handleFileClick('image')}>
               <Image className="w-4 h-4 mr-2 text-blue-600" />
               Picha
@@ -155,7 +155,7 @@ export function EnhancedChatInput({
               onChange={(e) => setMessage(e.target.value)}
               onKeyDown={handleKeyPress}
               placeholder="Andika ujumbe..."
-              className="min-h-[40px] max-h-32 resize-none"
+              className="min-h-[40px] max-h-32 resize-none rounded-full border-0 bg-muted focus:ring-2 focus:ring-primary/20"
               rows={2}
               onFocus={() => setIsExpanded(true)}
               onBlur={() => {
@@ -171,7 +171,7 @@ export function EnhancedChatInput({
               onKeyDown={handleKeyPress}
               placeholder="Andika ujumbe..."
               onFocus={() => setIsExpanded(true)}
-              className="h-10"
+              className="h-10 rounded-full border-0 bg-muted focus:ring-2 focus:ring-primary/20"
             />
           )}
         </div>

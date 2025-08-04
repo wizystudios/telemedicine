@@ -28,7 +28,7 @@ export function PatientCard({ patient, hasUrgentProblem = false }: PatientCardPr
   const displayName = `${patient.first_name || ''} ${patient.last_name || ''}`.trim() || 'Mgonjwa';
 
   const handleProfileClick = () => {
-    navigate(`/patient-profile/${patient.id}`);
+    navigate(`/patient/${patient.id}`);
   };
 
   const handleMessage = () => {
