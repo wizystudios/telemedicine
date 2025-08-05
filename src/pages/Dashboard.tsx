@@ -41,6 +41,24 @@ export default function Dashboard() {
     enabled: !!user?.id
   });
 
+  // Get new messages count
+  const { data: newMessagesCount = 0 } = useQuery({
+    queryKey: ['new-messages-count', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return 0;
+      
+      const { data, error } = await supabase
+        .from('chat_messages')
+        .select('id')
+        .neq('sender_id', user.id)
+        .eq('is_read', false);
+      
+      if (error) return 0;
+      return data?.length || 0;
+    },
+    enabled: !!user?.id
+  });
+
   // Check role from either database profile or user metadata
   const userRole = userProfile?.role || user?.user_metadata?.role;
 

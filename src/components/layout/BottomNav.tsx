@@ -2,6 +2,8 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { Home, Calendar, MessageCircle, User, Users, Stethoscope } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -14,6 +16,23 @@ export function BottomNav() {
   if (!user) return null;
 
   const userRole = user?.user_metadata?.role || 'patient';
+  
+  // Get unread messages count
+  const { data: unreadCount = 0 } = useQuery({
+    queryKey: ['unread-messages', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return 0;
+      
+      const { data } = await supabase
+        .from('chat_messages')
+        .select('id')
+        .neq('sender_id', user.id)
+        .eq('is_read', false);
+      
+      return data?.length || 0;
+    },
+    enabled: !!user?.id
+  });
 
   // Different navigation items based on role
   const getNavItems = () => {
@@ -52,13 +71,18 @@ export function BottomNav() {
               key={item.path}
               onClick={() => navigate(item.path)}
               className={cn(
-                "flex flex-col items-center py-2 px-2 rounded-lg transition-colors min-w-0",
+                "flex flex-col items-center py-2 px-2 rounded-lg transition-colors min-w-0 relative",
                 isActive 
                   ? "text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-950" 
                   : "text-gray-600 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400"
               )}
             >
               <Icon className="w-6 h-6" />
+              {item.path === '/messages' && unreadCount > 0 && (
+                <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </div>
+              )}
             </button>
           );
         })}

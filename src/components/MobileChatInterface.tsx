@@ -107,7 +107,7 @@ export function MobileChatInterface({
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-background">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-br from-emerald-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 pb-32">
         {/* Welcome Message */}
         <div className="flex justify-start">
           <div className="flex items-start space-x-2 max-w-[80%]">
@@ -166,7 +166,7 @@ export function MobileChatInterface({
       </div>
 
       {/* Input Area - Fixed position above bottom nav */}
-      <div className="border-t bg-card p-4 pb-24 fixed bottom-0 left-0 right-0 z-50">
+      <div className="border-t bg-card p-4 pb-20 fixed bottom-16 left-0 right-0 z-40">
         <div className="flex items-end space-x-2">
           {/* Attachment Menu */}
           <DropdownMenu>

@@ -85,7 +85,7 @@ export function EnhancedChatInput({
   };
 
   return (
-    <div className="border-t bg-card p-4 pb-24 fixed bottom-0 left-0 right-0 z-50">
+    <div className="border-t bg-card p-4 pb-20 fixed bottom-16 left-0 right-0 z-40 md:relative md:pb-4 md:bottom-auto">
       {/* Selected Files Display */}
       {selectedFiles.length > 0 && (
         <div className="mb-3 flex flex-wrap gap-2">

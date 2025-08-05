@@ -423,15 +423,17 @@ export default function Messages() {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-28">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-32 bg-gradient-to-br from-emerald-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
         {messages.map((msg) => (
           <div
             key={msg.id}
             className={`flex ${msg.sender_id === user?.id ? 'justify-end' : 'justify-start'}`}
           >
             {msg.sender_id === user?.id ? (
-              <div className="bg-primary text-primary-foreground rounded-2xl rounded-tr-md px-4 py-2 max-w-[80%] md:max-w-md">
-                {renderMessageContent(msg)}
+              <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-2xl rounded-tr-md px-4 py-2 max-w-[80%] md:max-w-md shadow-lg border border-emerald-400/20">
+                <div className="break-words overflow-wrap-anywhere">
+                  {renderMessageContent(msg)}
+                </div>
                 <p className="text-xs mt-1 opacity-70">
                   {format(new Date(msg.created_at), 'HH:mm')}
                 </p>
@@ -444,8 +446,10 @@ export default function Messages() {
                     {otherUser.first_name?.[0] || otherUser.email?.[0]?.toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <div className="bg-muted rounded-2xl rounded-tl-md px-4 py-2">
-                  {renderMessageContent(msg)}
+                <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-lg rounded-2xl rounded-tl-md px-4 py-2 border border-white/20">
+                  <div className="break-words overflow-wrap-anywhere">
+                    {renderMessageContent(msg)}
+                  </div>
                   <p className="text-xs mt-1 text-muted-foreground">
                     {format(new Date(msg.created_at), 'HH:mm')}
                   </p>

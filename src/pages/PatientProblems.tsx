@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,6 +24,7 @@ export default function PatientProblems() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [showAll, setShowAll] = useState(false);
 
   const { data: problems = [], isLoading } = useQuery({
     queryKey: ['patient-problems'],
@@ -155,61 +158,95 @@ export default function PatientProblems() {
             <AlertCircle className="w-5 h-5 text-red-500 mr-2" />
             Msaada
           </h1>
-          <Button size="sm" variant="outline" className="text-xs">
-            Onyesha Zaidi
-          </Button>
+          {problems.filter(p => p.status === 'open' || p.status === 'in_progress').length > 2 && (
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="text-xs"
+              onClick={() => setShowAll(!showAll)}
+            >
+              {showAll ? 'Onyesha Kidogo' : 'Onyesha Zaidi'}
+            </Button>
+          )}
         </div>
 
         {/* Problems List - Show Limited with Dropdown */}
         <div className="space-y-3">
           {problems
             .filter(problem => problem.status === 'open' || problem.status === 'in_progress')
-            .slice(0, 2)
+            .slice(0, showAll ? undefined : 2)
             .map((problem) => {
               const patient = problem.patient;
               const patientName = `${patient?.first_name || ''} ${patient?.last_name || ''}`.trim() || 'Mgonjwa';
               
               return (
-                <Card key={problem.id} className="hover:shadow-md transition-shadow">
-                  <CardContent className="p-4">
-                    <div className="flex items-start space-x-3">
-                      <div className="relative">
-                        <Avatar className="w-12 h-12">
-                          <AvatarImage src={patient?.avatar_url} />
-                          <AvatarFallback className="bg-primary text-primary-foreground">
-                            {patient?.first_name?.[0]}{patient?.last_name?.[0]}
-                          </AvatarFallback>
-                        </Avatar>
-                        {(problem.urgency_level === 'urgent' || problem.urgency_level === 'high') && (
-                          <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full animate-pulse border-2 border-background z-10"></div>
-                        )}
-                      </div>
-                      
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between">
+                <Collapsible key={problem.id}>
+                  <Card className="hover:shadow-md transition-shadow">
+                    <CollapsibleTrigger asChild>
+                      <CardContent className="p-4 cursor-pointer">
+                        <div className="flex items-start space-x-3">
+                          <div className="relative">
+                            <Avatar className="w-12 h-12">
+                              <AvatarImage src={patient?.avatar_url} />
+                              <AvatarFallback className="bg-primary text-primary-foreground">
+                                {patient?.first_name?.[0]}{patient?.last_name?.[0]}
+                              </AvatarFallback>
+                            </Avatar>
+                            {(problem.urgency_level === 'urgent' || problem.urgency_level === 'high') && (
+                              <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full animate-pulse border-2 border-background z-10"></div>
+                            )}
+                          </div>
+                          
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-foreground text-sm">
-                              {patientName}
-                            </h3>
-                            <div className="flex items-center space-x-2 mt-1">
-                              <p className="text-xs text-muted-foreground">
-                                {format(new Date(problem.created_at), 'dd/MM/yyyy HH:mm')}
-                              </p>
-                              <Badge variant="outline" className={`text-xs ${getUrgencyColor(problem.urgency_level)}`}>
-                                {getUrgencyText(problem.urgency_level)}
-                              </Badge>
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1 min-w-0">
+                                <h3 className="font-semibold text-foreground text-sm">
+                                  {patientName}
+                                </h3>
+                                <div className="flex items-center space-x-2 mt-1">
+                                  <p className="text-xs text-muted-foreground">
+                                    {format(new Date(problem.created_at), 'dd/MM/yyyy HH:mm')}
+                                  </p>
+                                  <Badge variant="outline" className={`text-xs ${getUrgencyColor(problem.urgency_level)}`}>
+                                    {getUrgencyText(problem.urgency_level)}
+                                  </Badge>
+                                </div>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  {problem.category}
+                                </p>
+                              </div>
+                              <ChevronDown className="w-4 h-4 text-muted-foreground" />
                             </div>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {problem.category}
+                            
+                            <div className="mt-2">
+                              <p className="text-xs font-medium text-foreground mb-1">Tatizo:</p>
+                              <p className="text-xs text-muted-foreground line-clamp-1">
+                                {problem.problem_text}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </CollapsibleTrigger>
+                    
+                    <CollapsibleContent>
+                      <CardContent className="pt-0 px-4 pb-4">
+                        <div className="pl-15 space-y-3">
+                          <div className="bg-muted rounded-lg p-3">
+                            <p className="text-sm text-foreground">
+                              {problem.problem_text}
                             </p>
                           </div>
                           
-                          <div className="flex flex-col space-y-1 ml-2">
+                          <div className="flex gap-2">
                             {problem.status === 'open' && (
                               <Button 
                                 size="sm" 
-                                onClick={() => handleHelpPatient(problem.id, problem.patient_id)}
-                                className="text-xs h-7 px-2"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleHelpPatient(problem.id, problem.patient_id);
+                                }}
+                                className="text-xs h-8 px-3"
                                 disabled={helpPatientMutation.isPending}
                               >
                                 Nisaidie
@@ -219,32 +256,28 @@ export default function PatientProblems() {
                             <Button 
                               size="sm" 
                               variant="outline"
-                              onClick={() => navigate(`/messages?patient=${problem.patient_id}`)}
-                              className="text-xs h-7 px-2"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/messages?patient=${problem.patient_id}`);
+                              }}
+                              className="text-xs h-8 px-3"
                             >
                               Ujumbe
                             </Button>
                           </div>
+                          
+                          {problem.status === 'in_progress' && problem.resolved_by === user?.id && (
+                            <div className="bg-primary/10 border border-primary/20 rounded-lg p-2">
+                              <p className="text-primary text-xs">
+                                ✓ Umejibu tatizo hili. Endelea na mazungumzo.
+                              </p>
+                            </div>
+                          )}
                         </div>
-                        
-                        <div className="mt-2">
-                          <p className="text-xs font-medium text-foreground mb-1">Tatizo:</p>
-                          <p className="text-xs text-muted-foreground line-clamp-2">
-                            {problem.problem_text}
-                          </p>
-                        </div>
-                        
-                        {problem.status === 'in_progress' && problem.resolved_by === user?.id && (
-                          <div className="bg-primary/10 border border-primary/20 rounded-lg p-2 mt-2">
-                            <p className="text-primary text-xs">
-                              ✓ Umejibu tatizo hili. Endelea na mazungumzo.
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                      </CardContent>
+                    </CollapsibleContent>
+                  </Card>
+                </Collapsible>
               );
             })}
         </div>

@@ -100,5 +100,22 @@ export function useOnlineStatus() {
     }
   };
 
-  return { onlineDoctors, updateOnlineStatus };
+  const toggleOnlineStatus = async () => {
+    if (!user?.id) return;
+    
+    try {
+      const { data: currentStatus } = await supabase
+        .from('doctor_online_status')
+        .select('is_online')
+        .eq('doctor_id', user.id)
+        .single();
+      
+      const newStatus = !currentStatus?.is_online;
+      await updateOnlineStatus(newStatus);
+    } catch (error) {
+      console.error('Error toggling online status:', error);
+    }
+  };
+
+  return { onlineDoctors, updateOnlineStatus, toggleOnlineStatus };
 }

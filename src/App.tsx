@@ -27,6 +27,7 @@ import BookAppointment from "./pages/BookAppointment";
 import PatientProblems from "./pages/PatientProblems";
 import PatientDetail from "./pages/PatientDetail";
 import PatientProblemForm from "./pages/PatientProblemForm";
+import Notifications from "./pages/Notifications";
 import NotFound from "./pages/NotFound";
 import DoctorProfile from "./pages/DoctorProfile";
 import PatientProfile from "./pages/PatientProfile";
@@ -213,6 +214,14 @@ function AppContent() {
             element={
               <ProtectedRoute>
                 <PatientProblemForm />
+              </ProtectedRoute>
+            } 
+           />
+           <Route 
+            path="/notifications" 
+            element={
+              <ProtectedRoute>
+                <Notifications />
               </ProtectedRoute>
             } 
            />
