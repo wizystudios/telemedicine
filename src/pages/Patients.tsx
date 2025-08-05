@@ -138,20 +138,7 @@ export default function Patients() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
       <div className="max-w-6xl mx-auto p-4 space-y-6">
         
-        {/* Header */}
-        <div className="flex items-center space-x-3">
-          <Search className="w-6 h-6 text-primary" />
-          <div>
-            <h1 className="text-xl font-bold text-foreground md:text-2xl">
-              Wagonjwa
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Bonyeza mgonjwa kutazama maelezo yake
-            </p>
-          </div>
-        </div>
-
-        {/* Search */}
+        {/* Search only */}
         <div className="relative">
           <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
           <Input
@@ -162,8 +149,8 @@ export default function Patients() {
           />
         </div>
 
-        {/* Patients Grid - Mobile Optimized */}
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+        {/* Patients Grid - Football Card Design */}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {allPatients.slice(0, 20).map((patient) => (
             <PatientCard
               key={patient.id}

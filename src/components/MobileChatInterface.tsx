@@ -165,8 +165,8 @@ export function MobileChatInterface({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Area */}
-      <div className="border-t bg-card p-4 pb-6">
+      {/* Input Area - Fixed position above bottom nav */}
+      <div className="border-t bg-card p-4 pb-24 fixed bottom-0 left-0 right-0 z-50">
         <div className="flex items-end space-x-2">
           {/* Attachment Menu */}
           <DropdownMenu>

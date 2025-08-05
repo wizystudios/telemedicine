@@ -85,58 +85,60 @@ export default function Dashboard() {
           <PatientProblemPost />
         )}
 
-        {/* Quick Stats */}
+        {/* Quick Stats - Compact Design */}
         <Card className="dark:bg-gray-800 dark:border-gray-700">
-          <CardContent className="p-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="text-center p-3">
-                <Calendar className="w-8 h-8 text-emerald-600 dark:text-emerald-400 mx-auto mb-2" />
-                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats.appointments}</p>
-                <p className="text-sm text-gray-600 dark:text-gray-300">Miadi</p>
+          <CardContent className="p-4">
+            <div className="grid grid-cols-4 gap-2">
+              <div className="text-center p-2">
+                <Calendar className="w-5 h-5 text-emerald-600 dark:text-emerald-400 mx-auto mb-1" />
+                <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{stats.appointments}</p>
+                <p className="text-xs text-gray-600 dark:text-gray-300">Miadi</p>
               </div>
               
-              <div className="text-center p-3">
-                <Users className="w-8 h-8 text-blue-600 dark:text-blue-400 mx-auto mb-2" />
-                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+              <div className="text-center p-2">
+                <Users className="w-5 h-5 text-blue-600 dark:text-blue-400 mx-auto mb-1" />
+                <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
                   {userRole === 'doctor' ? stats.patients : stats.doctors}
                 </p>
-                <p className="text-sm text-gray-600 dark:text-gray-300">
+                <p className="text-xs text-gray-600 dark:text-gray-300">
                   {userRole === 'doctor' ? 'Wagonjwa' : 'Madaktari'}
                 </p>
               </div>
               
-              <div className="text-center p-3">
-                <MessageCircle className="w-8 h-8 text-purple-600 dark:text-purple-400 mx-auto mb-2" />
-                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats.messages}</p>
-                <p className="text-sm text-gray-600 dark:text-gray-300">Ujumbe</p>
+              <div className="text-center p-2">
+                <MessageCircle className="w-5 h-5 text-purple-600 dark:text-purple-400 mx-auto mb-1" />
+                <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{stats.messages}</p>
+                <p className="text-xs text-gray-600 dark:text-gray-300">Ujumbe</p>
               </div>
               
-              <div className="text-center p-3">
-                <Video className="w-8 h-8 text-red-600 dark:text-red-400 mx-auto mb-2" />
-                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">0</p>
-                <p className="text-sm text-gray-600 dark:text-gray-300">Video</p>
+              <div className="text-center p-2 opacity-50">
+                <Video className="w-5 h-5 text-gray-400 mx-auto mb-1" />
+                <p className="text-lg font-bold text-gray-400">-</p>
+                <p className="text-xs text-gray-400">Video</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Doctor-specific: Patient Problems Alert */}
+        {/* Doctor-specific: Patient Problems Alert - Compact */}
         {userRole === 'doctor' && (
           <Card className="dark:bg-gray-800 dark:border-gray-700">
-            <CardHeader>
-              <CardTitle className="text-gray-900 dark:text-gray-100 flex items-center">
-                <AlertCircle className="w-5 h-5 mr-2 text-red-500" />
-                Wagonjwa Wanahitaji Msaada
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-6">
-                <AlertCircle className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-3" />
-                <p className="text-gray-500 dark:text-gray-400 mb-4">Hakuna matatizo ya wagonjwa kwa sasa</p>
-                <Button variant="outline" size="sm" onClick={() => window.location.href = '/patient-problems'}>
-                  Ona Matatizo Yote
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <AlertCircle className="w-4 h-4 text-red-500" />
+                  <span className="text-sm font-medium">Msaada</span>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => window.location.href = '/patient-problems'}
+                  className="text-xs"
+                >
+                  Angalia
                 </Button>
               </div>
+              <p className="text-xs text-gray-500 mt-1">2 wagonjwa wanahitaji msaada</p>
             </CardContent>
           </Card>
         )}

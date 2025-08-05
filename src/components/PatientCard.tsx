@@ -50,42 +50,34 @@ export function PatientCard({ patient, hasUrgentProblem = false }: PatientCardPr
   };
   
   return (
-    <div className="flex-shrink-0 w-20 cursor-pointer" onClick={handleProfileClick}>
-      <div className="flex flex-col items-center space-y-2">
-        <div className="relative">
-          <Avatar className="w-16 h-16 ring-2 ring-blue-200 dark:ring-blue-800 border-2 border-white dark:border-gray-800">
-            {patient.avatar_url ? (
-              <AvatarImage 
-                src={patient.avatar_url} 
-                alt={displayName}
-                className="object-cover w-full h-full rounded-full"
-              />
-            ) : null}
-            <AvatarFallback className="text-sm bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
-              {patient.first_name?.[0] || 'M'}{patient.last_name?.[0] || ''}
-            </AvatarFallback>
-          </Avatar>
-          {hasUrgentProblem && (
-            <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 border-2 border-white dark:border-gray-800 rounded-full animate-pulse z-10"></div>
-          )}
-        </div>
+    <div 
+      className={`cursor-pointer transition-all duration-200 hover:shadow-lg border-0 rounded-3xl bg-gradient-to-br relative overflow-hidden p-4 ${
+        hasUrgentProblem 
+          ? 'from-red-100 to-red-200 dark:from-red-900 dark:to-red-800 shadow-red-200' 
+          : 'from-white to-gray-50 dark:from-gray-800 dark:to-gray-700 shadow-gray-200'
+      }`}
+      onClick={handleProfileClick}
+    >
+      <div className="flex items-center space-x-3">
+        {/* Red indicator for urgent problems */}
+        {hasUrgentProblem && (
+          <div className="absolute top-3 right-3 w-3 h-3 bg-red-500 rounded-full animate-pulse shadow-lg"></div>
+        )}
         
-        <div className="text-center w-full">
-          <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-xs truncate">
+        <Avatar className="w-12 h-12 border-2 border-white shadow-sm">
+          <AvatarImage src={patient.avatar_url} />
+          <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold">
+            {patient.first_name?.[0] || patient.email?.[0]?.toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
+        
+        <div className="flex-1 min-w-0">
+          <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-sm truncate">
             {displayName}
           </h3>
-          <p className="text-xs text-gray-600 dark:text-gray-300 truncate">
-            {patient.email}
+          <p className="text-xs text-gray-600 dark:text-gray-400 truncate">
+            {patient.phone || patient.email}
           </p>
-          <div className="flex justify-center mt-1">
-            <Badge variant="secondary" className="text-xs">Mgonjwa</Badge>
-          </div>
-          {patient.country && (
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 flex items-center justify-center">
-              <MapPin className="w-2 h-2 mr-1" />
-              <span className="truncate">{patient.country}</span>
-            </p>
-          )}
         </div>
       </div>
     </div>

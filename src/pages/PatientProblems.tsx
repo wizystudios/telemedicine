@@ -149,23 +149,22 @@ export default function PatientProblems() {
     <div className="min-h-screen bg-background pb-20">
       <div className="max-w-4xl mx-auto p-4 space-y-6">
         
-        {/* Header */}
-        <div className="flex items-center space-x-3">
-          <AlertCircle className="w-6 h-6 text-red-500 md:w-8 md:h-8" />
-          <div>
-            <h1 className="text-xl font-bold text-foreground md:text-2xl">
-              Wagonjwa Wanahitaji Msaada
-            </h1>
-            <p className="text-sm text-muted-foreground md:text-base">
-              Bonyeza kutazama matatizo yao
-            </p>
-          </div>
+        {/* Compact Header */}
+        <div className="flex items-center justify-between">
+          <h1 className="text-lg font-bold text-foreground flex items-center">
+            <AlertCircle className="w-5 h-5 text-red-500 mr-2" />
+            Msaada
+          </h1>
+          <Button size="sm" variant="outline" className="text-xs">
+            Onyesha Zaidi
+          </Button>
         </div>
 
-        {/* Problems List - Mobile Optimized */}
+        {/* Problems List - Show Limited with Dropdown */}
         <div className="space-y-3">
           {problems
             .filter(problem => problem.status === 'open' || problem.status === 'in_progress')
+            .slice(0, 2)
             .map((problem) => {
               const patient = problem.patient;
               const patientName = `${patient?.first_name || ''} ${patient?.last_name || ''}`.trim() || 'Mgonjwa';

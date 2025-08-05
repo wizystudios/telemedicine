@@ -44,6 +44,7 @@ export function EnhancedChatInput({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
+  const audioInputRef = useRef<HTMLInputElement>(null);
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -52,7 +53,7 @@ export function EnhancedChatInput({
     }
   };
 
-  const handleFileClick = (type: 'file' | 'image' | 'video') => {
+  const handleFileClick = (type: 'file' | 'image' | 'video' | 'audio') => {
     switch (type) {
       case 'file':
         fileInputRef.current?.click();
@@ -62,6 +63,9 @@ export function EnhancedChatInput({
         break;
       case 'video':
         videoInputRef.current?.click();
+        break;
+      case 'audio':
+        audioInputRef.current?.click();
         break;
     }
   };
@@ -81,7 +85,7 @@ export function EnhancedChatInput({
   };
 
   return (
-    <div className="border-t bg-card p-4 safe-area-inset-bottom">
+    <div className="border-t bg-card p-4 pb-24 fixed bottom-0 left-0 right-0 z-50">
       {/* Selected Files Display */}
       {selectedFiles.length > 0 && (
         <div className="mb-3 flex flex-wrap gap-2">
@@ -136,13 +140,17 @@ export function EnhancedChatInput({
               <Video className="w-4 h-4 mr-2 text-purple-600" />
               Video
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleFileClick('audio')}>
+              <Mic className="w-4 h-4 mr-2 text-green-600" />
+              Audio
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => handleFileClick('file')}>
               <Paperclip className="w-4 h-4 mr-2 text-orange-600" />
               Faili
             </DropdownMenuItem>
             <DropdownMenuItem onClick={onVoiceRecord}>
-              <Mic className={`w-4 h-4 mr-2 ${isRecording ? 'text-red-600 animate-pulse' : 'text-green-600'}`} />
-              {isRecording ? 'Kurakodi...' : 'Sauti'}
+              <Mic className={`w-4 h-4 mr-2 ${isRecording ? 'text-red-600 animate-pulse' : 'text-blue-600'}`} />
+              {isRecording ? 'Kurakodi...' : 'Rekodi'}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -211,6 +219,14 @@ export function EnhancedChatInput({
         className="hidden"
         onChange={handleFileChange}
         accept="video/*"
+      />
+      <input
+        ref={audioInputRef}
+        type="file"
+        multiple
+        className="hidden"
+        onChange={handleFileChange}
+        accept="audio/*"
       />
     </div>
   );
