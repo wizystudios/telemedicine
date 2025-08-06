@@ -87,77 +87,47 @@ export function MobileChatInterface({
   }, [messages]);
 
   return (
-    <div className={`flex flex-col h-screen bg-background ${className}`}>
+    <div className={`flex flex-col h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 ${className}`}>
       {/* Chat Header */}
-      <div className="flex items-center justify-between p-4 border-b bg-card">
-        <div className="flex items-center space-x-3">
-          <Avatar className="w-10 h-10">
-            <AvatarImage src="/placeholder.svg" />
-            <AvatarFallback className="bg-emerald-500 text-white">
-              <div className="w-6 h-6 rounded-full bg-emerald-600 flex items-center justify-center">
-                <div className="w-3 h-3 bg-white rounded-full"></div>
-              </div>
-            </AvatarFallback>
-          </Avatar>
-          <div>
-            <h3 className="font-semibold text-foreground">Chat Bot</h3>
-            <p className="text-sm text-muted-foreground">Online</p>
-          </div>
+      <div className="bg-white dark:bg-gray-800 shadow-sm border-b px-4 py-3 flex items-center space-x-3">
+        <Avatar className="w-12 h-12 ring-2 ring-emerald-100">
+          <AvatarImage src="/placeholder.svg" />
+          <AvatarFallback className="bg-gradient-to-br from-emerald-400 to-emerald-600 text-white font-semibold">
+            Dr
+          </AvatarFallback>
+        </Avatar>
+        <div>
+          <h3 className="font-semibold text-gray-900 dark:text-white">Doctor</h3>
+          <p className="text-sm text-emerald-600 font-medium">Online</p>
         </div>
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-br from-emerald-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 pb-32">
+      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4 pb-24">
         {/* Welcome Message */}
-        <div className="flex justify-start">
-          <div className="flex items-start space-x-2 max-w-[80%]">
-            <Avatar className="w-8 h-8 flex-shrink-0">
-              <AvatarFallback className="bg-emerald-500 text-white text-xs">
-                <div className="w-4 h-4 rounded-full bg-emerald-600 flex items-center justify-center">
-                  <div className="w-2 h-2 bg-white rounded-full"></div>
-                </div>
-              </AvatarFallback>
-            </Avatar>
-            <div className="bg-muted rounded-2xl rounded-tl-md px-4 py-2">
-              <p className="text-sm text-foreground">Hello! 👋</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex justify-start">
-          <div className="flex items-start space-x-2 max-w-[80%]">
-            <Avatar className="w-8 h-8 flex-shrink-0">
-              <AvatarFallback className="bg-emerald-500 text-white text-xs">
-                <div className="w-4 h-4 rounded-full bg-emerald-600 flex items-center justify-center">
-                  <div className="w-2 h-2 bg-white rounded-full"></div>
-                </div>
-              </AvatarFallback>
-            </Avatar>
-            <div className="bg-muted rounded-2xl rounded-tl-md px-4 py-2">
-              <p className="text-sm text-foreground">How can I help?</p>
-            </div>
+        <div className="flex justify-start mb-4">
+          <div className="bg-white dark:bg-gray-700 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[85%] shadow-sm">
+            <p className="text-gray-800 dark:text-gray-200 text-base">Hello, how can I help you?</p>
+            <p className="text-xs text-gray-500 mt-1">9:40 AM</p>
           </div>
         </div>
 
         {/* Dynamic Messages */}
         {messages.map((msg) => (
-          <div key={msg.id} className={`flex ${msg.isUser ? 'justify-end' : 'justify-start'}`}>
+          <div key={msg.id} className={`flex ${msg.isUser ? 'justify-end' : 'justify-start'} mb-3`}>
             {msg.isUser ? (
-              <div className="bg-primary text-primary-foreground rounded-2xl rounded-tr-md px-4 py-2 max-w-[80%]">
-                <p className="text-sm">{msg.text}</p>
+              <div className="bg-blue-500 text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%] shadow-sm">
+                <p className="text-base break-words">{msg.text}</p>
+                <p className="text-xs opacity-75 mt-1">
+                  {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </p>
               </div>
             ) : (
-              <div className="flex items-start space-x-2 max-w-[80%]">
-                <Avatar className="w-8 h-8 flex-shrink-0">
-                  <AvatarFallback className="bg-emerald-500 text-white text-xs">
-                    <div className="w-4 h-4 rounded-full bg-emerald-600 flex items-center justify-center">
-                      <div className="w-2 h-2 bg-white rounded-full"></div>
-                    </div>
-                  </AvatarFallback>
-                </Avatar>
-                <div className="bg-muted rounded-2xl rounded-tl-md px-4 py-2">
-                  <p className="text-sm text-foreground">{msg.text}</p>
-                </div>
+              <div className="bg-white dark:bg-gray-700 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[85%] shadow-sm">
+                <p className="text-gray-800 dark:text-gray-200 text-base break-words">{msg.text}</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </p>
               </div>
             )}
           </div>
@@ -165,21 +135,21 @@ export function MobileChatInterface({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Area - Fixed position above bottom nav */}
-      <div className="border-t bg-card p-4 pb-20 fixed bottom-16 left-0 right-0 z-40">
-        <div className="flex items-end space-x-2">
+      {/* Input Area - Fixed at bottom */}
+      <div className="bg-white dark:bg-gray-800 border-t px-4 py-3 fixed bottom-16 left-0 right-0 z-50 shadow-lg">
+        <div className="flex items-center space-x-3 max-w-lg mx-auto">
           {/* Attachment Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button 
                 variant="ghost" 
                 size="icon"
-                className="h-10 w-10 rounded-full bg-muted hover:bg-muted/80 flex-shrink-0"
+                className="h-10 w-10 rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 flex-shrink-0"
               >
-                <Plus className="w-5 h-5 text-muted-foreground" />
+                <Plus className="w-5 h-5 text-gray-600 dark:text-gray-300" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-48">
+            <DropdownMenuContent align="start" className="w-48 bg-white dark:bg-gray-800 z-[60]">
               <DropdownMenuItem onClick={() => handleFileClick('image')}>
                 <Image className="w-4 h-4 mr-2 text-blue-600" />
                 Picha
@@ -205,8 +175,8 @@ export function MobileChatInterface({
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Andika ujumbe..."
-              className="pr-12 rounded-full bg-muted border-0 focus:ring-2 focus:ring-primary/20"
+              placeholder="Type a message..."
+              className="rounded-full bg-gray-100 dark:bg-gray-700 border-0 focus:ring-2 focus:ring-blue-500 pr-12 text-base"
             />
             
             <Button
@@ -214,7 +184,7 @@ export function MobileChatInterface({
               size="icon"
               className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 rounded-full"
             >
-              <Smile className="w-4 h-4 text-muted-foreground" />
+              <Smile className="w-4 h-4 text-gray-500" />
             </Button>
           </div>
 
@@ -223,7 +193,7 @@ export function MobileChatInterface({
             onClick={handleSend}
             disabled={!message.trim()}
             size="icon"
-            className="h-10 w-10 rounded-full flex-shrink-0"
+            className="h-10 w-10 rounded-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 flex-shrink-0"
           >
             <Send className="w-4 h-4" />
           </Button>

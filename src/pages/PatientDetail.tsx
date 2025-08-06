@@ -167,56 +167,51 @@ export default function PatientDetail() {
           </h1>
         </div>
 
-        {/* Patient Info Card */}
+        {/* Patient Info Card - Mobile Optimized */}
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-start space-x-4">
-              <Avatar className="w-16 h-16">
+          <CardContent className="p-4">
+            <div className="text-center space-y-3">
+              <Avatar className="w-20 h-20 mx-auto">
                 <AvatarImage src={patient.avatar_url} />
-                <AvatarFallback className="bg-primary/10 text-primary text-lg">
+                <AvatarFallback className="bg-emerald-100 text-emerald-600 text-xl font-semibold">
                   {patient.first_name?.[0]}{patient.last_name?.[0]}
                 </AvatarFallback>
               </Avatar>
               
-              <div className="flex-1">
-                <h2 className="text-xl font-semibold text-foreground mb-2">
+              <div>
+                <h2 className="text-lg font-bold text-foreground mb-1">
                   {patientName}
                 </h2>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                  <div className="flex items-center space-x-2">
-                    <Mail className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">{patient.email}</span>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center justify-center space-x-2">
+                    <Mail className="w-3 h-3 text-blue-500" />
+                    <span className="text-gray-600 text-xs truncate">{patient.email}</span>
                   </div>
                   
-                  {patient.phone && (
-                    <div className="flex items-center space-x-2">
-                      <Phone className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-muted-foreground">{patient.phone}</span>
-                    </div>
-                  )}
-                  
-                  <div className="flex items-center space-x-2">
-                    <Calendar className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">
+                  <div className="flex items-center justify-center space-x-2">
+                    <Calendar className="w-3 h-3 text-green-500" />
+                    <span className="text-gray-600 text-xs">
                       Amesajiliwa: {format(new Date(patient.created_at), 'dd/MM/yyyy')}
                     </span>
                   </div>
                   
-                  {patient.country && (
-                    <div className="flex items-center space-x-2">
-                      <span className="text-muted-foreground">📍 {patient.country}</span>
+                  {patient.phone && (
+                    <div className="flex items-center justify-center space-x-2">
+                      <Phone className="w-3 h-3 text-purple-500" />
+                      <span className="text-gray-600 text-xs">{patient.phone}</span>
                     </div>
                   )}
                 </div>
                 
-                <div className="flex space-x-2 mt-4">
+                <div className="flex justify-center mt-3">
                   <Button 
                     onClick={() => navigate(`/messages?patient=${patient.id}`)}
-                    className="flex items-center space-x-2"
+                    size="sm"
+                    className="flex items-center space-x-1"
                   >
-                    <MessageCircle className="w-4 h-4" />
-                    <span>Ujumbe</span>
+                    <MessageCircle className="w-3 h-3" />
+                    <span className="text-xs">Ujumbe</span>
                   </Button>
                 </div>
               </div>

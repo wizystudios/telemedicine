@@ -423,34 +423,34 @@ export default function Messages() {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-32 bg-gradient-to-br from-emerald-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
+      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4 pb-28 bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
         {messages.map((msg) => (
           <div
             key={msg.id}
-            className={`flex ${msg.sender_id === user?.id ? 'justify-end' : 'justify-start'}`}
+            className={`flex ${msg.sender_id === user?.id ? 'justify-end' : 'justify-start'} mb-3`}
           >
             {msg.sender_id === user?.id ? (
-              <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-2xl rounded-tr-md px-4 py-2 max-w-[80%] md:max-w-md shadow-lg border border-emerald-400/20">
-                <div className="break-words overflow-wrap-anywhere">
+              <div className="bg-blue-500 text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%] md:max-w-md shadow-sm">
+                <div className="break-words text-base">
                   {renderMessageContent(msg)}
                 </div>
-                <p className="text-xs mt-1 opacity-70">
+                <p className="text-xs mt-1 opacity-75">
                   {format(new Date(msg.created_at), 'HH:mm')}
                 </p>
               </div>
             ) : (
-              <div className="flex items-start space-x-2 max-w-[80%] md:max-w-md">
+              <div className="flex items-start space-x-2 max-w-[85%] md:max-w-md">
                 <Avatar className="w-8 h-8 flex-shrink-0">
                   <AvatarImage src={otherUser.avatar_url} />
                   <AvatarFallback className="bg-emerald-500 text-white text-xs">
                     {otherUser.first_name?.[0] || otherUser.email?.[0]?.toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-lg rounded-2xl rounded-tl-md px-4 py-2 border border-white/20">
-                  <div className="break-words overflow-wrap-anywhere">
+                <div className="bg-white dark:bg-gray-700 shadow-sm rounded-2xl rounded-tl-sm px-4 py-3">
+                  <div className="break-words text-base text-gray-800 dark:text-gray-200">
                     {renderMessageContent(msg)}
                   </div>
-                  <p className="text-xs mt-1 text-muted-foreground">
+                  <p className="text-xs mt-1 text-gray-500">
                     {format(new Date(msg.created_at), 'HH:mm')}
                   </p>
                 </div>
