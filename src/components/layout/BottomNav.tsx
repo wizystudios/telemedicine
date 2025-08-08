@@ -23,13 +23,15 @@ export function BottomNav() {
     queryFn: async () => {
       if (!user?.id) return 0;
       
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('chat_messages')
-        .select('id')
+        .select('sender_id')
         .neq('sender_id', user.id)
         .eq('is_read', false);
       
-      return data?.length || 0;
+      if (error) return 0;
+      const uniqueSenders = new Set((data || []).map((m: any) => m.sender_id));
+      return uniqueSenders.size;
     },
     enabled: !!user?.id
   });

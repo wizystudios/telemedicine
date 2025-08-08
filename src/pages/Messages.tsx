@@ -149,13 +149,13 @@ export default function Messages() {
           const fileName = `${user?.id}/${Date.now()}.${fileExt}`;
           
           const { error: uploadError, data: uploadData } = await supabase.storage
-            .from('avatars')
+            .from('chat')
             .upload(fileName, file);
 
           if (uploadError) throw uploadError;
 
           const { data: { publicUrl } } = supabase.storage
-            .from('avatars')
+            .from('chat')
             .getPublicUrl(fileName);
 
           let messageType = 'file';
@@ -423,15 +423,15 @@ export default function Messages() {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4 pb-28 bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-6 space-y-4 pb-[calc(env(safe-area-inset-bottom)+120px)] bg-gradient-to-b from-muted/30 to-background dark:from-muted/10">
         {messages.map((msg) => (
           <div
             key={msg.id}
             className={`flex ${msg.sender_id === user?.id ? 'justify-end' : 'justify-start'} mb-3`}
           >
             {msg.sender_id === user?.id ? (
-              <div className="bg-blue-500 text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%] md:max-w-md shadow-sm">
-                <div className="break-words text-base">
+              <div className="bg-primary text-primary-foreground rounded-2xl rounded-tr-sm px-4 py-3 max-w-[75%] md:max-w-md shadow-md">
+                <div className="break-words break-all hyphens-auto text-base">
                   {renderMessageContent(msg)}
                 </div>
                 <p className="text-xs mt-1 opacity-75">
@@ -446,11 +446,11 @@ export default function Messages() {
                     {otherUser.first_name?.[0] || otherUser.email?.[0]?.toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <div className="bg-white dark:bg-gray-700 shadow-sm rounded-2xl rounded-tl-sm px-4 py-3">
-                  <div className="break-words text-base text-gray-800 dark:text-gray-200">
+                <div className="bg-muted/60 dark:bg-muted/30 backdrop-blur-sm shadow-sm rounded-2xl rounded-tl-sm px-4 py-3 max-w-[75%]">
+                  <div className="break-words break-all hyphens-auto text-base text-foreground">
                     {renderMessageContent(msg)}
                   </div>
-                  <p className="text-xs mt-1 text-gray-500">
+                  <p className="text-xs mt-1 text-muted-foreground">
                     {format(new Date(msg.created_at), 'HH:mm')}
                   </p>
                 </div>

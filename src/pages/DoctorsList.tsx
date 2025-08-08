@@ -5,15 +5,21 @@ import { useAuth } from '@/hooks/useAuth';
 import { DoctorCard } from '@/components/DoctorCard';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function DoctorsList() {
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState(searchTerm);
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(searchTerm), 300);
+    return () => clearTimeout(t);
+  }, [searchTerm]);
 
   // Fetch doctors with their profiles
   const { data: doctors = [], isLoading } = useQuery({
-    queryKey: ['doctors', searchTerm],
+    queryKey: ['doctors', debouncedSearch],
     queryFn: async () => {
       let query = supabase
         .from('profiles')
@@ -31,8 +37,8 @@ export default function DoctorsList() {
         `)
         .eq('role', 'doctor');
 
-      if (searchTerm) {
-        query = query.or(`first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%`);
+      if (debouncedSearch) {
+        query = query.or(`first_name.ilike.%${debouncedSearch}%,last_name.ilike.%${debouncedSearch}%`);
       }
 
       const { data, error } = await query;

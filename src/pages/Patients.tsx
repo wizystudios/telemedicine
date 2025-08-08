@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Input } from '@/components/ui/input';
 import { PatientCard } from '@/components/PatientCard';
 import { Search, AlertCircle } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface Patient {
   id: string;
@@ -22,6 +22,12 @@ interface Patient {
 export default function Patients() {
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState(searchTerm);
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(searchTerm), 300);
+    return () => clearTimeout(t);
+  }, [searchTerm]);
 
   // Get user profile to check role from database
   const { data: userProfile } = useQuery({
@@ -67,7 +73,7 @@ export default function Patients() {
 
   // Fetch patients with urgent problem indicators
   const { data: allPatients = [], isLoading, error } = useQuery({
-    queryKey: ['patients-list', searchTerm],
+    queryKey: ['patients-list', debouncedSearch],
     queryFn: async () => {
       console.log('🔍 Fetching patients from profiles table...');
       
@@ -80,8 +86,8 @@ export default function Patients() {
         .eq('role', 'patient')
         .order('created_at', { ascending: false });
 
-      if (searchTerm) {
-        query = query.or(`first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`);
+      if (debouncedSearch) {
+        query = query.or(`first_name.ilike.%${debouncedSearch}%,last_name.ilike.%${debouncedSearch}%,email.ilike.%${debouncedSearch}%`);
       }
       
       const { data, error } = await query;

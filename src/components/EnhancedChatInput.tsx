@@ -85,7 +85,7 @@ export function EnhancedChatInput({
   };
 
   return (
-    <div className="border-t bg-card p-4 pb-20 fixed bottom-16 left-0 right-0 z-40 md:relative md:pb-4 md:bottom-auto">
+    <div className="border-t bg-card/95 supports-[backdrop-filter]:bg-card/80 backdrop-blur p-3 fixed left-0 right-0 z-50 bottom-[calc(env(safe-area-inset-bottom)+56px)] md:relative md:p-4 md:bottom-auto">
       {/* Selected Files Display */}
       {selectedFiles.length > 0 && (
         <div className="mb-3 flex flex-wrap gap-2">
@@ -131,7 +131,7 @@ export function EnhancedChatInput({
               <Plus className="w-5 h-5 text-primary" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-48" side="top">
+          <DropdownMenuContent align="start" className="w-44 z-[60] bg-popover" side="top">
             <DropdownMenuItem onClick={() => handleFileClick('image')}>
               <Image className="w-4 h-4 mr-2 text-blue-600" />
               Picha
@@ -163,7 +163,7 @@ export function EnhancedChatInput({
               onChange={(e) => setMessage(e.target.value)}
               onKeyDown={handleKeyPress}
               placeholder="Andika ujumbe..."
-              className="min-h-[40px] max-h-32 resize-none rounded-full border-0 bg-muted focus:ring-2 focus:ring-primary/20"
+              className="min-h-[44px] max-h-24 resize-none rounded-2xl border-0 bg-muted focus:ring-2 focus:ring-primary/20"
               rows={2}
               onFocus={() => setIsExpanded(true)}
               onBlur={() => {
@@ -179,7 +179,7 @@ export function EnhancedChatInput({
               onKeyDown={handleKeyPress}
               placeholder="Andika ujumbe..."
               onFocus={() => setIsExpanded(true)}
-              className="h-10 rounded-full border-0 bg-muted focus:ring-2 focus:ring-primary/20"
+              className="h-11 rounded-2xl border-0 bg-muted focus:ring-2 focus:ring-primary/20"
             />
           )}
         </div>

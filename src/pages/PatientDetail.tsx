@@ -251,16 +251,17 @@ export default function PatientDetail() {
                           </div>
                           
                           <div className="flex space-x-2">
-                            <Button size="sm" variant="outline">
-                              <CheckCircle className="w-4 h-4 mr-1" />
-                              Nisaidie
+                            <Button size="sm" variant="outline" className="h-8">
+                              <CheckCircle className="w-4 h-4" />
+                              <span className="hidden sm:inline ml-1">Nisaidie</span>
                             </Button>
                             <Button 
                               size="sm"
                               onClick={() => navigate(`/messages?patient=${patient.id}`)}
+                              className="h-8"
                             >
-                              <MessageCircle className="w-4 h-4 mr-1" />
-                              Ujumbe
+                              <MessageCircle className="w-4 h-4" />
+                              <span className="hidden sm:inline ml-1">Ujumbe</span>
                             </Button>
                           </div>
                         </div>

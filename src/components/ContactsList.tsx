@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,6 +12,12 @@ export default function ContactsList() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState(searchTerm);
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(searchTerm), 300);
+    return () => clearTimeout(t);
+  }, [searchTerm]);
 
   // Get current user profile to determine role
   const { data: currentUserProfile } = useQuery({
@@ -32,7 +38,7 @@ export default function ContactsList() {
 
   // Fetch contacts based on user role
   const { data: contacts = [], isLoading } = useQuery({
-    queryKey: ['contacts', currentUserProfile?.role, searchTerm],
+    queryKey: ['contacts', currentUserProfile?.role, debouncedSearch],
     queryFn: async () => {
       if (!currentUserProfile?.role) return [];
       
@@ -44,8 +50,8 @@ export default function ContactsList() {
         .select('id, first_name, last_name, avatar_url, role')
         .eq('role', targetRole);
 
-      if (searchTerm) {
-        query = query.or(`first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%`);
+      if (debouncedSearch) {
+        query = query.or(`first_name.ilike.%${debouncedSearch}%,last_name.ilike.%${debouncedSearch}%`);
       }
 
       const { data, error } = await query.order('first_name');
