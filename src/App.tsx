@@ -16,6 +16,8 @@ import { AppointmentNotificationHandler } from "@/components/AppointmentNotifica
 import { useState, useEffect } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useLocation } from "react-router-dom";
+import ChatbotHome from "./pages/ChatbotHome";
+import HospitalManagement from "./pages/HospitalManagement";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import DoctorsList from "./pages/DoctorsList";
@@ -110,7 +112,8 @@ function AppContent() {
         <main className={`flex-1 ${user ? (isMessagesPage ? "min-h-screen" : (isMobile ? "min-h-[calc(100vh-64px)]" : "min-h-[calc(100vh-64px)]")) : "min-h-screen"}`}>
           <Routes>
           <Route path="/auth" element={user ? <Navigate to="/dashboard" replace /> : <Auth />} />
-          <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Navigate to="/auth" replace />} />
+            <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Navigate to="/chatbot" replace />} />
+            <Route path="/chatbot" element={<ChatbotHome />} />
           
           {/* Protected Routes */}
           <Route 
@@ -218,13 +221,13 @@ function AppContent() {
             } 
            />
            <Route 
-            path="/notifications" 
-            element={
-              <ProtectedRoute>
-                <Notifications />
-              </ProtectedRoute>
-            } 
-           />
+             path="/hospital-management" 
+             element={
+               <ProtectedRoute>
+                 <HospitalManagement />
+               </ProtectedRoute>
+             } 
+            />
            
            {/* Catch all route */}
            <Route path="*" element={<NotFound />} />
