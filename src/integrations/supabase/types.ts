@@ -213,6 +213,44 @@ export type Database = {
           },
         ]
       }
+      chatbot_conversations: {
+        Row: {
+          context: Json | null
+          created_at: string
+          id: string
+          messages: Json
+          session_id: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          context?: Json | null
+          created_at?: string
+          id?: string
+          messages?: Json
+          session_id: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          context?: Json | null
+          created_at?: string
+          id?: string
+          messages?: Json
+          session_id?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chatbot_conversations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       doctor_availability: {
         Row: {
           created_at: string | null
@@ -343,6 +381,7 @@ export type Database = {
           created_at: string | null
           education: string[] | null
           experience_years: number | null
+          hospital_id: string | null
           id: string
           is_available: boolean | null
           is_verified: boolean | null
@@ -360,6 +399,7 @@ export type Database = {
           created_at?: string | null
           education?: string[] | null
           experience_years?: number | null
+          hospital_id?: string | null
           id?: string
           is_available?: boolean | null
           is_verified?: boolean | null
@@ -377,6 +417,7 @@ export type Database = {
           created_at?: string | null
           education?: string[] | null
           experience_years?: number | null
+          hospital_id?: string | null
           id?: string
           is_available?: boolean | null
           is_verified?: boolean | null
@@ -390,6 +431,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "doctor_profiles_hospital_id_fkey"
+            columns: ["hospital_id"]
+            isOneToOne: false
+            referencedRelation: "hospitals"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "doctor_profiles_specialty_id_fkey"
             columns: ["specialty_id"]
             isOneToOne: false
@@ -399,6 +447,133 @@ export type Database = {
           {
             foreignKeyName: "doctor_profiles_user_id_fkey"
             columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hospitals: {
+        Row: {
+          address: string
+          created_at: string
+          description: string | null
+          email: string | null
+          id: string
+          is_promoted: boolean | null
+          is_verified: boolean | null
+          name: string
+          owner_id: string
+          phone: string | null
+          promotion_expires_at: string | null
+          rating: number | null
+          services: string[] | null
+          total_reviews: number | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          address: string
+          created_at?: string
+          description?: string | null
+          email?: string | null
+          id?: string
+          is_promoted?: boolean | null
+          is_verified?: boolean | null
+          name: string
+          owner_id: string
+          phone?: string | null
+          promotion_expires_at?: string | null
+          rating?: number | null
+          services?: string[] | null
+          total_reviews?: number | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          address?: string
+          created_at?: string
+          description?: string | null
+          email?: string | null
+          id?: string
+          is_promoted?: boolean | null
+          is_verified?: boolean | null
+          name?: string
+          owner_id?: string
+          phone?: string | null
+          promotion_expires_at?: string | null
+          rating?: number | null
+          services?: string[] | null
+          total_reviews?: number | null
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hospitals_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      laboratories: {
+        Row: {
+          address: string
+          created_at: string
+          description: string | null
+          email: string | null
+          id: string
+          is_promoted: boolean | null
+          is_verified: boolean | null
+          name: string
+          owner_id: string
+          phone: string | null
+          promotion_expires_at: string | null
+          rating: number | null
+          test_types: string[] | null
+          total_reviews: number | null
+          updated_at: string
+        }
+        Insert: {
+          address: string
+          created_at?: string
+          description?: string | null
+          email?: string | null
+          id?: string
+          is_promoted?: boolean | null
+          is_verified?: boolean | null
+          name: string
+          owner_id: string
+          phone?: string | null
+          promotion_expires_at?: string | null
+          rating?: number | null
+          test_types?: string[] | null
+          total_reviews?: number | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          created_at?: string
+          description?: string | null
+          email?: string | null
+          id?: string
+          is_promoted?: boolean | null
+          is_verified?: boolean | null
+          name?: string
+          owner_id?: string
+          phone?: string | null
+          promotion_expires_at?: string | null
+          rating?: number | null
+          test_types?: string[] | null
+          total_reviews?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "laboratories_owner_id_fkey"
+            columns: ["owner_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -727,6 +902,71 @@ export type Database = {
           },
         ]
       }
+      pharmacies: {
+        Row: {
+          address: string
+          created_at: string
+          description: string | null
+          email: string | null
+          id: string
+          is_promoted: boolean | null
+          is_verified: boolean | null
+          medications_available: string[] | null
+          name: string
+          owner_id: string
+          phone: string | null
+          promotion_expires_at: string | null
+          rating: number | null
+          services: string[] | null
+          total_reviews: number | null
+          updated_at: string
+        }
+        Insert: {
+          address: string
+          created_at?: string
+          description?: string | null
+          email?: string | null
+          id?: string
+          is_promoted?: boolean | null
+          is_verified?: boolean | null
+          medications_available?: string[] | null
+          name: string
+          owner_id: string
+          phone?: string | null
+          promotion_expires_at?: string | null
+          rating?: number | null
+          services?: string[] | null
+          total_reviews?: number | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          created_at?: string
+          description?: string | null
+          email?: string | null
+          id?: string
+          is_promoted?: boolean | null
+          is_verified?: boolean | null
+          medications_available?: string[] | null
+          name?: string
+          owner_id?: string
+          phone?: string | null
+          promotion_expires_at?: string | null
+          rating?: number | null
+          services?: string[] | null
+          total_reviews?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pharmacies_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       post_likes: {
         Row: {
           created_at: string
@@ -807,6 +1047,62 @@ export type Database = {
           username?: string | null
         }
         Relationships: []
+      }
+      promotions: {
+        Row: {
+          created_at: string
+          description: string | null
+          end_date: string
+          entity_id: string
+          entity_type: string
+          id: string
+          is_active: boolean | null
+          owner_id: string
+          payment_amount: number
+          payment_status: string | null
+          start_date: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          end_date: string
+          entity_id: string
+          entity_type: string
+          id?: string
+          is_active?: boolean | null
+          owner_id: string
+          payment_amount: number
+          payment_status?: string | null
+          start_date: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          end_date?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          is_active?: boolean | null
+          owner_id?: string
+          payment_amount?: number
+          payment_status?: string | null
+          start_date?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promotions_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reviews: {
         Row: {
@@ -943,7 +1239,13 @@ export type Database = {
       }
     }
     Enums: {
-      user_role: "patient" | "doctor" | "admin"
+      user_role:
+        | "patient"
+        | "doctor"
+        | "admin"
+        | "hospital_owner"
+        | "pharmacy_owner"
+        | "lab_owner"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1071,7 +1373,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      user_role: ["patient", "doctor", "admin"],
+      user_role: [
+        "patient",
+        "doctor",
+        "admin",
+        "hospital_owner",
+        "pharmacy_owner",
+        "lab_owner",
+      ],
     },
   },
 } as const
