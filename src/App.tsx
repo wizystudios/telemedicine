@@ -16,23 +16,13 @@ import { AppointmentNotificationHandler } from "@/components/AppointmentNotifica
 import { useState, useEffect } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useLocation } from "react-router-dom";
-import ChatbotHome from "./pages/ChatbotHome";
-import HospitalManagement from "./pages/HospitalManagement";
+import TeleMedHome from "./pages/TeleMedHome";
 import Auth from "./pages/Auth";
-import Dashboard from "./pages/Dashboard";
-import DoctorsList from "./pages/DoctorsList";
-import Patients from "./pages/Patients";
-import Appointments from "./pages/Appointments";
+import { RoleBasedDashboard } from "./components/RoleBasedDashboard";
+import BookAppointment from "./pages/BookAppointment";
 import Messages from "./pages/Messages";
 import Profile from "./pages/Profile";
-import BookAppointment from "./pages/BookAppointment";
-import PatientProblems from "./pages/PatientProblems";
-import PatientDetail from "./pages/PatientDetail";
-import PatientProblemForm from "./pages/PatientProblemForm";
-import Notifications from "./pages/Notifications";
 import NotFound from "./pages/NotFound";
-import DoctorProfile from "./pages/DoctorProfile";
-import PatientProfile from "./pages/PatientProfile";
 
 const queryClient = new QueryClient();
 
@@ -97,54 +87,19 @@ function AppContent() {
   
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
-      {user && !isMessagesPage && <Navbar />}
-      {user && <AppointmentNotificationHandler />}
-      
-      <div className="flex">
-        {/* Desktop Sidebar */}
-        {user && !isMobile && (
-          <div className="flex-shrink-0">
-            <Sidebar isCollapsed={sidebarCollapsed} />
-          </div>
-        )}
-        
-        {/* Main Content */}
-        <main className={`flex-1 ${user ? (isMessagesPage ? "min-h-screen" : (isMobile ? "min-h-[calc(100vh-64px)]" : "min-h-[calc(100vh-64px)]")) : "min-h-screen"}`}>
+      {/* Main Content - No navigation bars, chatbot-first design */}
+      <main className="min-h-screen">
           <Routes>
-          <Route path="/auth" element={user ? <Navigate to="/dashboard" replace /> : <Auth />} />
-            <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Navigate to="/chatbot" replace />} />
-            <Route path="/chatbot" element={<ChatbotHome />} />
+            <Route path="/auth" element={user ? <Navigate to="/dashboard" replace /> : <Auth />} />
+            <Route path="/" element={<TeleMedHome />} />
+            <Route path="/chatbot" element={<TeleMedHome />} />
           
           {/* Protected Routes */}
           <Route 
             path="/dashboard" 
             element={
               <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/doctor-profile/:doctorId" 
-            element={
-              <ProtectedRoute>
-                <DoctorProfile />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/patient-profile/:patientId" 
-            element={
-              <ProtectedRoute>
-                <PatientProfile />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/appointments" 
-            element={
-              <ProtectedRoute>
-                <Appointments />
+                <RoleBasedDashboard />
               </ProtectedRoute>
             } 
           />
@@ -156,38 +111,6 @@ function AppContent() {
               </ProtectedRoute>
             } 
           />
-          <Route 
-            path="/doctors" 
-            element={
-              <ProtectedRoute>
-                <DoctorsList />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/doctors-list" 
-            element={
-              <ProtectedRoute>
-                <DoctorsList />
-              </ProtectedRoute>
-            } 
-          />
-           <Route 
-            path="/patients" 
-            element={
-              <ProtectedRoute>
-                <Patients />
-              </ProtectedRoute>
-            } 
-           />
-           <Route 
-            path="/patient/:patientId" 
-            element={
-              <ProtectedRoute>
-                <PatientDetail />
-              </ProtectedRoute>
-            } 
-           />
           <Route 
             path="/profile" 
             element={
@@ -204,47 +127,11 @@ function AppContent() {
               </ProtectedRoute>
             } 
            />
-            <Route 
-            path="/patient-problems" 
-            element={
-              <ProtectedRoute>
-                <PatientProblems />
-              </ProtectedRoute>
-            } 
-           />
-           <Route 
-            path="/post-problem" 
-            element={
-              <ProtectedRoute>
-                <PatientProblemForm />
-              </ProtectedRoute>
-            } 
-           />
-           <Route 
-             path="/hospital-management" 
-             element={
-               <ProtectedRoute>
-                 <HospitalManagement />
-               </ProtectedRoute>
-             } 
-            />
            
            {/* Catch all route */}
            <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
-      
-      {/* Mobile Bottom Navigation */}
-      {user && isMobile && <BottomNav />}
-      
-      {/* Notification Sidebar */}
-      {user && (
-        <NotificationSidebar 
-          isOpen={showNotifications} 
-          onClose={() => setShowNotifications(false)} 
-        />
-      )}
-    </div>
     </div>
   );
 }
