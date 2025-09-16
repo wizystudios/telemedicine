@@ -18,7 +18,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useLocation } from "react-router-dom";
 import TeleMedHome from "./pages/TeleMedHome";
 import Auth from "./pages/Auth";
-import { RoleBasedDashboard } from "./components/RoleBasedDashboard";
+import RoleBasedDashboard from "./components/RoleBasedDashboard";
 import BookAppointment from "./pages/BookAppointment";
 import Messages from "./pages/Messages";
 import Profile from "./pages/Profile";
