@@ -496,37 +496,6 @@ export default function TeleMedHome() {
       {/* Main Chatbot Section */}
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
-          {/* Quick Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <Card className="bg-white shadow-medical">
-              <CardContent className="p-4 text-center">
-                <Stethoscope className="w-8 h-8 mx-auto mb-2 text-medical-blue" />
-                <div className="text-2xl font-bold text-foreground">500+</div>
-                <div className="text-sm text-medical-gray">Doctors</div>
-              </CardContent>
-            </Card>
-            <Card className="bg-white shadow-medical">
-              <CardContent className="p-4 text-center">
-                <Building className="w-8 h-8 mx-auto mb-2 text-medical-green" />
-                <div className="text-2xl font-bold text-foreground">50+</div>
-                <div className="text-sm text-medical-gray">Hospitals</div>
-              </CardContent>
-            </Card>
-            <Card className="bg-white shadow-medical">
-              <CardContent className="p-4 text-center">
-                <Users className="w-8 h-8 mx-auto mb-2 text-medical-blue" />
-                <div className="text-2xl font-bold text-foreground">10K+</div>
-                <div className="text-sm text-medical-gray">Patients</div>
-              </CardContent>
-            </Card>
-            <Card className="bg-white shadow-medical">
-              <CardContent className="p-4 text-center">
-                <Star className="w-8 h-8 mx-auto mb-2 text-medical-warning" />
-                <div className="text-2xl font-bold text-foreground">4.9★</div>
-                <div className="text-sm text-medical-gray">Rating</div>
-              </CardContent>
-            </Card>
-          </div>
 
           {/* Chatbot Interface */}
           <Card className="bg-white shadow-medical-strong h-[600px] flex flex-col">
