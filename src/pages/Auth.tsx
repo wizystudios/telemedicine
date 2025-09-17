@@ -89,69 +89,65 @@ export default function Auth() {
                 <HeartHandshake className="w-12 h-12 text-medical-blue" />
               </div>
             </div>
-            <h1 className="text-4xl font-bold text-foreground mb-2">🏥 TeleMed Smart</h1>
-            <p className="text-lg text-medical-gray">Your Health, One Chat Away</p>
+            <h1 className="text-4xl font-bold text-foreground mb-2">TeleMed Smart</h1>
+            <p className="text-lg text-medical-gray">AI Health Assistant</p>
           </div>
 
-          {/* Main Action */}
-          <div className="w-full max-w-sm space-y-4 animate-fade-in">
-            <Button 
-              onClick={handleChatAsGuest}
-              className="w-full h-16 text-lg bg-medical-blue hover:bg-medical-blue/90 rounded-2xl shadow-medical transform transition-all hover:scale-105"
-            >
-              <HeartHandshake className="w-6 h-6 mr-3" />
-              Start Chatbot
-            </Button>
-            
-            {/* Professional Access */}
-            <div className="grid grid-cols-2 gap-3 mt-8">
+            {/* Main Action */}
+            <div className="w-full max-w-sm space-y-6 animate-fade-in">
               <Button 
-                onClick={() => {
-                  setSelectedRole('doctor');
-                  setCurrentStep('signin');
-                }}
-                variant="outline"
-                className="h-20 flex-col border-medical-blue/20 hover:bg-medical-light-blue rounded-xl"
+                onClick={handleChatAsGuest}
+                className="w-full h-16 text-lg bg-medical-blue hover:bg-medical-blue/90 rounded-2xl shadow-medical transform transition-all hover:scale-105"
               >
-                <Stethoscope className="w-6 h-6 text-medical-blue mb-1" />
-                <span className="text-sm font-medium">Doctor</span>
+                <HeartHandshake className="w-8 h-8" />
               </Button>
               
+              {/* Professional Access */}
+              <div className="grid grid-cols-2 gap-4 mt-8">
+                <Button 
+                  onClick={() => {
+                    setSelectedRole('doctor');
+                    setCurrentStep('signin');
+                  }}
+                  variant="outline"
+                  className="h-16 flex items-center justify-center border-medical-blue/20 hover:bg-medical-light-blue rounded-xl"
+                >
+                  <Stethoscope className="w-8 h-8 text-medical-blue" />
+                </Button>
+                
+                <Button 
+                  onClick={() => {
+                    setSelectedRole('hospital');
+                    setCurrentStep('signin');
+                  }}
+                  variant="outline"
+                  className="h-16 flex items-center justify-center border-medical-green/20 hover:bg-medical-light-green rounded-xl"
+                >
+                  <Building className="w-8 h-8 text-medical-green" />
+                </Button>
+              </div>
+
+              {/* Patient Register */}
+              <Button 
+                onClick={() => setCurrentStep('signup')}
+                variant="ghost"
+                className="w-full h-12 text-medical-blue hover:bg-medical-light-blue rounded-xl mt-6"
+              >
+                <UserCheck className="w-6 h-6" />
+              </Button>
+
+              {/* Admin Access */}
               <Button 
                 onClick={() => {
-                  setSelectedRole('hospital');
+                  setSelectedRole('admin');
                   setCurrentStep('signin');
                 }}
-                variant="outline"
-                className="h-20 flex-col border-medical-green/20 hover:bg-medical-light-green rounded-xl"
+                variant="ghost"
+                className="w-full h-8 text-xs text-medical-gray hover:text-foreground mt-4"
               >
-                <Building className="w-6 h-6 text-medical-green mb-1" />
-                <span className="text-sm font-medium">Hospital</span>
+                <Shield className="w-4 h-4" />
               </Button>
             </div>
-
-            {/* Patient Register */}
-            <Button 
-              onClick={() => setCurrentStep('signup')}
-              variant="ghost"
-              className="w-full h-12 text-medical-blue hover:bg-medical-light-blue rounded-xl mt-6"
-            >
-              <UserCheck className="w-4 h-4 mr-2" />
-              Register as Patient
-            </Button>
-
-            {/* Admin Access */}
-            <Button 
-              onClick={() => {
-                setSelectedRole('admin');
-                setCurrentStep('signin');
-              }}
-              variant="ghost"
-              className="w-full h-8 text-xs text-medical-gray hover:text-foreground mt-4"
-            >
-              Admin Access
-            </Button>
-          </div>
         </div>
 
         {/* Footer */}
@@ -175,14 +171,7 @@ export default function Auth() {
     return (
       <div className="min-h-screen bg-medical-gradient-light">
         {/* Header */}
-        <div className="flex justify-between items-center p-4">
-          <Button 
-            variant="ghost" 
-            onClick={() => setCurrentStep('welcome')}
-            className="text-medical-gray hover:text-foreground"
-          >
-            ← Back
-          </Button>
+        <div className="flex justify-end items-center p-4">
           <div className="flex items-center space-x-2">
             <LanguageSelector />
             <ThemeToggle />
@@ -200,14 +189,7 @@ export default function Auth() {
   return (
     <div className="min-h-screen bg-medical-gradient-light">
       {/* Header */}
-      <div className="flex justify-between items-center p-4">
-        <Button 
-          variant="ghost" 
-          onClick={() => setCurrentStep('welcome')}
-          className="text-medical-gray hover:text-foreground"
-        >
-          ← Back
-        </Button>
+      <div className="flex justify-end items-center p-4">
         <div className="flex items-center space-x-2">
           <LanguageSelector />
           <ThemeToggle />
