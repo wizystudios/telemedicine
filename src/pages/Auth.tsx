@@ -170,8 +170,17 @@ export default function Auth() {
   if (currentStep === 'signup') {
     return (
       <div className="min-h-screen bg-medical-gradient-light">
-        {/* Header */}
-        <div className="flex justify-end items-center p-4">
+        {/* Header with Back Button */}
+        <div className="flex justify-between items-center p-4">
+          <Button 
+            onClick={() => setCurrentStep('welcome')}
+            variant="ghost" 
+            size="sm"
+            className="text-medical-gray hover:text-foreground"
+          >
+            <ArrowRight className="w-4 h-4 rotate-180 mr-2" />
+            Back
+          </Button>
           <div className="flex items-center space-x-2">
             <LanguageSelector />
             <ThemeToggle />
@@ -188,13 +197,22 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen bg-medical-gradient-light">
-      {/* Header */}
-      <div className="flex justify-end items-center p-4">
-        <div className="flex items-center space-x-2">
-          <LanguageSelector />
-          <ThemeToggle />
+        {/* Header with Back Button */}
+        <div className="flex justify-between items-center p-4">
+          <Button 
+            onClick={() => setCurrentStep('welcome')}
+            variant="ghost" 
+            size="sm"
+            className="text-medical-gray hover:text-foreground"
+          >
+            <ArrowRight className="w-4 h-4 rotate-180 mr-2" />
+            Back
+          </Button>
+          <div className="flex items-center space-x-2">
+            <LanguageSelector />
+            <ThemeToggle />
+          </div>
         </div>
-      </div>
 
       {/* Sign In Form */}
       <div className="flex-1 flex items-center justify-center px-4">

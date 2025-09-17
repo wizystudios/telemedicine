@@ -228,6 +228,7 @@ export function SmartChatbot({ onBookAppointment, onViewHospital, onViewPharmacy
 
   const searchDoctors = async (query: string) => {
     try {
+      console.log('Searching for doctors...');
       const { data, error } = await supabase
         .from('profiles')
         .select(`
@@ -240,13 +241,18 @@ export function SmartChatbot({ onBookAppointment, onViewHospital, onViewPharmacy
         .eq('role', 'doctor')
         .limit(5);
 
+      console.log('Doctor search result:', { data, error });
       if (error) throw error;
-      return data?.map(doctor => ({
+      
+      const doctors = data?.map(doctor => ({
         ...doctor,
         specialization: 'Mfanyakazi wa Afya',
         rating: 4.5,
         isAvailable: true
       })) || [];
+      
+      console.log('Mapped doctors:', doctors);
+      return doctors;
     } catch (error) {
       console.error('Error searching doctors:', error);
       return [];
@@ -450,115 +456,118 @@ export function SmartChatbot({ onBookAppointment, onViewHospital, onViewPharmacy
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto h-screen flex flex-col bg-white dark:bg-gray-900">
+    <div className="w-full max-w-4xl mx-auto h-screen flex flex-col bg-white dark:bg-gray-900 shadow-2xl rounded-xl border border-gray-200 dark:border-gray-700">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
         <div className="flex items-center space-x-3">
           <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
             <Bot className="h-4 w-4 text-white" />
           </div>
-          <h1 className="text-lg font-semibold text-gray-900 dark:text-white">AI Assistant</h1>
         </div>
       </div>
       
-      {/* Messages */}
-      <div className="flex-1 overflow-hidden">
-        <ScrollArea className="h-full">
-          <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
-            {messages.map((message) => (
-              <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`flex items-start space-x-3 max-w-[85%] ${message.type === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
-                  <Avatar className="h-8 w-8 flex-shrink-0 mt-1">
-                    <AvatarFallback className={message.type === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'}>
-                      {message.type === 'user' ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
-                    </AvatarFallback>
-                  </Avatar>
-                  
-                  <div className="space-y-2">
-                    <div className={`rounded-2xl px-4 py-3 ${
-                      message.type === 'user' 
-                        ? 'bg-blue-600 text-white ml-auto' 
-                        : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100'
-                    }`}>
-                      <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
-                    </div>
-                    
-                    {renderMessageData(message)}
-                    
-                    {message.suggestions && (
-                      <div className="flex flex-wrap gap-2 mt-3">
-                        {message.suggestions.map((suggestion, index) => (
-                          <Button
-                            key={index}
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleSuggestionClick(suggestion)}
-                            className="text-xs rounded-full border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
-                          >
-                            {suggestion}
-                          </Button>
-                        ))}
+      <div className="flex-1 flex flex-col bg-gradient-to-br from-gray-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        {/* Messages Container */}
+        <div className="flex-1 overflow-hidden">
+          <div className="h-full max-w-4xl mx-auto flex flex-col">
+            <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
+              {messages.map((message) => (
+                <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`flex items-start space-x-3 max-w-[80%] ${message.type === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
+                    <div className="flex-shrink-0 mt-1">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                        message.type === 'user' 
+                          ? 'bg-blue-600 text-white' 
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                      }`}>
+                        {message.type === 'user' ? <User className="w-4 h-4" /> : <Bot className="w-4 w-4" />}
                       </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-            
-            {isLoading && (
-              <div className="flex justify-start">
-                <div className="flex items-start space-x-3">
-                  <Avatar className="h-8 w-8 mt-1">
-                    <AvatarFallback className="bg-gray-100 text-gray-700">
-                      <Bot className="h-4 w-4" />
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="bg-gray-100 dark:bg-gray-800 rounded-2xl px-4 py-3">
-                    <div className="flex space-x-1">
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className={`rounded-2xl px-4 py-3 ${
+                        message.type === 'user' 
+                          ? 'bg-blue-600 text-white' 
+                          : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 shadow-sm'
+                      }`}>
+                        <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                      </div>
+                      
+                      {renderMessageData(message)}
+                      
+                      {message.suggestions && (
+                        <div className="flex flex-wrap gap-2 mt-3">
+                          {message.suggestions.map((suggestion, index) => (
+                            <Button
+                              key={index}
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleSuggestionClick(suggestion)}
+                              className="text-xs rounded-full border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 h-8"
+                            >
+                              {suggestion}
+                            </Button>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
-            
-            <div ref={messagesEndRef} />
+              ))}
+              
+              {isLoading && (
+                <div className="flex justify-start">
+                  <div className="flex items-start space-x-3">
+                    <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mt-1">
+                      <Bot className="w-4 h-4 text-gray-700 dark:text-gray-300" />
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl px-4 py-3 shadow-sm">
+                      <div className="flex space-x-1">
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              <div ref={messagesEndRef} />
+            </div>
           </div>
-        </ScrollArea>
-      </div>
-      
-      {/* Input */}
-      <div className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
-        <div className="max-w-3xl mx-auto">
-          <div className="flex items-end space-x-2 bg-gray-50 dark:bg-gray-900 rounded-2xl p-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={isListening ? stopListening : startListening}
-              className={`rounded-xl ${isListening ? 'text-red-600' : 'text-gray-600'}`}
-            >
-              {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-            </Button>
-            
-            <Input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Type your message..."
-              className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-              disabled={isLoading}
-            />
-            
-            <Button 
-              onClick={handleSendMessage}
-              disabled={!input.trim() || isLoading}
-              size="sm"
-              className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              <Send className="h-4 w-4" />
-            </Button>
+        </div>
+        
+        {/* Input Area */}
+        <div className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+          <div className="max-w-4xl mx-auto p-4">
+            <div className="flex items-end space-x-3 bg-gray-50 dark:bg-gray-900 rounded-3xl p-3 shadow-sm border border-gray-200 dark:border-gray-700">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={isListening ? stopListening : startListening}
+                className={`rounded-full p-2 ${isListening ? 'text-red-600 hover:bg-red-50' : 'text-gray-600 hover:bg-gray-100'}`}
+              >
+                {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+              </Button>
+              
+              <Input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Type your message..."
+                className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-gray-900 dark:text-gray-100 placeholder:text-gray-500"
+                disabled={isLoading}
+              />
+              
+              <Button 
+                onClick={handleSendMessage}
+                disabled={!input.trim() || isLoading}
+                size="sm"
+                className="rounded-full p-2 bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50"
+              >
+                <Send className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
         </div>
       </div>
