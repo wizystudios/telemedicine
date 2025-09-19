@@ -370,43 +370,49 @@ export function SmartChatbot({ onBookAppointment, onViewHospital, onViewPharmacy
 
     if (type === 'doctors') {
       return (
-        <div className="mt-3 space-y-3">
+        <div className="mt-4 space-y-4">
           {items.map((doctor: any) => (
-            <Card key={doctor.id} className="border border-blue-200 hover:shadow-md transition-shadow">
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-3">
-                  <Avatar className="h-12 w-12">
-                    <AvatarImage src={doctor.avatar_url} />
-                    <AvatarFallback className="bg-blue-100 text-blue-700">
-                      <Stethoscope className="h-6 w-6" />
+            <div key={doctor.id} className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-5 hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]">
+              <div className="flex items-center space-x-4">
+                <div className="relative">
+                  <Avatar className="h-16 w-16 ring-4 ring-blue-100 dark:ring-blue-900">
+                    <AvatarImage src={doctor.avatar_url} className="object-cover" />
+                    <AvatarFallback className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-lg font-semibold">
+                      <Stethoscope className="h-8 w-8" />
                     </AvatarFallback>
                   </Avatar>
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-gray-900">
-                      Dr. {doctor.first_name} {doctor.last_name}
-                    </h4>
-                    <p className="text-sm text-gray-600">{doctor.specialization}</p>
-                    <div className="flex items-center mt-1 space-x-4">
-                      <div className="flex items-center">
-                        <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                        <span className="text-sm text-gray-600 ml-1">{doctor.rating}</span>
-                      </div>
-                      <Badge variant="secondary" className="bg-green-100 text-green-700">
-                        Available
-                      </Badge>
-                    </div>
-                  </div>
-                  <Button 
-                    size="sm" 
-                    onClick={() => onBookAppointment?.(doctor.id)}
-                    className="bg-blue-600 hover:bg-blue-700"
-                  >
-                    <Calendar className="h-4 w-4 mr-1" />
-                    Book
-                  </Button>
+                  <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-400 rounded-full border-2 border-white dark:border-gray-800"></div>
                 </div>
-              </CardContent>
-            </Card>
+                <div className="flex-1">
+                  <h4 className="text-lg font-bold text-gray-900 dark:text-white">
+                    Dr. {doctor.first_name} {doctor.last_name}
+                  </h4>
+                  <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">{doctor.specialization}</p>
+                  <div className="flex items-center mt-2 space-x-4">
+                    <div className="flex items-center space-x-1">
+                      <div className="flex">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} className={`h-4 w-4 ${i < Math.floor(doctor.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
+                        ))}
+                      </div>
+                      <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">{doctor.rating}</span>
+                    </div>
+                    <Badge className="bg-green-100 text-green-700 hover:bg-green-200 px-3 py-1 rounded-full font-medium">
+                      <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
+                      Available
+                    </Badge>
+                  </div>
+                </div>
+                <Button 
+                  onClick={() => onBookAppointment?.(doctor.id)}
+                  className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 
+                           text-white px-6 py-3 rounded-xl font-semibold shadow-lg transform hover:scale-105 transition-all duration-200"
+                >
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Book Appointment
+                </Button>
+              </div>
+            </div>
           ))}
         </div>
       );
@@ -414,39 +420,55 @@ export function SmartChatbot({ onBookAppointment, onViewHospital, onViewPharmacy
 
     if (type === 'hospitals') {
       return (
-        <div className="mt-3 space-y-3">
+        <div className="mt-4 space-y-4">
           {items.map((hospital: any) => (
-            <Card key={hospital.id} className="border border-green-200 hover:shadow-md transition-shadow">
-              <CardContent className="p-4">
-                <div className="flex items-start space-x-3">
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <MapPin className="h-6 w-6 text-green-600" />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-gray-900">{hospital.name}</h4>
-                    <p className="text-sm text-gray-600 mt-1">{hospital.address}</p>
-                    <div className="flex items-center mt-2 space-x-4">
-                      <div className="flex items-center">
-                        <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                        <span className="text-sm text-gray-600 ml-1">{hospital.rating}</span>
+            <div key={hospital.id} className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-5 hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]">
+              <div className="flex items-start space-x-4">
+                <div className="p-3 bg-gradient-to-r from-green-400 to-emerald-500 rounded-2xl shadow-lg">
+                  <MapPin className="h-8 w-8 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h4 className="text-lg font-bold text-gray-900 dark:text-white">{hospital.name}</h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 flex items-center">
+                    <MapPin className="h-4 w-4 mr-1" />
+                    {hospital.address}
+                  </p>
+                  <div className="flex items-center mt-3 space-x-4">
+                    <div className="flex items-center space-x-1">
+                      <div className="flex">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} className={`h-4 w-4 ${i < Math.floor(hospital.rating || 4.5) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
+                        ))}
                       </div>
-                      {hospital.is_promoted && (
-                        <Badge className="bg-yellow-100 text-yellow-700">Promoted</Badge>
-                      )}
+                      <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">{hospital.rating || '4.5'}</span>
                     </div>
-                  </div>
-                  <div className="flex flex-col space-y-2">
-                    <Button size="sm" variant="outline" onClick={() => onViewHospital?.(hospital.id)}>
-                      View
-                    </Button>
-                    <Button size="sm" className="bg-green-600 hover:bg-green-700">
-                      <Phone className="h-4 w-4 mr-1" />
-                      Call
-                    </Button>
+                    {hospital.is_promoted && (
+                      <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-3 py-1 rounded-full font-medium">
+                        ⭐ Featured
+                      </Badge>
+                    )}
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+                <div className="flex flex-col space-y-3">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={() => onViewHospital?.(hospital.id)}
+                    className="border-gray-300 hover:border-blue-500 hover:text-blue-600 rounded-xl px-4 py-2 font-medium"
+                  >
+                    View Details
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 
+                             text-white rounded-xl px-4 py-2 font-medium shadow-lg transform hover:scale-105 transition-all duration-200"
+                  >
+                    <Phone className="h-4 w-4 mr-2" />
+                    Call Now
+                  </Button>
+                </div>
+              </div>
+            </div>
           ))}
         </div>
       );
@@ -456,118 +478,155 @@ export function SmartChatbot({ onBookAppointment, onViewHospital, onViewPharmacy
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto h-screen flex flex-col bg-white dark:bg-gray-900 shadow-2xl rounded-xl border border-gray-200 dark:border-gray-700">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-            <Bot className="h-4 w-4 text-white" />
+    <div className="h-screen w-full flex flex-col bg-gradient-to-br from-indigo-50 via-white to-cyan-50 dark:from-gray-900 dark:via-gray-800 dark:to-slate-900">
+      {/* Modern Header with glass effect */}
+      <div className="sticky top-0 z-10 backdrop-blur-xl bg-white/80 dark:bg-gray-900/80 border-b border-white/20 dark:border-gray-800/50 shadow-lg">
+        <div className="max-w-4xl mx-auto px-6 py-4">
+          <div className="flex items-center space-x-4">
+            <div className="relative">
+              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg">
+                <Bot className="h-6 w-6 text-white" />
+              </div>
+              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white dark:border-gray-900 animate-pulse"></div>
+            </div>
+            <div>
+              <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                AI Doctor Assistant
+              </h1>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Always here to help • Online</p>
+            </div>
           </div>
         </div>
       </div>
       
-      <div className="flex-1 flex flex-col bg-gradient-to-br from-gray-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-        {/* Messages Container */}
-        <div className="flex-1 overflow-hidden">
-          <div className="h-full max-w-4xl mx-auto flex flex-col">
-            <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
-              {messages.map((message) => (
-                <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`flex items-start space-x-3 max-w-[80%] ${message.type === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
-                    <div className="flex-shrink-0 mt-1">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                        message.type === 'user' 
-                          ? 'bg-blue-600 text-white' 
-                          : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                      }`}>
-                        {message.type === 'user' ? <User className="w-4 h-4" /> : <Bot className="w-4 w-4" />}
+      {/* Modern Chat Container */}
+      <div className="flex-1 overflow-hidden">
+        <div className="h-full max-w-4xl mx-auto flex flex-col">
+          {/* Messages Area with beautiful scrollbar */}
+          <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
+            {messages.map((message) => (
+              <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <div className={`flex items-start space-x-3 max-w-[85%] ${message.type === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
+                  {/* Avatar */}
+                  <div className="flex-shrink-0">
+                    {message.type === 'user' ? (
+                      <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center shadow-lg">
+                        <User className="w-5 h-5 text-white" />
                       </div>
+                    ) : (
+                      <div className="w-10 h-10 bg-gradient-to-r from-emerald-400 to-cyan-500 rounded-full flex items-center justify-center shadow-lg">
+                        <Bot className="w-5 h-5 text-white" />
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Message Content */}
+                  <div className="space-y-3">
+                    <div className={`relative rounded-3xl px-6 py-4 shadow-lg ${
+                      message.type === 'user' 
+                        ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white ml-4' 
+                        : 'bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 text-gray-800 dark:text-gray-200 mr-4'
+                    }`}>
+                      {/* Message bubble tail */}
+                      <div className={`absolute top-4 w-0 h-0 ${
+                        message.type === 'user'
+                          ? 'right-[-8px] border-l-[16px] border-l-blue-500 border-t-[8px] border-t-transparent border-b-[8px] border-b-transparent'
+                          : 'left-[-8px] border-r-[16px] border-r-white dark:border-r-gray-800 border-t-[8px] border-t-transparent border-b-[8px] border-b-transparent'
+                      }`}></div>
+                      
+                      <p className="text-sm leading-relaxed font-medium">{message.content}</p>
                     </div>
                     
-                    <div className="space-y-2">
-                      <div className={`rounded-2xl px-4 py-3 ${
-                        message.type === 'user' 
-                          ? 'bg-blue-600 text-white' 
-                          : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 shadow-sm'
-                      }`}>
-                        <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                    {renderMessageData(message)}
+                    
+                    {/* Suggestions with modern pill design */}
+                    {message.suggestions && (
+                      <div className="flex flex-wrap gap-2 mt-4">
+                        {message.suggestions.map((suggestion, index) => (
+                          <button
+                            key={index}
+                            onClick={() => handleSuggestionClick(suggestion)}
+                            className="px-4 py-2 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-600 
+                                       hover:from-blue-50 hover:to-indigo-50 dark:hover:from-blue-900 dark:hover:to-indigo-900
+                                       text-gray-700 dark:text-gray-300 hover:text-blue-700 dark:hover:text-blue-300
+                                       rounded-full text-sm font-medium border border-gray-200 dark:border-gray-600
+                                       hover:border-blue-300 dark:hover:border-blue-600 transition-all duration-200
+                                       shadow-sm hover:shadow-md transform hover:scale-105"
+                          >
+                            {suggestion}
+                          </button>
+                        ))}
                       </div>
-                      
-                      {renderMessageData(message)}
-                      
-                      {message.suggestions && (
-                        <div className="flex flex-wrap gap-2 mt-3">
-                          {message.suggestions.map((suggestion, index) => (
-                            <Button
-                              key={index}
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleSuggestionClick(suggestion)}
-                              className="text-xs rounded-full border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 h-8"
-                            >
-                              {suggestion}
-                            </Button>
-                          ))}
-                        </div>
-                      )}
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+            
+            {/* Modern typing indicator */}
+            {isLoading && (
+              <div className="flex justify-start">
+                <div className="flex items-start space-x-3">
+                  <div className="w-10 h-10 bg-gradient-to-r from-emerald-400 to-cyan-500 rounded-full flex items-center justify-center shadow-lg">
+                    <Bot className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-3xl px-6 py-4 shadow-lg mr-4">
+                    <div className="flex space-x-2">
+                      <div className="w-2 h-2 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                      <div className="w-2 h-2 bg-gradient-to-r from-pink-400 to-red-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                     </div>
                   </div>
                 </div>
-              ))}
-              
-              {isLoading && (
-                <div className="flex justify-start">
-                  <div className="flex items-start space-x-3">
-                    <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mt-1">
-                      <Bot className="w-4 h-4 text-gray-700 dark:text-gray-300" />
-                    </div>
-                    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl px-4 py-3 shadow-sm">
-                      <div className="flex space-x-1">
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-              
-              <div ref={messagesEndRef} />
-            </div>
+              </div>
+            )}
+            
+            <div ref={messagesEndRef} />
           </div>
         </div>
-        
-        {/* Input Area */}
-        <div className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-          <div className="max-w-4xl mx-auto p-4">
-            <div className="flex items-end space-x-3 bg-gray-50 dark:bg-gray-900 rounded-3xl p-3 shadow-sm border border-gray-200 dark:border-gray-700">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={isListening ? stopListening : startListening}
-                className={`rounded-full p-2 ${isListening ? 'text-red-600 hover:bg-red-50' : 'text-gray-600 hover:bg-gray-100'}`}
-              >
-                {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-              </Button>
-              
+      </div>
+      
+      {/* Modern Input Area */}
+      <div className="sticky bottom-0 backdrop-blur-xl bg-white/90 dark:bg-gray-900/90 border-t border-white/20 dark:border-gray-800/50">
+        <div className="max-w-4xl mx-auto p-6">
+          <div className="relative flex items-end space-x-4 bg-white dark:bg-gray-800 rounded-3xl shadow-xl border border-gray-200 dark:border-gray-700 p-4">
+            {/* Voice button */}
+            <button
+              onClick={isListening ? stopListening : startListening}
+              className={`flex-shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-200 shadow-lg ${
+                isListening 
+                  ? 'bg-gradient-to-r from-red-500 to-pink-500 text-white hover:from-red-600 hover:to-pink-600' 
+                  : 'bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 text-gray-600 dark:text-gray-300 hover:from-blue-50 hover:to-indigo-50 dark:hover:from-blue-900 dark:hover:to-indigo-900'
+              }`}
+            >
+              {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+            </button>
+            
+            {/* Input field */}
+            <div className="flex-1 relative">
               <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Type your message..."
-                className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-gray-900 dark:text-gray-100 placeholder:text-gray-500"
+                placeholder="Ask me anything about your health..."
+                className="w-full border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 
+                         text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400
+                         text-base py-3 px-0 resize-none"
                 disabled={isLoading}
               />
-              
-              <Button 
-                onClick={handleSendMessage}
-                disabled={!input.trim() || isLoading}
-                size="sm"
-                className="rounded-full p-2 bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50"
-              >
-                <Send className="w-4 h-4" />
-              </Button>
             </div>
+            
+            {/* Send button */}
+            <button 
+              onClick={handleSendMessage}
+              disabled={!input.trim() || isLoading}
+              className="flex-shrink-0 w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 
+                       disabled:from-gray-300 disabled:to-gray-400 dark:disabled:from-gray-600 dark:disabled:to-gray-700
+                       text-white rounded-2xl flex items-center justify-center transition-all duration-200 shadow-lg
+                       disabled:cursor-not-allowed transform hover:scale-105 disabled:hover:scale-100"
+            >
+              <Send className="w-5 h-5" />
+            </button>
           </div>
         </div>
       </div>
