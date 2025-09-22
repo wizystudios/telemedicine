@@ -1,8 +1,7 @@
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Navigate } from 'react-router-dom';
-import { PatientDashboard } from '@/components/PatientDashboard';
-import HospitalOwnerDashboard from '@/components/HospitalOwnerDashboard';
+import { ComprehensiveChatbot } from '@/components/ComprehensiveChatbot';
 
 export default function RoleBasedDashboard() {
   const { user } = useAuth();
@@ -11,7 +10,6 @@ export default function RoleBasedDashboard() {
     return <Navigate to="/auth" replace />;
   }
 
-  // For now, show appropriate dashboard based on user existence
-  // Hospital owners can access hospital management, others see patient dashboard
-  return <PatientDashboard />;
+  // Single comprehensive chatbot interface for all functionality
+  return <ComprehensiveChatbot />;
 }
