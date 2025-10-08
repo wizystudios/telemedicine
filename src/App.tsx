@@ -91,8 +91,8 @@ function AppContent() {
       <main className="min-h-screen">
           <Routes>
             <Route path="/auth" element={user ? <Navigate to="/dashboard" replace /> : <Auth />} />
-            <Route path="/" element={<TeleMedHome />} />
-            <Route path="/chatbot" element={<TeleMedHome />} />
+            <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <TeleMedHome />} />
+            <Route path="/chatbot" element={user ? <Navigate to="/dashboard" replace /> : <TeleMedHome />} />
           
           {/* Protected Routes */}
           <Route 
