@@ -306,50 +306,60 @@ export function ComprehensiveChatbot() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className="flex flex-col h-screen bg-background">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-card">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+          </div>
+          <div>
+            <h3 className="font-semibold text-sm text-foreground">Support chat</h3>
+            <p className="text-xs text-muted-foreground">Online</p>
+          </div>
+        </div>
+      </div>
+
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
+      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-3">
         {messages.map((msg, idx) => (
           <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div
-              className={`max-w-[80%] rounded-2xl px-4 py-3 ${
+              className={`max-w-[75%] rounded-[18px] px-4 py-2.5 ${
                 msg.role === 'user'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white shadow-sm border border-gray-100'
+                  ? 'bg-gradient-to-br from-purple-500 to-purple-600 text-white'
+                  : 'bg-card border border-border text-foreground'
               }`}
             >
-              <p className="text-sm whitespace-pre-line">{msg.content}</p>
+              <p className="text-[15px] leading-relaxed whitespace-pre-line">{msg.content}</p>
               
               {/* Render data if available */}
               {msg.data?.type === 'doctors' && (
-                <div className="mt-3 space-y-2">
+                <div className="mt-2 space-y-2">
                   {msg.data.items.map((doctor: any) => (
                     <button
                       key={doctor.id}
                       onClick={() => handleDoctorClick(doctor.id)}
-                      className="w-full flex items-center gap-3 p-3 bg-blue-50 rounded-xl hover:bg-blue-100 transition-colors"
+                      className="w-full text-left p-2 rounded-lg bg-background/50 hover:bg-background transition-colors"
                     >
-                      <div className="w-10 h-10 bg-blue-200 rounded-full flex items-center justify-center text-blue-700 font-semibold">
-                        {doctor.first_name?.[0]}{doctor.last_name?.[0]}
-                      </div>
-                      <div className="text-left">
-                        <p className="font-medium text-sm text-gray-900">
-                          Dr. {doctor.first_name} {doctor.last_name}
-                        </p>
-                      </div>
+                      <p className="font-medium text-sm">
+                        Dr. {doctor.first_name} {doctor.last_name}
+                      </p>
                     </button>
                   ))}
                 </div>
               )}
 
               {msg.data?.type === 'hospitals' && (
-                <div className="mt-3 space-y-2">
+                <div className="mt-2 space-y-2">
                   {msg.data.items.map((hospital: any) => (
-                    <div key={hospital.id} className="p-3 bg-gray-50 rounded-xl">
-                      <p className="font-medium text-sm text-gray-900">{hospital.name}</p>
-                      <p className="text-xs text-gray-600">{hospital.address}</p>
+                    <div key={hospital.id} className="p-2 rounded-lg bg-background/50">
+                      <p className="font-medium text-sm">{hospital.name}</p>
+                      <p className="text-xs opacity-70">{hospital.address}</p>
                       {hospital.phone && (
-                        <a href={`tel:${hospital.phone}`} className="text-xs text-blue-600 hover:underline">
+                        <a href={`tel:${hospital.phone}`} className="text-xs underline">
                           {hospital.phone}
                         </a>
                       )}
@@ -359,13 +369,13 @@ export function ComprehensiveChatbot() {
               )}
 
               {msg.data?.type === 'pharmacies' && (
-                <div className="mt-3 space-y-2">
+                <div className="mt-2 space-y-2">
                   {msg.data.items.map((pharmacy: any) => (
-                    <div key={pharmacy.id} className="p-3 bg-gray-50 rounded-xl">
-                      <p className="font-medium text-sm text-gray-900">{pharmacy.name}</p>
-                      <p className="text-xs text-gray-600">{pharmacy.address}</p>
+                    <div key={pharmacy.id} className="p-2 rounded-lg bg-background/50">
+                      <p className="font-medium text-sm">{pharmacy.name}</p>
+                      <p className="text-xs opacity-70">{pharmacy.address}</p>
                       {pharmacy.phone && (
-                        <a href={`tel:${pharmacy.phone}`} className="text-xs text-blue-600 hover:underline">
+                        <a href={`tel:${pharmacy.phone}`} className="text-xs underline">
                           {pharmacy.phone}
                         </a>
                       )}
@@ -375,13 +385,13 @@ export function ComprehensiveChatbot() {
               )}
 
               {msg.data?.type === 'labs' && (
-                <div className="mt-3 space-y-2">
+                <div className="mt-2 space-y-2">
                   {msg.data.items.map((lab: any) => (
-                    <div key={lab.id} className="p-3 bg-gray-50 rounded-xl">
-                      <p className="font-medium text-sm text-gray-900">{lab.name}</p>
-                      <p className="text-xs text-gray-600">{lab.address}</p>
+                    <div key={lab.id} className="p-2 rounded-lg bg-background/50">
+                      <p className="font-medium text-sm">{lab.name}</p>
+                      <p className="text-xs opacity-70">{lab.address}</p>
                       {lab.phone && (
-                        <a href={`tel:${lab.phone}`} className="text-xs text-blue-600 hover:underline">
+                        <a href={`tel:${lab.phone}`} className="text-xs underline">
                           {lab.phone}
                         </a>
                       )}
@@ -391,7 +401,7 @@ export function ComprehensiveChatbot() {
               )}
 
               {msg.data?.type === 'post_problem' && (
-                <div className="mt-3">
+                <div className="mt-2">
                   <Input
                     placeholder="Describe your symptoms..."
                     onKeyDown={(e) => {
@@ -400,21 +410,20 @@ export function ComprehensiveChatbot() {
                         e.currentTarget.value = '';
                       }
                     }}
-                    className="bg-white"
+                    className="bg-background/50 text-sm"
                   />
                 </div>
               )}
 
               {msg.data?.type === 'conversations' && (
-                <div className="mt-3 space-y-2">
+                <div className="mt-2 space-y-2">
                   {msg.data.items.map((conv: any) => (
                     <button
                       key={conv.id}
                       onClick={() => navigate(`/messages?appointmentId=${conv.id}`)}
-                      className="w-full flex items-center gap-3 p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
+                      className="w-full text-left p-2 rounded-lg bg-background/50 hover:bg-background transition-colors"
                     >
-                      <div className="w-10 h-10 bg-gray-200 rounded-full" />
-                      <p className="text-sm text-gray-900">
+                      <p className="text-sm">
                         {conv.profiles?.first_name} {conv.profiles?.last_name}
                       </p>
                     </button>
@@ -427,11 +436,11 @@ export function ComprehensiveChatbot() {
         
         {isLoading && (
           <div className="flex justify-start">
-            <div className="bg-white rounded-2xl px-4 py-3 shadow-sm">
+            <div className="bg-card border border-border rounded-[18px] px-4 py-2.5">
               <div className="flex gap-1">
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" />
+                <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+                <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
               </div>
             </div>
           </div>
@@ -440,31 +449,32 @@ export function ComprehensiveChatbot() {
       </div>
 
       {/* Input Area */}
-      <div className="border-t border-gray-200 bg-white p-4">
+      <div className="border-t border-border bg-card px-4 py-3">
         <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-10 w-10 rounded-full text-muted-foreground hover:text-foreground"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+          </Button>
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-            placeholder="Type a message..."
-            className="flex-1 h-12 rounded-full border-gray-300"
+            placeholder="Type your message..."
+            className="flex-1 h-10 rounded-full bg-background border-border text-sm"
             disabled={isLoading}
           />
           <Button
-            onClick={toggleListening}
-            variant="outline"
-            size="icon"
-            className={`h-12 w-12 rounded-full ${isListening ? 'bg-red-100 text-red-600' : ''}`}
-          >
-            {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-          </Button>
-          <Button
             onClick={handleSend}
             disabled={!input.trim() || isLoading}
-            className="h-12 w-12 rounded-full bg-blue-600 hover:bg-blue-700"
+            className="h-10 w-10 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700"
             size="icon"
           >
-            <Send className="w-5 h-5" />
+            <Send className="w-4 h-4" />
           </Button>
         </div>
       </div>
