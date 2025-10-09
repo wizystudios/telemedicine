@@ -86,9 +86,12 @@ function AppContent() {
   }
   
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
-      {/* Main Content - No navigation bars, chatbot-first design */}
-      <main className="min-h-screen">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors flex flex-col">
+      {/* Navbar - Only show when user is logged in */}
+      {user && <Navbar />}
+      
+      {/* Main Content */}
+      <main className="flex-1">
           <Routes>
             <Route path="/auth" element={user ? <Navigate to="/dashboard" replace /> : <Auth />} />
             <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <TeleMedHome />} />

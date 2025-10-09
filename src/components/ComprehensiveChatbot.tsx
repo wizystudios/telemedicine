@@ -1,304 +1,213 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { Send, Mic, MicOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Send, Mic, MicOff } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 
 interface Message {
-  id: string;
-  type: 'user' | 'bot';
+  role: 'user' | 'assistant';
   content: string;
-  timestamp: Date;
-  suggestions?: string[];
-}
-
-declare global {
-  interface Window {
-    SpeechRecognition: any;
-    webkitSpeechRecognition: any;
-  }
+  data?: any;
 }
 
 export function ComprehensiveChatbot() {
-  const { user, signOut } = useAuth();
-  const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      type: 'bot',
-      content: 'Karibu TeleMed! Ninaweza kukusaidia na:',
-      timestamp: new Date(),
-      suggestions: [
-        '🩺 Daktari',
-        '🏥 Hospitali', 
-        '💊 Dawa',
-        '📅 Miadi',
-        '🔬 Maabara',
-        '🆘 Msaada',
-        '📱 Chat',
-        '⚙️ Settings'
-      ]
-    }
+    { role: 'assistant', content: 'Hi! How can I help you today?' }
   ]);
-  
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const recognition = useRef<any>(null);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  const recognitionRef = useRef<any>(null);
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
-    scrollToBottom();
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Voice recognition setup
   useEffect(() => {
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      recognition.current = new SpeechRecognition();
-      recognition.current.continuous = false;
-      recognition.current.interimResults = false;
-      recognition.current.lang = 'sw-KE';
+      const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = false;
 
-      recognition.current.onresult = (event) => {
+      recognitionRef.current.onresult = (event: any) => {
         const transcript = event.results[0][0].transcript;
         setInput(transcript);
         setIsListening(false);
       };
 
-      recognition.current.onerror = () => {
+      recognitionRef.current.onerror = () => {
         setIsListening(false);
-        toast({
-          title: "Kosa",
-          description: "Imeshindwa kusikia. Jaribu tena.",
-          variant: "destructive"
-        });
       };
 
-      recognition.current.onend = () => {
+      recognitionRef.current.onend = () => {
         setIsListening(false);
       };
     }
   }, []);
 
-  const startListening = () => {
-    if (recognition.current) {
-      setIsListening(true);
-      recognition.current.start();
+  const toggleListening = () => {
+    if (!recognitionRef.current) {
+      toast({ title: 'Voice not supported', description: 'Your browser doesn\'t support voice input' });
+      return;
     }
-  };
 
-  const stopListening = () => {
-    if (recognition.current) {
-      recognition.current.stop();
+    if (isListening) {
+      recognitionRef.current.stop();
       setIsListening(false);
+    } else {
+      recognitionRef.current.start();
+      setIsListening(true);
     }
   };
 
-  const processMessage = async (message: string): Promise<Message> => {
-    const lowerMessage = message.toLowerCase();
-    
-    if (lowerMessage.includes('daktari') || lowerMessage.includes('doctor') || lowerMessage.includes('find') || lowerMessage.includes('🩺')) {
-      const doctors = await searchDoctors(message);
-      if (doctors.length === 0) {
+  const processMessage = async (userMessage: string): Promise<Message> => {
+    const lower = userMessage.toLowerCase();
+
+    // Book appointment
+    if (lower.includes('book') || lower.includes('appointment')) {
+      const { data: doctors } = await supabase
+        .from('profiles')
+        .select('id, first_name, last_name, avatar_url')
+        .eq('role', 'doctor')
+        .limit(5);
+
+      if (doctors && doctors.length > 0) {
         return {
-          id: Date.now().toString(),
-          type: 'bot',
-          content: 'Samahani, hakuna madaktari waliopo kwa sasa.',
-          timestamp: new Date(),
-          suggestions: ['🏥 Hospitali', '🆘 Msaada']
+          role: 'assistant',
+          content: 'Here are available doctors. Tap on a doctor to book:',
+          data: { type: 'doctors', items: doctors }
         };
       }
-      
-      let content = `Nimepata madaktari ${doctors.length}:\n\n`;
-      doctors.forEach((doc: any, idx: number) => {
-        content += `${idx + 1}. Dr. ${doc.first_name} ${doc.last_name}\n`;
-        content += `   ${doc.specialization}\n`;
-        content += `   ⭐ ${doc.rating.toFixed(1)}\n`;
-        content += `   📍 ${doc.location}\n`;
-        if (doc.phone) content += `   📞 ${doc.phone}\n`;
-        content += `\n`;
-      });
-      
-      return {
-        id: Date.now().toString(),
-        type: 'bot',
-        content,
-        timestamp: new Date(),
-        suggestions: ['📅 Miadi', '🏥 Hospitali', '💊 Dawa']
-      };
+      return { role: 'assistant', content: 'No doctors available right now. Please try again later.' };
     }
 
-    if (lowerMessage.includes('hospitali') || lowerMessage.includes('hospital') || lowerMessage.includes('🏥')) {
-      const hospitals = await searchHospitals(message);
-      if (hospitals.length === 0) {
+    // Find doctors
+    if (lower.includes('doctor') || lower.includes('daktari')) {
+      const { data: doctors } = await supabase
+        .from('profiles')
+        .select('id, first_name, last_name, avatar_url')
+        .eq('role', 'doctor')
+        .limit(5);
+
+      if (doctors && doctors.length > 0) {
         return {
-          id: Date.now().toString(),
-          type: 'bot',
-          content: 'Samahani, hakuna hospitali zilizopo kwa sasa.',
-          timestamp: new Date(),
-          suggestions: ['🩺 Daktari', '💊 Dawa']
+          role: 'assistant',
+          content: `Found ${doctors.length} doctors:`,
+          data: { type: 'doctors', items: doctors }
         };
       }
-      
-      let content = `Nimepata hospitali ${hospitals.length}:\n\n`;
-      hospitals.forEach((h: any, idx: number) => {
-        content += `${idx + 1}. ${h.name}\n`;
-        content += `   📍 ${h.address}\n`;
-        if (h.phone) content += `   📞 ${h.phone}\n`;
-        content += `\n`;
-      });
-      
-      return {
-        id: Date.now().toString(),
-        type: 'bot',
-        content,
-        timestamp: new Date(),
-        suggestions: ['🩺 Daktari', '💊 Dawa', '📅 Miadi']
-      };
+      return { role: 'assistant', content: 'No doctors found.' };
     }
 
-    if (lowerMessage.includes('dawa') || lowerMessage.includes('pharmacy') || lowerMessage.includes('pharmasi') || lowerMessage.includes('💊')) {
-      const pharmacies = await searchPharmacies(message);
-      if (pharmacies.length === 0) {
+    // Find hospitals
+    if (lower.includes('hospital')) {
+      const { data: hospitals } = await supabase
+        .from('hospitals')
+        .select('id, name, address, phone')
+        .eq('is_verified', true)
+        .limit(5);
+
+      if (hospitals && hospitals.length > 0) {
         return {
-          id: Date.now().toString(),
-          type: 'bot',
-          content: 'Samahani, hakuna maduka ya dawa yaliyopo.',
-          timestamp: new Date(),
-          suggestions: ['🩺 Daktari', '🏥 Hospitali']
+          role: 'assistant',
+          content: `Found ${hospitals.length} hospitals:`,
+          data: { type: 'hospitals', items: hospitals }
         };
       }
-      
-      let content = `Nimepata maduka ya dawa ${pharmacies.length}:\n\n`;
-      pharmacies.forEach((p: any, idx: number) => {
-        content += `${idx + 1}. ${p.name}\n`;
-        content += `   📍 ${p.address}\n`;
-        if (p.phone) content += `   📞 ${p.phone}\n`;
-        content += `\n`;
-      });
-      
-      return {
-        id: Date.now().toString(),
-        type: 'bot',
-        content,
-        timestamp: new Date(),
-        suggestions: ['🩺 Daktari', '🏥 Hospitali']
-      };
+      return { role: 'assistant', content: 'No hospitals found.' };
     }
 
-    if (lowerMessage.includes('lab') || lowerMessage.includes('upimaji') || lowerMessage.includes('laboratory') || lowerMessage.includes('🔬')) {
-      const labs = await searchLabs(message);
-      if (labs.length === 0) {
+    // Find pharmacies
+    if (lower.includes('pharmacy') || lower.includes('dawa')) {
+      const { data: pharmacies } = await supabase
+        .from('pharmacies')
+        .select('id, name, address, phone')
+        .eq('is_verified', true)
+        .limit(5);
+
+      if (pharmacies && pharmacies.length > 0) {
         return {
-          id: Date.now().toString(),
-          type: 'bot',
-          content: 'Samahani, hakuna maabara yaliyopo.',
-          timestamp: new Date(),
-          suggestions: ['🩺 Daktari', '🏥 Hospitali']
+          role: 'assistant',
+          content: `Found ${pharmacies.length} pharmacies:`,
+          data: { type: 'pharmacies', items: pharmacies }
         };
       }
+      return { role: 'assistant', content: 'No pharmacies found.' };
+    }
+
+    // Find labs
+    if (lower.includes('lab') || lower.includes('test')) {
+      const { data: labs } = await supabase
+        .from('laboratories')
+        .select('id, name, address, phone')
+        .eq('is_verified', true)
+        .limit(5);
+
+      if (labs && labs.length > 0) {
+        return {
+          role: 'assistant',
+          content: `Found ${labs.length} labs:`,
+          data: { type: 'labs', items: labs }
+        };
+      }
+      return { role: 'assistant', content: 'No labs found.' };
+    }
+
+    // Post problem
+    if (lower.includes('problem') || lower.includes('help') || lower.includes('sick')) {
+      if (!user) {
+        return { role: 'assistant', content: 'Please login to post your problem.' };
+      }
+      return {
+        role: 'assistant',
+        content: 'I can help you post your problem. What symptoms are you experiencing?',
+        data: { type: 'post_problem' }
+      };
+    }
+
+    // View messages/chats
+    if (lower.includes('message') || lower.includes('chat')) {
+      if (!user) {
+        return { role: 'assistant', content: 'Please login to view messages.' };
+      }
       
-      let content = `Nimepata maabara ${labs.length}:\n\n`;
-      labs.forEach((l: any, idx: number) => {
-        content += `${idx + 1}. ${l.name}\n`;
-        content += `   📍 ${l.address}\n`;
-        if (l.phone) content += `   📞 ${l.phone}\n`;
-        content += `\n`;
-      });
-      
+      const { data: appointments } = await supabase
+        .from('appointments')
+        .select('id, doctor_id, patient_id, profiles!appointments_doctor_id_fkey(first_name, last_name, avatar_url)')
+        .or(`patient_id.eq.${user.id},doctor_id.eq.${user.id}`)
+        .limit(5);
+
+      if (appointments && appointments.length > 0) {
+        return {
+          role: 'assistant',
+          content: 'Your recent conversations:',
+          data: { type: 'conversations', items: appointments }
+        };
+      }
+      return { role: 'assistant', content: 'No conversations yet.' };
+    }
+
+    // First aid
+    if (lower.includes('first aid') || lower.includes('emergency')) {
       return {
-        id: Date.now().toString(),
-        type: 'bot',
-        content,
-        timestamp: new Date(),
-        suggestions: ['🩺 Daktari', '📅 Miadi']
+        role: 'assistant',
+        content: 'EMERGENCY? Call 112 immediately.\n\nCommon First Aid:\n• Bleeding: Apply pressure\n• Burn: Cool with water\n• Choking: Heimlich maneuver\n• CPR: 30 compressions, 2 breaths\n\nDo you need to talk to a doctor now?'
       };
     }
 
-    if (lowerMessage.includes('miadi') || lowerMessage.includes('appointment') || lowerMessage.includes('ratiba') || lowerMessage.includes('📅')) {
-      return {
-        id: Date.now().toString(),
-        type: 'bot',
-        content: 'Kwa kuratibu miadi:\n\n1. Chagua Daktari\n2. Chagua Siku\n3. Chagua Muda\n\nAnza na kutafuta daktari.',
-        timestamp: new Date(),
-        suggestions: ['🩺 Daktari', '🏥 Hospitali']
-      };
-    }
-
-    if (lowerMessage.includes('records') || lowerMessage.includes('rekodi') || lowerMessage.includes('history') || lowerMessage.includes('📋')) {
-      return {
-        id: Date.now().toString(),
-        type: 'bot',
-        content: 'Medical Records:\n\n• Historia ya Magonjwa\n• Dawa za Sasa\n• Matokeo ya Maabara\n• Miadi ya Awali\n\nUnataka kuona nini?',
-        timestamp: new Date(),
-        suggestions: ['Historia', 'Dawa', 'Matokeo', 'Miadi']
-      };
-    }
-
-    if (lowerMessage.includes('settings') || lowerMessage.includes('mipangilio') || lowerMessage.includes('⚙️')) {
-      return {
-        id: Date.now().toString(),
-        type: 'bot',
-        content: 'Mipangilio:\n\n• Profile\n• Arifa\n• Lugha\n• Privacy\n• Account\n\nUnataka kubadilisha nini?',
-        timestamp: new Date(),
-        suggestions: ['Profile', 'Arifa', 'Lugha', 'Logout']
-      };
-    }
-
-    if (lowerMessage.includes('maongezi') || lowerMessage.includes('chat') || lowerMessage.includes('message') || lowerMessage.includes('📱')) {
-      return {
-        id: Date.now().toString(),
-        type: 'bot',
-        content: 'Maongezi na Madaktari:\n\n• Daktari wako wa kawaida\n• Daktari yoyote online\n• Mshauri wa afya\n\nNani unataka kuongea naye?',
-        timestamp: new Date(),
-        suggestions: ['Daktari wangu', 'Online', 'Tafuta']
-      };
-    }
-
-    if (lowerMessage.includes('msaada') || lowerMessage.includes('first aid') || lowerMessage.includes('dharura') || lowerMessage.includes('🆘')) {
-      return {
-        id: Date.now().toString(),
-        type: 'bot',
-        content: '🚨 Kwa Dharura: Piga 999!\n\nMsaada wa Haraka:\n• Jeraha - Safisha na funika\n• Homa - Maji mengi\n• Kichwa - Pumzika\n• Tumbo - Maji\n• Kupumua - Kaa wima\n\nUna tatizo gani?',
-        timestamp: new Date(),
-        suggestions: ['Jeraha', 'Homa', 'Kichwa', 'Piga 999']
-      };
-    }
-
-    if (lowerMessage.includes('hujambo') || lowerMessage.includes('hello') || lowerMessage.includes('mambo') || lowerMessage.includes('habari')) {
-      return {
-        id: Date.now().toString(),
-        type: 'bot',
-        content: 'Hujambo! Ninaweza kukusaidia aje leo?',
-        timestamp: new Date(),
-        suggestions: ['🩺 Daktari', '🏥 Hospitali', '💊 Dawa', '🆘 Msaada']
-      };
-    }
-
-    if (lowerMessage.includes('logout') || lowerMessage.includes('toka') || lowerMessage.includes('ondoka')) {
-      await signOut();
-      navigate('/auth');
-      return {
-        id: Date.now().toString(),
-        type: 'bot',
-        content: 'Umeondoka. Asante!',
-        timestamp: new Date()
-      };
-    }
-
+    // Default helpful response
     return {
-      id: Date.now().toString(),
-      type: 'bot',
-      content: 'Ninaweza kukusaidia na:\n\n🩺 Madaktari\n🏥 Hospitali\n💊 Dawa\n📅 Miadi\n🔬 Maabara\n🆘 Msaada\n📱 Chat\n\nJaribu moja ya hivi...',
-      timestamp: new Date(),
-      suggestions: ['🩺 Daktari', '🏥 Hospitali', '💊 Dawa', '🆘 Msaada']
+      role: 'assistant',
+      content: 'I can help you:\n• Find doctors\n• Book appointments\n• Find hospitals\n• Find pharmacies\n• Find labs\n• Post health problems\n• View messages\n• Get first aid info\n\nWhat do you need?'
     };
   };
 
@@ -330,124 +239,184 @@ export function ComprehensiveChatbot() {
     }
   };
 
-  const searchHospitals = async (query: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('hospitals')
-        .select('*')
-        .eq('is_verified', true)
-        .limit(10);
+  const handleSend = async () => {
+    if (!input.trim() || isLoading) return;
 
-      if (error) throw error;
-      return data || [];
-    } catch (error) {
-      console.error('Error searching hospitals:', error);
-      return [];
-    }
-  };
-
-  const searchPharmacies = async (query: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('pharmacies')
-        .select('*')
-        .eq('is_verified', true)
-        .limit(10);
-
-      if (error) throw error;
-      return data || [];
-    } catch (error) {
-      console.error('Error searching pharmacies:', error);
-      return [];
-    }
-  };
-
-  const searchLabs = async (query: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('laboratories')
-        .select('*')
-        .eq('is_verified', true)
-        .limit(10);
-
-      if (error) throw error;
-      return data || [];
-    } catch (error) {
-      console.error('Error searching labs:', error);
-      return [];
-    }
-  };
-
-  const handleSendMessage = async () => {
-    if (!input.trim()) return;
-
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      type: 'user',
-      content: input,
-      timestamp: new Date()
-    };
-
-    setMessages(prev => [...prev, userMessage]);
+    const userMessage = input.trim();
     setInput('');
+    setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
     setIsLoading(true);
 
-    try {
-      if (user) {
-        await supabase
-          .from('chatbot_conversations')
-          .upsert({
-            user_id: user.id,
-            session_id: `session_${user.id}_${Date.now()}`,
-            messages: JSON.stringify([...messages, userMessage])
-          });
-      }
+    const response = await processMessage(userMessage);
+    setMessages(prev => [...prev, response]);
+    setIsLoading(false);
+  };
 
-      const botResponse = await processMessage(input);
-      setMessages(prev => [...prev, botResponse]);
-    } catch (error) {
-      console.error('Error processing message:', error);
-      const errorMessage: Message = {
-        id: Date.now().toString(),
-        type: 'bot',
-        content: 'Samahani, kuna tatizo. Jaribu tena.',
-        timestamp: new Date(),
-        suggestions: ['🩺 Daktari', '🏥 Hospitali', '🆘 Msaada']
-      };
-      setMessages(prev => [...prev, errorMessage]);
-    } finally {
-      setIsLoading(false);
+  const handleDoctorClick = async (doctorId: string) => {
+    if (!user) {
+      toast({ title: 'Login required', description: 'Please login to book appointments' });
+      navigate('/auth');
+      return;
+    }
+
+    // Create appointment
+    const { data, error } = await supabase
+      .from('appointments')
+      .insert({
+        patient_id: user.id,
+        doctor_id: doctorId,
+        appointment_date: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        status: 'pending'
+      })
+      .select()
+      .single();
+
+    if (error) {
+      toast({ title: 'Error', description: 'Failed to book appointment', variant: 'destructive' });
+    } else {
+      toast({ title: 'Success!', description: 'Appointment request sent' });
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: 'Appointment booked! The doctor will confirm soon. You can chat with them in the Messages section.'
+      }]);
     }
   };
 
-  const handleSuggestionClick = (suggestion: string) => {
-    setInput(suggestion);
-  };
+  const handlePostProblem = async (problemText: string) => {
+    if (!user) return;
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
+    const { error } = await supabase
+      .from('patient_problems')
+      .insert({
+        patient_id: user.id,
+        problem_text: problemText,
+        category: 'general',
+        urgency_level: 'normal'
+      });
+
+    if (error) {
+      toast({ title: 'Error', description: 'Failed to post problem', variant: 'destructive' });
+    } else {
+      toast({ title: 'Posted!', description: 'Doctors will be notified' });
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: 'Your problem has been posted. Doctors will respond soon!'
+      }]);
     }
   };
 
   return (
-    <div className="flex flex-col h-screen bg-background">
-      {/* Messages */}
+    <div className="flex flex-col h-screen bg-gradient-to-b from-gray-50 to-white">
+      {/* Messages Area */}
       <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
-        {messages.map((message) => (
-          <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[75%] ${message.type === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'} rounded-2xl px-4 py-2.5 shadow-sm`}>
-              <p className="text-sm whitespace-pre-line">{message.content}</p>
-              {message.suggestions && message.suggestions.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-3">
-                  {message.suggestions.map((suggestion, idx) => (
+        {messages.map((msg, idx) => (
+          <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div
+              className={`max-w-[80%] rounded-2xl px-4 py-3 ${
+                msg.role === 'user'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white shadow-sm border border-gray-100'
+              }`}
+            >
+              <p className="text-sm whitespace-pre-line">{msg.content}</p>
+              
+              {/* Render data if available */}
+              {msg.data?.type === 'doctors' && (
+                <div className="mt-3 space-y-2">
+                  {msg.data.items.map((doctor: any) => (
                     <button
-                      key={idx}
-                      onClick={() => handleSuggestionClick(suggestion)}
-                      className="px-3 py-1.5 text-xs bg-background/80 hover:bg-background rounded-full border transition-colors"
+                      key={doctor.id}
+                      onClick={() => handleDoctorClick(doctor.id)}
+                      className="w-full flex items-center gap-3 p-3 bg-blue-50 rounded-xl hover:bg-blue-100 transition-colors"
                     >
-                      {suggestion}
+                      <div className="w-10 h-10 bg-blue-200 rounded-full flex items-center justify-center text-blue-700 font-semibold">
+                        {doctor.first_name?.[0]}{doctor.last_name?.[0]}
+                      </div>
+                      <div className="text-left">
+                        <p className="font-medium text-sm text-gray-900">
+                          Dr. {doctor.first_name} {doctor.last_name}
+                        </p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {msg.data?.type === 'hospitals' && (
+                <div className="mt-3 space-y-2">
+                  {msg.data.items.map((hospital: any) => (
+                    <div key={hospital.id} className="p-3 bg-gray-50 rounded-xl">
+                      <p className="font-medium text-sm text-gray-900">{hospital.name}</p>
+                      <p className="text-xs text-gray-600">{hospital.address}</p>
+                      {hospital.phone && (
+                        <a href={`tel:${hospital.phone}`} className="text-xs text-blue-600 hover:underline">
+                          {hospital.phone}
+                        </a>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {msg.data?.type === 'pharmacies' && (
+                <div className="mt-3 space-y-2">
+                  {msg.data.items.map((pharmacy: any) => (
+                    <div key={pharmacy.id} className="p-3 bg-gray-50 rounded-xl">
+                      <p className="font-medium text-sm text-gray-900">{pharmacy.name}</p>
+                      <p className="text-xs text-gray-600">{pharmacy.address}</p>
+                      {pharmacy.phone && (
+                        <a href={`tel:${pharmacy.phone}`} className="text-xs text-blue-600 hover:underline">
+                          {pharmacy.phone}
+                        </a>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {msg.data?.type === 'labs' && (
+                <div className="mt-3 space-y-2">
+                  {msg.data.items.map((lab: any) => (
+                    <div key={lab.id} className="p-3 bg-gray-50 rounded-xl">
+                      <p className="font-medium text-sm text-gray-900">{lab.name}</p>
+                      <p className="text-xs text-gray-600">{lab.address}</p>
+                      {lab.phone && (
+                        <a href={`tel:${lab.phone}`} className="text-xs text-blue-600 hover:underline">
+                          {lab.phone}
+                        </a>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {msg.data?.type === 'post_problem' && (
+                <div className="mt-3">
+                  <Input
+                    placeholder="Describe your symptoms..."
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                        handlePostProblem(e.currentTarget.value);
+                        e.currentTarget.value = '';
+                      }
+                    }}
+                    className="bg-white"
+                  />
+                </div>
+              )}
+
+              {msg.data?.type === 'conversations' && (
+                <div className="mt-3 space-y-2">
+                  {msg.data.items.map((conv: any) => (
+                    <button
+                      key={conv.id}
+                      onClick={() => navigate(`/messages?appointmentId=${conv.id}`)}
+                      className="w-full flex items-center gap-3 p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
+                    >
+                      <div className="w-10 h-10 bg-gray-200 rounded-full" />
+                      <p className="text-sm text-gray-900">
+                        {conv.profiles?.first_name} {conv.profiles?.last_name}
+                      </p>
                     </button>
                   ))}
                 </div>
@@ -455,13 +424,14 @@ export function ComprehensiveChatbot() {
             </div>
           </div>
         ))}
+        
         {isLoading && (
           <div className="flex justify-start">
-            <div className="bg-muted rounded-2xl px-4 py-3">
-              <div className="flex space-x-2">
-                <div className="w-2 h-2 bg-foreground/40 rounded-full animate-bounce"></div>
-                <div className="w-2 h-2 bg-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                <div className="w-2 h-2 bg-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+            <div className="bg-white rounded-2xl px-4 py-3 shadow-sm">
+              <div className="flex gap-1">
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
               </div>
             </div>
           </div>
@@ -469,32 +439,32 @@ export function ComprehensiveChatbot() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
-      <div className="border-t bg-background p-4">
+      {/* Input Area */}
+      <div className="border-t border-gray-200 bg-white p-4">
         <div className="flex items-center gap-2">
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="Andika ujumbe..."
-            className="flex-1 rounded-full"
+            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+            placeholder="Type a message..."
+            className="flex-1 h-12 rounded-full border-gray-300"
             disabled={isLoading}
           />
           <Button
+            onClick={toggleListening}
+            variant="outline"
             size="icon"
-            variant="ghost"
-            className="rounded-full"
-            onClick={isListening ? stopListening : startListening}
+            className={`h-12 w-12 rounded-full ${isListening ? 'bg-red-100 text-red-600' : ''}`}
           >
-            {isListening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+            {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
           </Button>
           <Button
-            size="icon"
-            className="rounded-full"
-            onClick={handleSendMessage}
+            onClick={handleSend}
             disabled={!input.trim() || isLoading}
+            className="h-12 w-12 rounded-full bg-blue-600 hover:bg-blue-700"
+            size="icon"
           >
-            <Send className="h-5 w-5" />
+            <Send className="w-5 h-5" />
           </Button>
         </div>
       </div>

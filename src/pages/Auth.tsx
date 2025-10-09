@@ -1,309 +1,285 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { useTranslation } from '@/hooks/useTranslation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { 
-  HeartHandshake, 
-  AlertCircle, 
-  ArrowRight, 
-  Eye, 
-  EyeOff,
-  Stethoscope,
-  Building,
-  Shield,
-  UserCheck
-} from 'lucide-react';
+import { HeartHandshake, Eye, EyeOff, User, Stethoscope, Building, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { LanguageSelector } from '@/components/auth/LanguageSelector';
-import { ThemeToggle } from '@/components/auth/ThemeToggle';
-import { SimpleRegistration } from '@/components/auth/SimpleRegistration';
 
 export default function Auth() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [mode, setMode] = useState<'login' | 'register'>('login');
+  const [step, setStep] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
-  const [currentStep, setCurrentStep] = useState<'welcome' | 'signin' | 'signup' | 'roleselect'>('welcome');
-  const [selectedRole, setSelectedRole] = useState<'patient' | 'doctor' | 'hospital' | 'admin'>('patient');
-  const { signIn } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // Form data
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [role, setRole] = useState<'patient' | 'doctor' | 'hospital' | 'admin'>('patient');
+  
+  const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { t } = useTranslation();
 
-  const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError('');
 
-    const formData = new FormData(e.currentTarget);
-    const email = formData.get('email') as string;
-    const password = formData.get('password') as string;
-
-    console.log('Attempting sign in for:', email);
-
-    const { error } = await signIn(email, password);
-    
-    if (error) {
-      console.error('Sign in error:', error);
-      setError(error.message);
-      toast({
-        title: 'Sign In Failed',
-        description: error.message,
-        variant: 'destructive'
-      });
+    if (mode === 'login') {
+      const { error } = await signIn(email, password);
+      if (error) {
+        toast({ title: 'Login Failed', description: error.message, variant: 'destructive' });
+      } else {
+        toast({ title: 'Welcome!', description: 'Successfully logged in' });
+        navigate('/dashboard');
+      }
     } else {
-      toast({
-        title: 'Welcome Back!',
-        description: 'Successfully signed in',
+      const { error } = await signUp(email, password, {
+        first_name: firstName,
+        last_name: lastName,
+        phone,
+        role
       });
-      navigate('/dashboard');
+      if (error) {
+        toast({ title: 'Registration Failed', description: error.message, variant: 'destructive' });
+      } else {
+        toast({ title: 'Success!', description: 'Account created successfully' });
+        navigate('/dashboard');
+      }
     }
-    
     setIsLoading(false);
   };
 
-  const handleChatAsGuest = () => {
-    navigate('/');
+  const nextStep = () => {
+    if (mode === 'register') {
+      if (step === 1 && email && password) setStep(2);
+      else if (step === 2 && firstName && lastName) setStep(3);
+      else if (step === 3 && role) handleSubmit(new Event('submit') as any);
+    }
   };
 
-  if (currentStep === 'welcome') {
-    return (
-      <div className="min-h-screen bg-medical-gradient-light">
-        {/* Header */}
-        <div className="flex justify-end items-center p-4">
-          <div className="flex items-center space-x-2">
-            <LanguageSelector />
-            <ThemeToggle />
-          </div>
-        </div>
-
-        {/* Main content */}
-        <div className="flex-1 flex flex-col items-center justify-center px-6 pb-20">
-          {/* Logo */}
-          <div className="text-center mb-12 animate-fade-in">
-            <div className="relative mb-6">
-              <div className="bg-white shadow-medical-strong p-6 rounded-3xl mx-auto w-fit">
-                <HeartHandshake className="w-12 h-12 text-medical-blue" />
-              </div>
-            </div>
-            <h1 className="text-4xl font-bold text-foreground mb-2">TeleMed Smart</h1>
-            <p className="text-lg text-medical-gray">AI Health Assistant</p>
-          </div>
-
-            {/* Main Action */}
-            <div className="w-full max-w-sm space-y-6 animate-fade-in">
-              <Button 
-                onClick={handleChatAsGuest}
-                className="w-full h-16 text-lg bg-medical-blue hover:bg-medical-blue/90 rounded-2xl shadow-medical transform transition-all hover:scale-105"
-              >
-                <HeartHandshake className="w-8 h-8" />
-              </Button>
-              
-              {/* Professional Access */}
-              <div className="grid grid-cols-2 gap-4 mt-8">
-                <Button 
-                  onClick={() => {
-                    setSelectedRole('doctor');
-                    setCurrentStep('signin');
-                  }}
-                  variant="outline"
-                  className="h-16 flex items-center justify-center border-medical-blue/20 hover:bg-medical-light-blue rounded-xl"
-                >
-                  <Stethoscope className="w-8 h-8 text-medical-blue" />
-                </Button>
-                
-                <Button 
-                  onClick={() => {
-                    setSelectedRole('hospital');
-                    setCurrentStep('signin');
-                  }}
-                  variant="outline"
-                  className="h-16 flex items-center justify-center border-medical-green/20 hover:bg-medical-light-green rounded-xl"
-                >
-                  <Building className="w-8 h-8 text-medical-green" />
-                </Button>
-              </div>
-
-              {/* Patient Register */}
-              <Button 
-                onClick={() => setCurrentStep('signup')}
-                variant="ghost"
-                className="w-full h-12 text-medical-blue hover:bg-medical-light-blue rounded-xl mt-6"
-              >
-                <UserCheck className="w-6 h-6" />
-              </Button>
-
-              {/* Admin Access */}
-              <Button 
-                onClick={() => {
-                  setSelectedRole('admin');
-                  setCurrentStep('signin');
-                }}
-                variant="ghost"
-                className="w-full h-8 text-xs text-medical-gray hover:text-foreground mt-4"
-              >
-                <Shield className="w-4 h-4" />
-              </Button>
-            </div>
-        </div>
-
-        {/* Footer */}
-        <div className="text-center pb-6">
-          <div className="flex justify-center items-center space-x-4 text-xs text-medical-gray">
-            <div className="flex items-center space-x-1">
-              <Shield className="w-3 h-3 text-medical-success" />
-              <span>Secure</span>
-            </div>
-            <div className="flex items-center space-x-1">
-              <HeartHandshake className="w-3 h-3 text-medical-blue" />
-              <span>24/7</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (currentStep === 'signup') {
-    return (
-      <div className="min-h-screen bg-medical-gradient-light">
-        {/* Header with Back Button */}
-        <div className="flex justify-between items-center p-4">
-          <Button 
-            onClick={() => setCurrentStep('welcome')}
-            variant="ghost" 
-            size="sm"
-            className="text-medical-gray hover:text-foreground"
-          >
-            <ArrowRight className="w-4 h-4 rotate-180 mr-2" />
-            Back
-          </Button>
-          <div className="flex items-center space-x-2">
-            <LanguageSelector />
-            <ThemeToggle />
-          </div>
-        </div>
-
-        {/* Registration */}
-        <div className="flex-1 flex items-center justify-center px-4">
-          <SimpleRegistration onBack={() => setCurrentStep('welcome')} />
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-medical-gradient-light">
-        {/* Header with Back Button */}
-        <div className="flex justify-between items-center p-4">
-          <Button 
-            onClick={() => setCurrentStep('welcome')}
-            variant="ghost" 
-            size="sm"
-            className="text-medical-gray hover:text-foreground"
-          >
-            <ArrowRight className="w-4 h-4 rotate-180 mr-2" />
-            Back
-          </Button>
-          <div className="flex items-center space-x-2">
-            <LanguageSelector />
-            <ThemeToggle />
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex flex-col">
+      {/* Header */}
+      <div className="p-4 flex items-center justify-center">
+        <div className="flex items-center gap-2">
+          <HeartHandshake className="w-8 h-8 text-blue-600" />
+          <span className="text-2xl font-bold text-gray-900">TeleMed Smart</span>
         </div>
+      </div>
 
-      {/* Sign In Form */}
-      <div className="flex-1 flex items-center justify-center px-4">
+      {/* Main Content */}
+      <div className="flex-1 flex items-center justify-center px-4 pb-20">
         <div className="w-full max-w-md">
-          <Card className="bg-white shadow-medical-strong animate-scale-in">
-            <CardHeader className="text-center pb-2">
-              <div className="flex items-center justify-center space-x-2 mb-4">
-                <div className="w-10 h-10 bg-medical-gradient rounded-xl flex items-center justify-center">
-                  <HeartHandshake className="w-6 h-6 text-white" />
-                </div>
-                <span className="text-2xl font-bold text-foreground">TeleMed Smart</span>
-              </div>
-              <CardTitle className="text-xl text-foreground">
-                {selectedRole === 'doctor' && 'Doctor Login'}
-                {selectedRole === 'hospital' && 'Hospital / Pharmacy Login'}
-                {selectedRole === 'admin' && 'Admin Login'}
-                {selectedRole === 'patient' && 'Patient Login'}
-              </CardTitle>
-              <p className="text-sm text-medical-gray">
-                {selectedRole === 'doctor' && 'Verified medical professionals only'}
-                {selectedRole === 'hospital' && 'Healthcare institutions'}
-                {selectedRole === 'admin' && 'TeleMed operators'}
-                {selectedRole === 'patient' && 'Registered patients'}
-              </p>
-            </CardHeader>
-            
-            <CardContent>
-              <form onSubmit={handleSignIn} className="space-y-6">
-                <div className="space-y-4">
+          <div className="bg-white rounded-3xl shadow-lg p-8">
+            {/* Mode Toggle */}
+            <div className="flex gap-2 mb-8 bg-gray-100 p-1 rounded-full">
+              <button
+                onClick={() => { setMode('login'); setStep(1); }}
+                className={`flex-1 py-2 rounded-full text-sm font-medium transition-all ${
+                  mode === 'login' ? 'bg-blue-600 text-white' : 'text-gray-600'
+                }`}
+              >
+                Login
+              </button>
+              <button
+                onClick={() => { setMode('register'); setStep(1); }}
+                className={`flex-1 py-2 rounded-full text-sm font-medium transition-all ${
+                  mode === 'register' ? 'bg-blue-600 text-white' : 'text-gray-600'
+                }`}
+              >
+                Register
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Step 1: Email & Password */}
+              {step === 1 && (
+                <div className="space-y-4 animate-in fade-in slide-in-from-right-4">
                   <div>
-                    <Label htmlFor="email" className="text-foreground">
-                      Email / Phone
-                    </Label>
-                    <Input 
-                      id="email" 
-                      name="email" 
-                      type="email" 
-                      required 
-                      className="h-12 rounded-xl border-2 focus:border-medical-blue"
-                      placeholder="Enter your email or phone"
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="h-12 rounded-xl"
+                      placeholder="your@email.com"
+                      required
                     />
                   </div>
                   <div>
-                    <Label htmlFor="password" className="text-foreground">
-                      Password
-                    </Label>
+                    <Label htmlFor="password">Password</Label>
                     <div className="relative">
-                      <Input 
-                        id="password" 
-                        name="password" 
+                      <Input
+                        id="password"
                         type={showPassword ? 'text' : 'password'}
-                        required 
-                        className="h-12 rounded-xl border-2 focus:border-medical-blue pr-10"
-                        placeholder="Enter your password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="h-12 rounded-xl pr-10"
+                        placeholder="••••••••"
+                        required
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-medical-gray hover:text-foreground"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
                       >
                         {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                     </div>
                   </div>
                 </div>
-                
-                {error && (
-                  <div className="flex items-center space-x-2 text-medical-error text-sm bg-red-50 p-3 rounded-lg">
-                    <AlertCircle className="w-4 h-4" />
-                    <span>{error}</span>
-                  </div>
-                )}
-                
-                <Button 
-                  type="submit" 
-                  disabled={isLoading}
-                  className="w-full h-12 text-lg bg-medical-blue hover:bg-medical-blue/90 rounded-xl"
-                >
-                  {isLoading ? 'Signing In...' : 'Sign In'}
-                </Button>
+              )}
 
-                {selectedRole !== 'admin' && (
-                  <div className="text-center pt-4">
-                    <p className="text-sm text-medical-gray">
-                      Forgot password? Contact support
-                    </p>
+              {/* Step 2: Name & Phone (Register only) */}
+              {mode === 'register' && step === 2 && (
+                <div className="space-y-4 animate-in fade-in slide-in-from-right-4">
+                  <div>
+                    <Label htmlFor="firstName">First Name</Label>
+                    <Input
+                      id="firstName"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      className="h-12 rounded-xl"
+                      placeholder="John"
+                      required
+                    />
                   </div>
+                  <div>
+                    <Label htmlFor="lastName">Last Name</Label>
+                    <Input
+                      id="lastName"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      className="h-12 rounded-xl"
+                      placeholder="Doe"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="phone">Phone (Optional)</Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className="h-12 rounded-xl"
+                      placeholder="+255 123 456 789"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Step 3: Role Selection (Register only) */}
+              {mode === 'register' && step === 3 && (
+                <div className="space-y-4 animate-in fade-in slide-in-from-right-4">
+                  <Label>Select Your Role</Label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setRole('patient')}
+                      className={`p-4 rounded-2xl border-2 transition-all ${
+                        role === 'patient' 
+                          ? 'border-blue-600 bg-blue-50' 
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <User className="w-8 h-8 mx-auto mb-2 text-blue-600" />
+                      <p className="text-sm font-medium">Patient</p>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setRole('doctor')}
+                      className={`p-4 rounded-2xl border-2 transition-all ${
+                        role === 'doctor' 
+                          ? 'border-green-600 bg-green-50' 
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <Stethoscope className="w-8 h-8 mx-auto mb-2 text-green-600" />
+                      <p className="text-sm font-medium">Doctor</p>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setRole('hospital')}
+                      className={`p-4 rounded-2xl border-2 transition-all ${
+                        role === 'hospital' 
+                          ? 'border-purple-600 bg-purple-50' 
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <Building className="w-8 h-8 mx-auto mb-2 text-purple-600" />
+                      <p className="text-sm font-medium">Hospital</p>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setRole('admin')}
+                      className={`p-4 rounded-2xl border-2 transition-all ${
+                        role === 'admin' 
+                          ? 'border-orange-600 bg-orange-50' 
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <Shield className="w-8 h-8 mx-auto mb-2 text-orange-600" />
+                      <p className="text-sm font-medium">Admin</p>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="space-y-3 pt-4">
+                {mode === 'login' || step === 3 ? (
+                  <Button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full h-12 rounded-xl bg-blue-600 hover:bg-blue-700"
+                  >
+                    {isLoading ? 'Please wait...' : mode === 'login' ? 'Login' : 'Create Account'}
+                  </Button>
+                ) : (
+                  <>
+                    <Button
+                      type="button"
+                      onClick={nextStep}
+                      className="w-full h-12 rounded-xl bg-blue-600 hover:bg-blue-700"
+                    >
+                      Next
+                    </Button>
+                    {step > 1 && (
+                      <Button
+                        type="button"
+                        onClick={() => setStep(step - 1)}
+                        variant="outline"
+                        className="w-full h-12 rounded-xl"
+                      >
+                        Back
+                      </Button>
+                    )}
+                  </>
                 )}
-              </form>
-            </CardContent>
-          </Card>
+              </div>
+            </form>
+
+            {/* Progress Dots for Registration */}
+            {mode === 'register' && (
+              <div className="flex justify-center gap-2 mt-6">
+                {[1, 2, 3].map((s) => (
+                  <div
+                    key={s}
+                    className={`h-2 rounded-full transition-all ${
+                      s === step ? 'w-8 bg-blue-600' : 'w-2 bg-gray-300'
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
