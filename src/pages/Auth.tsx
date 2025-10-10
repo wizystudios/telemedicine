@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { HeartHandshake, Eye, EyeOff, User, Stethoscope, Building, Shield } from 'lucide-react';
+import { HeartHandshake, Eye, EyeOff, User, Stethoscope, Building, Shield, Pill, TestTube } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function Auth() {
@@ -19,7 +19,7 @@ export default function Auth() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
-  const [role, setRole] = useState<'patient' | 'doctor' | 'hospital' | 'admin'>('patient');
+  const [role, setRole] = useState<string>('patient');
   
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
@@ -206,27 +206,39 @@ export default function Auth() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => setRole('hospital')}
+                      onClick={() => setRole('hospital_owner')}
                       className={`p-4 rounded-2xl border-2 transition-all ${
-                        role === 'hospital' 
+                        role === 'hospital_owner' 
                           ? 'border-purple-600 bg-purple-50' 
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
                       <Building className="w-8 h-8 mx-auto mb-2 text-purple-600" />
-                      <p className="text-sm font-medium">Hospital</p>
+                      <p className="text-sm font-medium">Hospital Owner</p>
                     </button>
                     <button
                       type="button"
-                      onClick={() => setRole('admin')}
+                      onClick={() => setRole('pharmacy_owner')}
                       className={`p-4 rounded-2xl border-2 transition-all ${
-                        role === 'admin' 
-                          ? 'border-orange-600 bg-orange-50' 
+                        role === 'pharmacy_owner' 
+                          ? 'border-pink-600 bg-pink-50' 
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
-                      <Shield className="w-8 h-8 mx-auto mb-2 text-orange-600" />
-                      <p className="text-sm font-medium">Admin</p>
+                      <Pill className="w-8 h-8 mx-auto mb-2 text-pink-600" />
+                      <p className="text-sm font-medium">Pharmacy Owner</p>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setRole('lab_owner')}
+                      className={`p-4 rounded-2xl border-2 transition-all ${
+                        role === 'lab_owner' 
+                          ? 'border-teal-600 bg-teal-50' 
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <TestTube className="w-8 h-8 mx-auto mb-2 text-teal-600" />
+                      <p className="text-sm font-medium">Lab Owner</p>
                     </button>
                   </div>
                 </div>

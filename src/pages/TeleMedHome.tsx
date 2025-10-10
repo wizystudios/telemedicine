@@ -485,41 +485,33 @@ export default function TeleMedHome() {
             
             {/* Messages */}
             <ScrollArea className="flex-1 p-4">
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {messages.map((message) => (
                   <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`flex items-start space-x-2 max-w-[80%] ${message.type === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
-                      <Avatar className="h-8 w-8 flex-shrink-0">
-                        <AvatarFallback className={message.type === 'user' ? 'bg-medical-light-blue text-medical-blue' : 'bg-medical-light-green text-medical-green'}>
-                          {message.type === 'user' ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
-                        </AvatarFallback>
-                      </Avatar>
+                    <div className={`max-w-[75%] rounded-[18px] px-4 py-2.5 ${
+                      message.type === 'user' 
+                        ? 'bg-gradient-to-br from-purple-500 to-purple-600 text-white' 
+                        : 'bg-card border border-border text-foreground'
+                    }`}>
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                        
+                      {renderMessageData(message)}
                       
-                      <div className={`rounded-lg p-3 ${
-                        message.type === 'user' 
-                          ? 'bg-medical-blue text-white' 
-                          : 'bg-muted text-foreground'
-                      }`}>
-                        <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                        
-                        {renderMessageData(message)}
-                        
-                        {message.suggestions && (
-                          <div className="mt-3 flex flex-wrap gap-2">
-                            {message.suggestions.map((suggestion, index) => (
-                              <Button
-                                key={index}
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleSuggestionClick(suggestion)}
-                                className="text-xs h-7"
-                              >
-                                {suggestion}
-                              </Button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
+                      {message.suggestions && (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {message.suggestions.map((suggestion, index) => (
+                            <Button
+                              key={index}
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleSuggestionClick(suggestion)}
+                              className="text-xs h-7"
+                            >
+                              {suggestion}
+                            </Button>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -547,30 +539,29 @@ export default function TeleMedHome() {
               </div>
             </ScrollArea>
             
-            {/* Input Area */}
-            <div className="p-4 border-t bg-muted/30">
-              <div className="flex space-x-2">
+            {/* Input Area - Matching Logged-in Version */}
+            <div className="border-t border-border bg-card px-4 py-3">
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full text-muted-foreground hover:text-foreground">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                </Button>
                 <Input
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder="Ask me about doctors, hospitals, or health questions..."
-                  className="flex-1"
+                  placeholder="Type your message..."
+                  className="flex-1 h-10 rounded-full bg-background border-border text-sm"
+                  disabled={isLoading}
                 />
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={isListening ? stopListening : startListening}
-                  className={isListening ? 'bg-medical-error text-white' : ''}
-                >
-                  {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-                </Button>
                 <Button 
                   onClick={handleSendMessage}
                   disabled={!input.trim() || isLoading}
-                  className="bg-medical-blue hover:bg-medical-blue/90"
+                  className="h-10 w-10 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700"
+                  size="icon"
                 >
-                  <Send className="h-4 w-4" />
+                  <Send className="w-4 h-4" />
                 </Button>
               </div>
             </div>

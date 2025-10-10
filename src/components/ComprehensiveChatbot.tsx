@@ -72,6 +72,27 @@ export function ComprehensiveChatbot() {
   const processMessage = async (userMessage: string): Promise<Message> => {
     const lower = userMessage.toLowerCase();
 
+    // Symptom detection - suggest both doctors AND pharmacies
+    const symptoms = ['headache', 'fever', 'pain', 'cough', 'cold', 'sick', 'hurt', 'ache'];
+    const hasSymptom = symptoms.some(s => lower.includes(s));
+    
+    if (hasSymptom) {
+      const [doctorsRes, pharmaciesRes] = await Promise.all([
+        supabase.from('profiles').select('id, first_name, last_name, avatar_url').eq('role', 'doctor').limit(3),
+        supabase.from('pharmacies').select('id, name, address, phone').eq('is_verified', true).limit(3)
+      ]);
+
+      return {
+        role: 'assistant',
+        content: 'I can help you with that. Here are some doctors and nearby pharmacies:',
+        data: { 
+          type: 'health_suggestions',
+          doctors: doctorsRes.data || [],
+          pharmacies: pharmaciesRes.data || []
+        }
+      };
+    }
+
     // Book appointment
     if (lower.includes('book') || lower.includes('appointment')) {
       const { data: doctors } = await supabase
@@ -333,8 +354,42 @@ export function ComprehensiveChatbot() {
                   : 'bg-card border border-border text-foreground'
               }`}
             >
-              <p className="text-[15px] leading-relaxed whitespace-pre-line">{msg.content}</p>
+              <p className="text-sm leading-relaxed whitespace-pre-line">{msg.content}</p>
               
+              {/* Health suggestions with doctors and pharmacies */}
+              {msg.data?.type === 'health_suggestions' && (
+                <div className="mt-2 space-y-3">
+                  {msg.data.doctors?.length > 0 && (
+                    <div>
+                      <p className="text-xs font-semibold mb-1 opacity-70">Doctors:</p>
+                      {msg.data.doctors.map((doctor: any) => (
+                        <button
+                          key={doctor.id}
+                          onClick={() => handleDoctorClick(doctor.id)}
+                          className="w-full text-left p-2 mb-1 rounded-lg bg-background/50 hover:bg-background transition-colors flex items-center gap-2"
+                        >
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-xs font-bold">
+                            {doctor.first_name?.[0]}{doctor.last_name?.[0]}
+                          </div>
+                          <p className="font-medium text-sm">Dr. {doctor.first_name} {doctor.last_name}</p>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {msg.data.pharmacies?.length > 0 && (
+                    <div>
+                      <p className="text-xs font-semibold mb-1 opacity-70">Nearby Pharmacies:</p>
+                      {msg.data.pharmacies.map((pharmacy: any) => (
+                        <div key={pharmacy.id} className="p-2 mb-1 rounded-lg bg-background/50">
+                          <p className="font-medium text-sm">{pharmacy.name}</p>
+                          <p className="text-xs opacity-70">{pharmacy.address}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Render data if available */}
               {msg.data?.type === 'doctors' && (
                 <div className="mt-2 space-y-2">
@@ -342,11 +397,12 @@ export function ComprehensiveChatbot() {
                     <button
                       key={doctor.id}
                       onClick={() => handleDoctorClick(doctor.id)}
-                      className="w-full text-left p-2 rounded-lg bg-background/50 hover:bg-background transition-colors"
+                      className="w-full text-left p-2 rounded-lg bg-background/50 hover:bg-background transition-colors flex items-center gap-2"
                     >
-                      <p className="font-medium text-sm">
-                        Dr. {doctor.first_name} {doctor.last_name}
-                      </p>
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-xs font-bold">
+                        {doctor.first_name?.[0]}{doctor.last_name?.[0]}
+                      </div>
+                      <p className="font-medium text-sm">Dr. {doctor.first_name} {doctor.last_name}</p>
                     </button>
                   ))}
                 </div>
