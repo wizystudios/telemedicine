@@ -1370,6 +1370,8 @@ export type Database = {
         | "pharmacy_owner"
         | "lab_owner"
         | "admin"
+        | "super_admin"
+        | "polyclinic_owner"
       user_role:
         | "patient"
         | "doctor"
@@ -1511,6 +1513,8 @@ export const Constants = {
         "pharmacy_owner",
         "lab_owner",
         "admin",
+        "super_admin",
+        "polyclinic_owner",
       ],
       user_role: [
         "patient",
