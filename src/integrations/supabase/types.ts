@@ -379,11 +379,14 @@ export type Database = {
           bio: string | null
           consultation_fee: number | null
           created_at: string | null
+          doctor_type: string | null
           education: string[] | null
           experience_years: number | null
           hospital_id: string | null
+          hospital_name: string | null
           id: string
           is_available: boolean | null
+          is_private: boolean | null
           is_verified: boolean | null
           languages: string[] | null
           license_number: string
@@ -397,11 +400,14 @@ export type Database = {
           bio?: string | null
           consultation_fee?: number | null
           created_at?: string | null
+          doctor_type?: string | null
           education?: string[] | null
           experience_years?: number | null
           hospital_id?: string | null
+          hospital_name?: string | null
           id?: string
           is_available?: boolean | null
+          is_private?: boolean | null
           is_verified?: boolean | null
           languages?: string[] | null
           license_number: string
@@ -415,11 +421,14 @@ export type Database = {
           bio?: string | null
           consultation_fee?: number | null
           created_at?: string | null
+          doctor_type?: string | null
           education?: string[] | null
           experience_years?: number | null
           hospital_id?: string | null
+          hospital_name?: string | null
           id?: string
           is_available?: boolean | null
+          is_private?: boolean | null
           is_verified?: boolean | null
           languages?: string[] | null
           license_number?: string
@@ -452,6 +461,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      doctor_timetable: {
+        Row: {
+          created_at: string | null
+          day_of_week: number
+          doctor_id: string
+          end_time: string
+          id: string
+          is_available: boolean | null
+          location: string | null
+          start_time: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          day_of_week: number
+          doctor_id: string
+          end_time: string
+          id?: string
+          is_available?: boolean | null
+          location?: string | null
+          start_time: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          day_of_week?: number
+          doctor_id?: string
+          end_time?: string
+          id?: string
+          is_available?: boolean | null
+          location?: string | null
+          start_time?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       hospitals: {
         Row: {
@@ -911,6 +956,8 @@ export type Database = {
           id: string
           is_promoted: boolean | null
           is_verified: boolean | null
+          location_lat: number | null
+          location_lng: number | null
           medications_available: string[] | null
           name: string
           owner_id: string
@@ -929,6 +976,8 @@ export type Database = {
           id?: string
           is_promoted?: boolean | null
           is_verified?: boolean | null
+          location_lat?: number | null
+          location_lng?: number | null
           medications_available?: string[] | null
           name: string
           owner_id: string
@@ -947,6 +996,8 @@ export type Database = {
           id?: string
           is_promoted?: boolean | null
           is_verified?: boolean | null
+          location_lat?: number | null
+          location_lng?: number | null
           medications_available?: string[] | null
           name?: string
           owner_id?: string
@@ -963,6 +1014,47 @@ export type Database = {
             columns: ["owner_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pharmacy_medicines: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          in_stock: boolean | null
+          name: string
+          pharmacy_id: string
+          price: number | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          in_stock?: boolean | null
+          name: string
+          pharmacy_id: string
+          price?: number | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          in_stock?: boolean | null
+          name?: string
+          pharmacy_id?: string
+          price?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pharmacy_medicines_pharmacy_id_fkey"
+            columns: ["pharmacy_id"]
+            isOneToOne: false
+            referencedRelation: "pharmacies"
             referencedColumns: ["id"]
           },
         ]
@@ -1216,6 +1308,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -1229,6 +1342,17 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_user_role: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       increment_post_views: {
         Args: { post_id_param: string }
         Returns: undefined
@@ -1239,6 +1363,13 @@ export type Database = {
       }
     }
     Enums: {
+      app_role:
+        | "patient"
+        | "doctor"
+        | "hospital_owner"
+        | "pharmacy_owner"
+        | "lab_owner"
+        | "admin"
       user_role:
         | "patient"
         | "doctor"
@@ -1373,6 +1504,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: [
+        "patient",
+        "doctor",
+        "hospital_owner",
+        "pharmacy_owner",
+        "lab_owner",
+        "admin",
+      ],
       user_role: [
         "patient",
         "doctor",

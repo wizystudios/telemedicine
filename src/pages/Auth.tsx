@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -38,18 +39,33 @@ export default function Auth() {
         navigate('/dashboard');
       }
     } else {
-      const { error } = await signUp(email, password, {
+      // First create auth user
+      const { data, error } = await signUp(email, password, {
         first_name: firstName,
         last_name: lastName,
-        phone,
-        role
+        phone
       });
+      
       if (error) {
         toast({ title: 'Registration Failed', description: error.message, variant: 'destructive' });
-      } else {
-        toast({ title: 'Success!', description: 'Account created successfully' });
-        navigate('/dashboard');
+        setIsLoading(false);
+        return;
       }
+
+      // Then insert role into secure user_roles table
+      if (data?.user) {
+        const { error: roleError } = await supabase
+          .from('user_roles')
+          .insert([{ user_id: data.user.id, role: role as any }]);
+
+        if (roleError) {
+          console.error('Role insert error:', roleError);
+          toast({ title: 'Error', description: 'Failed to set account role', variant: 'destructive' });
+        }
+      }
+
+      toast({ title: 'Success!', description: 'Account created successfully. Please check your email.' });
+      navigate('/dashboard');
     }
     setIsLoading(false);
   };

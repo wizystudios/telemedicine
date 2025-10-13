@@ -24,6 +24,17 @@ import Messages from "./pages/Messages";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
+import DoctorProfile from './pages/DoctorProfile';
+import PharmacyProfile from './pages/PharmacyProfile';
+import HospitalProfile from './pages/HospitalProfile';
+import DoctorsList from './pages/DoctorsList';
+import Appointments from './pages/Appointments';
+import Notifications from './pages/Notifications';
+import Patients from './pages/Patients';
+import PatientDetail from './pages/PatientDetail';
+import PatientProblems from './pages/PatientProblems';
+import HospitalManagement from './pages/HospitalManagement';
+
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -131,8 +142,16 @@ function AppContent() {
             } 
            />
            
-           {/* Catch all route */}
-           <Route path="*" element={<NotFound />} />
+           <Route path="/doctor-profile/:doctorId" element={<ProtectedRoute><DoctorProfile /></ProtectedRoute>} />
+           <Route path="/pharmacy-profile/:pharmacyId" element={<ProtectedRoute><PharmacyProfile /></ProtectedRoute>} />
+           <Route path="/hospital-profile/:hospitalId" element={<ProtectedRoute><HospitalProfile /></ProtectedRoute>} />
+           <Route path="/doctors-list" element={<ProtectedRoute><DoctorsList /></ProtectedRoute>} />
+           <Route path="/appointments" element={<ProtectedRoute><Appointments /></ProtectedRoute>} />
+           <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+           <Route path="/patients" element={<ProtectedRoute><Patients /></ProtectedRoute>} />
+           <Route path="/patient-detail/:patientId" element={<ProtectedRoute><PatientDetail /></ProtectedRoute>} />
+           <Route path="/patient-problems" element={<ProtectedRoute><PatientProblems /></ProtectedRoute>} />
+           <Route path="/hospital-management" element={<ProtectedRoute><HospitalManagement /></ProtectedRoute>} />
         </Routes>
       </main>
     </div>

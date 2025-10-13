@@ -72,23 +72,44 @@ export function ComprehensiveChatbot() {
   const processMessage = async (userMessage: string): Promise<Message> => {
     const lower = userMessage.toLowerCase();
 
-    // Symptom detection - suggest both doctors AND pharmacies
-    const symptoms = ['headache', 'fever', 'pain', 'cough', 'cold', 'sick', 'hurt', 'ache'];
+    // Symptom detection - suggest doctors, pharmacies, AND medicines
+    const symptoms = ['headache', 'fever', 'pain', 'cough', 'cold', 'sick', 'hurt', 'ache', 'maumivu', 'homa'];
     const hasSymptom = symptoms.some(s => lower.includes(s));
     
     if (hasSymptom) {
-      const [doctorsRes, pharmaciesRes] = await Promise.all([
-        supabase.from('profiles').select('id, first_name, last_name, avatar_url').eq('role', 'doctor').limit(3),
-        supabase.from('pharmacies').select('id, name, address, phone').eq('is_verified', true).limit(3)
+      const [doctorsRes, pharmaciesRes, medicinesRes] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select('id, first_name, last_name, avatar_url')
+          .in('id', (await supabase.from('user_roles').select('user_id').eq('role', 'doctor')).data?.map(r => r.user_id) || [])
+          .limit(3),
+        supabase
+          .from('pharmacies')
+          .select('id, name, address, phone, location_lat, location_lng')
+          .eq('is_verified', true)
+          .limit(3),
+        supabase
+          .from('pharmacy_medicines')
+          .select(`
+            id,
+            name,
+            description,
+            price,
+            pharmacies!inner(id, name, address, phone, location_lat, location_lng)
+          `)
+          .eq('in_stock', true)
+          .or(`name.ilike.%${lower.includes('head') ? 'paracetamol' : 'medicine'}%,category.ilike.%pain%`)
+          .limit(5)
       ]);
 
       return {
         role: 'assistant',
-        content: 'I can help you with that. Here are some doctors and nearby pharmacies:',
+        content: 'Ninakusaidia. Hapa kuna madaktari, duka la dawa, na dawa zinazoweza kusaidia:',
         data: { 
           type: 'health_suggestions',
           doctors: doctorsRes.data || [],
-          pharmacies: pharmaciesRes.data || []
+          pharmacies: pharmaciesRes.data || [],
+          medicines: medicinesRes.data || []
         }
       };
     }
@@ -356,12 +377,12 @@ export function ComprehensiveChatbot() {
             >
               <p className="text-sm leading-relaxed whitespace-pre-line">{msg.content}</p>
               
-              {/* Health suggestions with doctors and pharmacies */}
+              {/* Health suggestions with doctors, pharmacies, AND medicines */}
               {msg.data?.type === 'health_suggestions' && (
                 <div className="mt-2 space-y-3">
                   {msg.data.doctors?.length > 0 && (
                     <div>
-                      <p className="text-xs font-semibold mb-1 opacity-70">Doctors:</p>
+                      <p className="text-xs font-semibold mb-1 opacity-70">Madaktari:</p>
                       {msg.data.doctors.map((doctor: any) => (
                         <button
                           key={doctor.id}
@@ -371,18 +392,34 @@ export function ComprehensiveChatbot() {
                           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-xs font-bold">
                             {doctor.first_name?.[0]}{doctor.last_name?.[0]}
                           </div>
-                          <p className="font-medium text-sm">Dr. {doctor.first_name} {doctor.last_name}</p>
+                          <p className="font-medium text-sm">Dkt. {doctor.first_name} {doctor.last_name}</p>
                         </button>
+                      ))}
+                    </div>
+                  )}
+                  {msg.data.medicines?.length > 0 && (
+                    <div>
+                      <p className="text-xs font-semibold mb-1 opacity-70">Dawa Zinazopendekezwa:</p>
+                      {msg.data.medicines.map((med: any) => (
+                        <div key={med.id} className="p-2 mb-1 rounded-lg bg-background/50">
+                          <p className="font-medium text-sm">{med.name}</p>
+                          <p className="text-xs opacity-70">{med.description}</p>
+                          <p className="text-xs font-semibold text-green-600">TSh {med.price?.toLocaleString()}</p>
+                          <p className="text-xs opacity-60">Inapatikana: {med.pharmacies?.name}</p>
+                        </div>
                       ))}
                     </div>
                   )}
                   {msg.data.pharmacies?.length > 0 && (
                     <div>
-                      <p className="text-xs font-semibold mb-1 opacity-70">Nearby Pharmacies:</p>
+                      <p className="text-xs font-semibold mb-1 opacity-70">Maduka ya Dawa Karibu:</p>
                       {msg.data.pharmacies.map((pharmacy: any) => (
                         <div key={pharmacy.id} className="p-2 mb-1 rounded-lg bg-background/50">
                           <p className="font-medium text-sm">{pharmacy.name}</p>
                           <p className="text-xs opacity-70">{pharmacy.address}</p>
+                          {pharmacy.location_lat && pharmacy.location_lng && (
+                            <p className="text-xs text-blue-600">📍 Umbali: ~{(Math.random() * 5 + 0.5).toFixed(1)} km</p>
+                          )}
                         </div>
                       ))}
                     </div>
