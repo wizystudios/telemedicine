@@ -1357,6 +1357,10 @@ export type Database = {
         Args: { post_id_param: string }
         Returns: undefined
       }
+      is_super_admin: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
       update_doctor_online_status: {
         Args: { is_online_param: boolean; status_message_param?: string }
         Returns: undefined

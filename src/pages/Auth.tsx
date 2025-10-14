@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { HeartHandshake, Eye, EyeOff, User, Stethoscope, Building, Shield, Pill, TestTube } from 'lucide-react';
+import { HeartHandshake, Eye, EyeOff, User, Stethoscope, Building, Shield, Pill, TestTube, Hospital } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function Auth() {
@@ -255,6 +255,18 @@ export default function Auth() {
                     >
                       <TestTube className="w-8 h-8 mx-auto mb-2 text-teal-600" />
                       <p className="text-sm font-medium">Lab Owner</p>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setRole('polyclinic_owner')}
+                      className={`p-4 rounded-2xl border-2 transition-all ${
+                        role === 'polyclinic_owner' 
+                          ? 'border-indigo-600 bg-indigo-50' 
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <Hospital className="w-8 h-8 mx-auto mb-2 text-indigo-600" />
+                      <p className="text-sm font-medium">Polyclinic Owner</p>
                     </button>
                   </div>
                 </div>
