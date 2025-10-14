@@ -10,6 +10,8 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Shield, Users, Building, Pill, TestTube, Activity } from 'lucide-react';
+import RegisterOrganizationForm from '@/components/super-admin/RegisterOrganizationForm';
+import RegisterDoctorForm from '@/components/super-admin/RegisterDoctorForm';
 
 export default function SuperAdminDashboard() {
   const { toast } = useToast();
@@ -212,6 +214,8 @@ export default function SuperAdminDashboard() {
         <TabsList>
           <TabsTrigger value="users">Users</TabsTrigger>
           <TabsTrigger value="organizations">Organizations</TabsTrigger>
+          <TabsTrigger value="register-org">Register Organization</TabsTrigger>
+          <TabsTrigger value="register-doctor">Register Doctor</TabsTrigger>
         </TabsList>
 
         <TabsContent value="users">
@@ -305,6 +309,14 @@ export default function SuperAdminDashboard() {
               </Table>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="register-org">
+          <RegisterOrganizationForm />
+        </TabsContent>
+
+        <TabsContent value="register-doctor">
+          <RegisterDoctorForm />
         </TabsContent>
       </Tabs>
     </div>

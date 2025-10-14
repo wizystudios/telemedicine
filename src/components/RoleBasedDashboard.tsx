@@ -7,6 +7,8 @@ import { PatientDashboard } from '@/components/PatientDashboard';
 import { DoctorDashboard } from '@/components/DoctorDashboard';
 import HospitalOwnerDashboard from '@/components/HospitalOwnerDashboard';
 import SuperAdminDashboard from '@/components/SuperAdminDashboard';
+import PharmacyOwnerDashboard from '@/components/PharmacyOwnerDashboard';
+import LabOwnerDashboard from '@/components/LabOwnerDashboard';
 
 export default function RoleBasedDashboard() {
   const { user } = useAuth();
@@ -40,12 +42,12 @@ export default function RoleBasedDashboard() {
   if (userRole === 'super_admin') return <SuperAdminDashboard />;
   if (userRole === 'doctor') return <DoctorDashboard />;
   if (userRole === 'hospital_owner') return <HospitalOwnerDashboard />;
-  if (userRole === 'pharmacy_owner' || userRole === 'lab_owner' || userRole === 'polyclinic_owner') {
+  if (userRole === 'pharmacy_owner') return <PharmacyOwnerDashboard />;
+  if (userRole === 'lab_owner') return <LabOwnerDashboard />;
+  if (userRole === 'polyclinic_owner') {
     return <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">
-        Welcome {userRole === 'pharmacy_owner' ? 'Pharmacy' : userRole === 'lab_owner' ? 'Lab' : 'Polyclinic'} Owner
-      </h1>
-      <p>Your dashboard is coming soon. Manage your {userRole === 'pharmacy_owner' ? 'pharmacy' : userRole === 'lab_owner' ? 'laboratory' : 'polyclinic'} here.</p>
+      <h1 className="text-2xl font-bold mb-4">Welcome Polyclinic Owner</h1>
+      <p>Your dashboard is coming soon. Manage your polyclinic here.</p>
     </div>;
   }
 
