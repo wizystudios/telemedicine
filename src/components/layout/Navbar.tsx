@@ -64,45 +64,43 @@ export function Navbar() {
   if (!user) return null;
 
   return (
-    <nav className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-40">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          <Link to="/dashboard" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center">
-              <Heart className="w-5 h-5 text-white" />
+    <nav className="bg-background/80 backdrop-blur-lg border-b sticky top-0 z-40">
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="flex justify-center items-center h-14">
+          <Link to="/dashboard" className="flex items-center gap-2">
+            <div className="w-7 h-7 bg-gradient-to-br from-primary to-primary/80 rounded-lg flex items-center justify-center">
+              <Heart className="w-4 h-4 text-primary-foreground" />
             </div>
-            <span className="font-bold text-lg">TeleMed Smart</span>
+            <span className="font-bold text-base">TeleMed</span>
           </Link>
 
-          <div className="flex items-center space-x-4">
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
             <ThemeToggle />
             
-            {/* Notifications */}
             <Button 
               variant="ghost" 
-              size="sm" 
-              className="relative"
+              size="icon"
+              className="relative h-8 w-8"
               onClick={() => {
-                // This will be handled by the parent component
                 const event = new CustomEvent('toggleNotifications');
                 window.dispatchEvent(event);
               }}
             >
-              <Bell className="w-5 h-5" />
-              <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+              <Bell className="w-4 h-4" />
+              <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-destructive rounded-full"></span>
             </Button>
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                  <Avatar className="h-10 w-10">
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full p-0">
+                  <Avatar className="h-8 w-8">
                     <AvatarImage src={user.user_metadata?.avatar_url} />
-                    <AvatarFallback>
+                    <AvatarFallback className="text-xs">
                       {user.user_metadata?.first_name?.[0] || user.email?.[0]?.toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   {userRole === 'doctor' && isOnline && (
-                    <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+                    <div className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-green-500 border border-background rounded-full"></div>
                   )}
                 </Button>
               </DropdownMenuTrigger>

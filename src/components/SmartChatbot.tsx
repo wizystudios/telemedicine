@@ -301,54 +301,35 @@ export function SmartChatbot({
   };
 
   return (
-    <Card className="w-full max-w-3xl mx-auto shadow-lg">
-      <CardContent className="p-0">
-        {/* Chat Header */}
-        <div className="bg-primary p-3 flex items-center gap-2 rounded-t-lg">
-          <Avatar className="h-8 w-8">
-            <AvatarFallback className="bg-primary-foreground text-primary">
-              <Bot className="h-5 w-5" />
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex-1">
-            <h3 className="font-semibold text-sm text-primary-foreground">TeleMed Assistant</h3>
-            <p className="text-xs text-primary-foreground/80">Online • Tayari kusaidia</p>
-          </div>
-        </div>
+    <div className="flex flex-col h-[calc(100vh-8rem)] w-full max-w-2xl mx-auto">
+      <CardContent className="p-0 flex flex-col h-full">
 
-        {/* Messages Area */}
-        <div className="h-[400px] overflow-y-auto p-3 space-y-3 bg-muted/20">
+        {/* Messages Area - iPhone Style */}
+        <div className="flex-1 overflow-y-auto p-3 space-y-2 bg-gradient-to-b from-background to-muted/20">
           {messages.map((msg, index) => (
             <div
               key={index}
               className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
             >
-              <div className={`max-w-[85%] ${msg.type === 'user' ? 'order-2' : 'order-1'}`}>
+              <div className={`max-w-[75%] ${msg.type === 'user' ? 'ml-auto' : 'mr-auto'}`}>
                 {msg.type === 'bot' && (
-                  <div className="flex items-start gap-2">
-                    <Avatar className="h-7 w-7">
-                      <AvatarFallback className="bg-primary text-primary-foreground">
-                        <Bot className="h-4 w-4" />
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <div className="bg-card rounded-lg p-2 shadow-sm border">
-                        <p className="text-sm text-foreground">{msg.content}</p>
-                        {renderMessageData(msg)}
-                      </div>
-                      <span className="text-xs text-muted-foreground mt-1 block">
-                        {msg.timestamp.toLocaleTimeString('sw-TZ', { 
-                          hour: '2-digit', 
-                          minute: '2-digit' 
-                        })}
-                      </span>
+                  <div>
+                    <div className="bg-muted/60 rounded-2xl rounded-tl-sm px-3 py-2 shadow-sm">
+                      <p className="text-sm text-foreground">{msg.content}</p>
+                      {renderMessageData(msg)}
                     </div>
+                    <span className="text-xs text-muted-foreground mt-1 block">
+                      {msg.timestamp.toLocaleTimeString('sw-TZ', { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                      })}
+                    </span>
                   </div>
                 )}
                 
                 {msg.type === 'user' && (
                   <div>
-                    <div className="bg-primary text-primary-foreground rounded-lg p-2 shadow-sm">
+                    <div className="bg-primary text-primary-foreground rounded-2xl rounded-tr-sm px-3 py-2 shadow-sm">
                       <p className="text-sm">{msg.content}</p>
                     </div>
                     <span className="text-xs text-muted-foreground mt-1 block text-right">
@@ -365,18 +346,11 @@ export function SmartChatbot({
           
           {isLoading && (
             <div className="flex justify-start">
-              <div className="flex items-start gap-2">
-                <Avatar className="h-7 w-7">
-                  <AvatarFallback className="bg-primary text-primary-foreground">
-                    <Bot className="h-4 w-4" />
-                  </AvatarFallback>
-                </Avatar>
-                <div className="bg-card rounded-lg p-2 shadow-sm border">
-                  <div className="flex gap-1">
-                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce" />
-                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce delay-100" />
-                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce delay-200" />
-                  </div>
+              <div className="bg-muted/60 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm">
+                <div className="flex gap-1">
+                  <div className="w-2 h-2 bg-foreground/50 rounded-full animate-bounce" />
+                  <div className="w-2 h-2 bg-foreground/50 rounded-full animate-bounce delay-100" />
+                  <div className="w-2 h-2 bg-foreground/50 rounded-full animate-bounce delay-200" />
                 </div>
               </div>
             </div>
@@ -384,37 +358,37 @@ export function SmartChatbot({
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input Area */}
-        <div className="border-t p-3 bg-background">
-          <div className="flex gap-2">
+        {/* Input Area - iPhone Style */}
+        <div className="border-t bg-background p-3">
+          <div className="flex items-center gap-2">
             <Input
-              placeholder="Andika ujumbe..."
+              placeholder="Message..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={handleKeyPress}
-              className="flex-1 h-9 text-sm"
+              className="flex-1 h-9 text-sm rounded-full bg-muted/50 border-0"
               disabled={isLoading}
             />
             <Button
-              size="sm"
-              variant={isListening ? "destructive" : "outline"}
+              size="icon"
+              variant={isListening ? "destructive" : "ghost"}
               onClick={isListening ? stopListening : startListening}
               disabled={isLoading}
-              className="h-9 w-9 p-0"
+              className="h-9 w-9 rounded-full"
             >
               {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
             </Button>
             <Button
-              size="sm"
+              size="icon"
               onClick={handleSendMessage}
               disabled={isLoading || !input.trim()}
-              className="h-9 w-9 p-0"
+              className="h-9 w-9 rounded-full"
             >
               <Send className="h-4 w-4" />
             </Button>
           </div>
         </div>
       </CardContent>
-    </Card>
+    </div>
   );
 }

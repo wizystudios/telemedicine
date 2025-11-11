@@ -91,90 +91,14 @@ export default function ChatbotHome() {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
-      <section className="container mx-auto px-3 py-4 max-w-5xl">
-        <div className="text-center mb-4">
-          <div className="flex items-center justify-center space-x-2 mb-2">
-            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-              <Bot className="w-6 h-6 text-primary-foreground" />
-            </div>
-            <h1 className="text-2xl font-bold">
-              TeleMed<span className="text-primary">Smart</span>
-            </h1>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            Msaidizi wa afya - Uliza, pata jibu haraka
-          </p>
-        </div>
-
-        {/* Main Chatbot Interface */}
-        <div className="mb-6">
-          <SmartChatbot 
-            onBookAppointment={handleBookAppointment}
-            onViewHospital={handleViewHospital}
-            onViewPharmacy={handleViewPharmacy}
-          />
-        </div>
-
-        {/* Stats Section */}
-        <div className="grid grid-cols-4 gap-2 mb-6">
-          {stats.map((stat, index) => (
-            <Card key={index} className="text-center">
-              <CardContent className="p-3">
-                <stat.icon className="w-5 h-5 mx-auto mb-1 text-primary" />
-                <div className="text-lg font-bold mb-0.5">{stat.number}</div>
-                <div className="text-xs text-muted-foreground">{stat.label}</div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {/* Features Grid */}
-        <div className="grid md:grid-cols-3 gap-3 mb-6">
-          {features.map((feature, index) => (
-            <Card key={index} className="hover:shadow-md transition-shadow">
-              <CardHeader className="p-3">
-                <div className={`w-10 h-10 rounded-lg ${feature.color} flex items-center justify-center mb-2`}>
-                  <feature.icon className="w-5 h-5" />
-                </div>
-                <CardTitle className="text-sm">{feature.title}</CardTitle>
-                <CardDescription className="text-xs">
-                  {feature.description}
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          ))}
-        </div>
-
-        {/* Quick Access Section */}
-        {!user && (
-          <Card className="bg-primary text-primary-foreground">
-            <CardContent className="p-4 text-center">
-              <h2 className="text-lg font-bold mb-2">Anza Sasa!</h2>
-              <p className="text-xs opacity-90 mb-3">
-                Jiunge na wagonjwa wanaotumia TeleMed
-              </p>
-              <div className="flex gap-2 justify-center">
-                <Button 
-                  size="sm" 
-                  variant="secondary"
-                  onClick={() => navigate('/auth')}
-                >
-                  Jisajili
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  onClick={() => navigate('/auth')}
-                  className="border-primary-foreground text-primary-foreground"
-                >
-                  Ingia
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-      </section>
+    <div className="h-screen bg-background flex flex-col overflow-hidden">
+      <div className="flex-1 flex items-center justify-center p-2">
+        <SmartChatbot 
+          onBookAppointment={handleBookAppointment}
+          onViewHospital={handleViewHospital}
+          onViewPharmacy={handleViewPharmacy}
+        />
+      </div>
     </div>
   );
 }

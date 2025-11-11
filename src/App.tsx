@@ -11,6 +11,7 @@ import { BottomNav } from "@/components/layout/BottomNav";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { NotificationSidebar } from "@/components/layout/NotificationSidebar";
 import { LoadingScreen } from "@/components/LoadingScreen";
+import { useRealtimeChatNotifications } from "@/hooks/useRealtimeChatNotifications";
 
 import { AppointmentNotificationHandler } from "@/components/AppointmentNotificationHandler";
 import { useState, useEffect } from "react";
@@ -57,6 +58,9 @@ function AppContent() {
   const location = useLocation();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  
+  // Enable realtime notifications
+  useRealtimeChatNotifications();
   
   // Check if current route is messages page
   const isMessagesPage = location.pathname.startsWith('/messages');
@@ -135,6 +139,9 @@ function AppContent() {
            <Route path="/hospital-management" element={<ProtectedRoute><HospitalManagement /></ProtectedRoute>} />
         </Routes>
       </main>
+
+      {/* Bottom Navigation - Show always on mobile */}
+      <BottomNav />
     </div>
   );
 }

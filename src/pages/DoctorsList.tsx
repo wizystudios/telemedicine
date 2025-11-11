@@ -3,23 +3,23 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { DoctorCard } from '@/components/DoctorCard';
-import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { AdvancedDoctorSearch, SearchFilters } from '@/components/AdvancedDoctorSearch';
+import { useState } from 'react';
 
 export default function DoctorsList() {
   const { user } = useAuth();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState(searchTerm);
+  const [filters, setFilters] = useState<SearchFilters>({
+    searchTerm: '',
+    specialty: '',
+    location: '',
+    minPrice: 0,
+    maxPrice: 200000,
+    isAvailable: undefined
+  });
 
-  useEffect(() => {
-    const t = setTimeout(() => setDebouncedSearch(searchTerm), 300);
-    return () => clearTimeout(t);
-  }, [searchTerm]);
-
-  // Fetch doctors with their profiles
+  // Fetch doctors with advanced filters
   const { data: doctors = [], isLoading } = useQuery({
-    queryKey: ['doctors', debouncedSearch],
+    queryKey: ['doctors', filters],
     queryFn: async () => {
       let query = supabase
         .from('profiles')
@@ -27,6 +27,7 @@ export default function DoctorsList() {
           *,
           doctor_profiles(
             specialization:specialties(name),
+            specialty_id,
             bio,
             experience_years,
             consultation_fee,
@@ -37,8 +38,8 @@ export default function DoctorsList() {
         `)
         .eq('role', 'doctor');
 
-      if (debouncedSearch) {
-        query = query.or(`first_name.ilike.%${debouncedSearch}%,last_name.ilike.%${debouncedSearch}%`);
+      if (filters.searchTerm) {
+        query = query.or(`first_name.ilike.%${filters.searchTerm}%,last_name.ilike.%${filters.searchTerm}%`);
       }
 
       const { data, error } = await query;
@@ -48,9 +49,10 @@ export default function DoctorsList() {
         return [];
       }
 
-      return data?.map(doctor => ({
+      let filtered = data?.map(doctor => ({
         ...doctor,
         specialization: doctor.doctor_profiles?.[0]?.specialization?.name || 'Mfanyakazi wa Afya',
+        specialty_id: doctor.doctor_profiles?.[0]?.specialty_id,
         bio: doctor.doctor_profiles?.[0]?.bio,
         experience_years: doctor.doctor_profiles?.[0]?.experience_years,
         consultation_fee: doctor.doctor_profiles?.[0]?.consultation_fee,
@@ -58,6 +60,26 @@ export default function DoctorsList() {
         languages: doctor.doctor_profiles?.[0]?.languages,
         isOnline: doctor.doctor_online_status?.[0]?.is_online || false
       })) || [];
+
+      // Apply client-side filters
+      if (filters.specialty) {
+        filtered = filtered.filter(d => d.specialty_id === filters.specialty);
+      }
+      if (filters.location) {
+        filtered = filtered.filter(d => 
+          d.country?.toLowerCase().includes(filters.location?.toLowerCase() || '')
+        );
+      }
+      if (filters.minPrice !== undefined && filters.maxPrice !== undefined) {
+        filtered = filtered.filter(d => 
+          d.consultation_fee >= filters.minPrice! && d.consultation_fee <= filters.maxPrice!
+        );
+      }
+      if (filters.isAvailable) {
+        filtered = filtered.filter(d => d.isOnline);
+      }
+
+      return filtered;
     },
     enabled: !!user
   });
@@ -101,29 +123,17 @@ export default function DoctorsList() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
-      <div className="max-w-6xl mx-auto p-4 space-y-6">
+    <div className="min-h-screen bg-background pb-20">
+      <div className="max-w-6xl mx-auto p-3 space-y-3">
         
         {/* Header */}
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-            Madaktari
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Chagua daktari unayemtaka
-          </p>
+        <div className="text-center py-2">
+          <h1 className="text-xl font-bold mb-1">Doctors</h1>
+          <p className="text-xs text-muted-foreground">Find the right doctor for you</p>
         </div>
 
-        {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-          <Input
-            placeholder="Tafuta daktari..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
-        </div>
+        {/* Advanced Search */}
+        <AdvancedDoctorSearch onSearch={setFilters} />
 
         {/* Doctors Grid */}
         <div className="space-y-4">
@@ -145,8 +155,8 @@ export default function DoctorsList() {
 
         {doctors.length === 0 && (
           <div className="text-center py-8">
-            <p className="text-gray-600 dark:text-gray-400">
-              {searchTerm ? 'Hakuna daktari aliyepatikana' : 'Hakuna madaktari kwa sasa'}
+            <p className="text-muted-foreground">
+              {filters.searchTerm ? 'Hakuna daktari aliyepatikana' : 'Hakuna madaktari kwa sasa'}
             </p>
           </div>
         )}
