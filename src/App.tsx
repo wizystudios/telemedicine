@@ -11,7 +11,7 @@ import { BottomNav } from "@/components/layout/BottomNav";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { NotificationSidebar } from "@/components/layout/NotificationSidebar";
 import { LoadingScreen } from "@/components/LoadingScreen";
-import { WelcomePages } from "@/components/welcome/WelcomePages";
+
 import { AppointmentNotificationHandler } from "@/components/AppointmentNotificationHandler";
 import { useState, useEffect } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -55,20 +55,11 @@ function AppContent() {
   const { user, loading } = useAuth();
   const isMobile = useIsMobile();
   const location = useLocation();
-  const [showWelcome, setShowWelcome] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   
   // Check if current route is messages page
   const isMessagesPage = location.pathname.startsWith('/messages');
-  
-  useEffect(() => {
-    // Check if user has seen welcome pages before
-    const hasSeenWelcome = localStorage.getItem('hasSeenWelcome');
-    if (!hasSeenWelcome && !user) {
-      setShowWelcome(true);
-    }
-  }, [user]);
 
   useEffect(() => {
     // Listen for notification toggle event
@@ -82,18 +73,8 @@ function AppContent() {
     };
   }, [showNotifications]);
 
-  const handleWelcomeComplete = () => {
-    localStorage.setItem('hasSeenWelcome', 'true');
-    setShowWelcome(false);
-  };
-  
   if (loading) {
     return <LoadingScreen />;
-  }
-
-  // Show welcome pages if user hasn't seen them and isn't logged in
-  if (showWelcome && !user) {
-    return <WelcomePages onComplete={handleWelcomeComplete} />;
   }
   
   return (
