@@ -301,94 +301,99 @@ export function SmartChatbot({
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)] w-full max-w-2xl mx-auto">
-      <CardContent className="p-0 flex flex-col h-full">
-
-        {/* Messages Area - iPhone Style */}
-        <div className="flex-1 overflow-y-auto p-3 space-y-2 bg-gradient-to-b from-background to-muted/20">
-          {messages.map((msg, index) => (
-            <div
-              key={index}
-              className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
-              <div className={`max-w-[75%] ${msg.type === 'user' ? 'ml-auto' : 'mr-auto'}`}>
-                {msg.type === 'bot' && (
-                  <div>
-                    <div className="bg-muted/60 rounded-2xl rounded-tl-sm px-3 py-2 shadow-sm">
-                      <p className="text-sm text-foreground">{msg.content}</p>
-                      {renderMessageData(msg)}
-                    </div>
-                    <span className="text-xs text-muted-foreground mt-1 block">
-                      {msg.timestamp.toLocaleTimeString('sw-TZ', { 
-                        hour: '2-digit', 
-                        minute: '2-digit' 
-                      })}
-                    </span>
-                  </div>
-                )}
-                
-                {msg.type === 'user' && (
-                  <div>
-                    <div className="bg-primary text-primary-foreground rounded-2xl rounded-tr-sm px-3 py-2 shadow-sm">
-                      <p className="text-sm">{msg.content}</p>
-                    </div>
-                    <span className="text-xs text-muted-foreground mt-1 block text-right">
-                      {msg.timestamp.toLocaleTimeString('sw-TZ', { 
-                        hour: '2-digit', 
-                        minute: '2-digit' 
-                      })}
-                    </span>
-                  </div>
-                )}
+    <div className="flex flex-col h-full w-full">
+      {/* Messages Area - iPhone iMessage Style */}
+      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3" style={{ background: 'hsl(var(--background))' }}>
+        {messages.map((msg, index) => (
+          <div
+            key={index}
+            className={`flex items-end gap-2 ${msg.type === 'user' ? 'flex-row-reverse' : 'flex-row'}`}
+          >
+            {msg.type === 'bot' && (
+              <Avatar className="h-7 w-7 flex-shrink-0">
+                <AvatarFallback className="bg-primary/10">
+                  <Bot className="h-4 w-4 text-primary" />
+                </AvatarFallback>
+              </Avatar>
+            )}
+            
+            <div className={`max-w-[75%] ${msg.type === 'user' ? 'items-end' : 'items-start'} flex flex-col gap-1`}>
+              <div
+                className={`
+                  px-4 py-2.5 rounded-[20px] shadow-sm
+                  ${msg.type === 'user' 
+                    ? 'bg-primary text-primary-foreground rounded-br-md' 
+                    : 'bg-muted/80 text-foreground rounded-bl-md'
+                  }
+                `}
+              >
+                <p className="text-[15px] leading-relaxed">{msg.content}</p>
+                {renderMessageData(msg)}
+              </div>
+              <span className={`text-[11px] text-muted-foreground px-2 ${msg.type === 'user' ? 'text-right' : 'text-left'}`}>
+                {msg.timestamp.toLocaleTimeString('en-US', { 
+                  hour: 'numeric', 
+                  minute: '2-digit',
+                  hour12: true 
+                })}
+              </span>
+            </div>
+          </div>
+        ))}
+        
+        {isLoading && (
+          <div className="flex items-end gap-2">
+            <Avatar className="h-7 w-7 flex-shrink-0">
+              <AvatarFallback className="bg-primary/10">
+                <Bot className="h-4 w-4 text-primary" />
+              </AvatarFallback>
+            </Avatar>
+            <div className="bg-muted/80 rounded-[20px] rounded-bl-md px-4 py-3 shadow-sm">
+              <div className="flex gap-1.5">
+                <div className="w-2 h-2 bg-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                <div className="w-2 h-2 bg-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                <div className="w-2 h-2 bg-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
             </div>
-          ))}
+          </div>
+        )}
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Input Area - iPhone iMessage Style */}
+      <div className="border-t bg-background/95 backdrop-blur-sm px-2 py-2 safe-bottom">
+        <div className="flex items-end gap-2 max-w-2xl mx-auto">
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={isListening ? stopListening : startListening}
+            disabled={isLoading}
+            className="h-9 w-9 rounded-full flex-shrink-0 text-primary hover:bg-primary/10"
+          >
+            {isListening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+          </Button>
           
-          {isLoading && (
-            <div className="flex justify-start">
-              <div className="bg-muted/60 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm">
-                <div className="flex gap-1">
-                  <div className="w-2 h-2 bg-foreground/50 rounded-full animate-bounce" />
-                  <div className="w-2 h-2 bg-foreground/50 rounded-full animate-bounce delay-100" />
-                  <div className="w-2 h-2 bg-foreground/50 rounded-full animate-bounce delay-200" />
-                </div>
-              </div>
-            </div>
-          )}
-          <div ref={messagesEndRef} />
-        </div>
-
-        {/* Input Area - iPhone Style */}
-        <div className="border-t bg-background p-3">
-          <div className="flex items-center gap-2">
+          <div className="flex-1 bg-muted/50 rounded-[20px] px-4 py-2 min-h-[36px] flex items-center">
             <Input
-              placeholder="Message..."
+              placeholder="iMessage"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={handleKeyPress}
-              className="flex-1 h-9 text-sm rounded-full bg-muted/50 border-0"
+              className="border-0 bg-transparent p-0 h-auto text-[15px] focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground/50"
               disabled={isLoading}
             />
-            <Button
-              size="icon"
-              variant={isListening ? "destructive" : "ghost"}
-              onClick={isListening ? stopListening : startListening}
-              disabled={isLoading}
-              className="h-9 w-9 rounded-full"
-            >
-              {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-            </Button>
-            <Button
-              size="icon"
-              onClick={handleSendMessage}
-              disabled={isLoading || !input.trim()}
-              className="h-9 w-9 rounded-full"
-            >
-              <Send className="h-4 w-4" />
-            </Button>
           </div>
+
+          <Button
+            size="icon"
+            onClick={handleSendMessage}
+            disabled={isLoading || !input.trim()}
+            className="h-9 w-9 rounded-full flex-shrink-0 bg-primary hover:bg-primary/90"
+          >
+            <Send className="h-5 w-5" />
+          </Button>
         </div>
-      </CardContent>
+      </div>
     </div>
   );
 }
