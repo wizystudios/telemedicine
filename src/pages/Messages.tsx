@@ -5,12 +5,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Phone, Video, ArrowLeft, Download, Play, Pause, FileText, Image as ImageIcon } from 'lucide-react';
+import { Phone, Video, ArrowLeft, Download, Play, Pause, FileText, Image as ImageIcon, Mic, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import ContactsList from '@/components/ContactsList';
-import { EnhancedChatInput } from '@/components/EnhancedChatInput';
 
 export default function Messages() {
   const [searchParams] = useSearchParams();
@@ -461,18 +461,25 @@ export default function Messages() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Enhanced Chat Input - Fixed for mobile */}
-      <div className="flex-shrink-0">
-        <EnhancedChatInput
-          message={message}
-          setMessage={setMessage}
-          onSendMessage={handleSendMessage}
-          onFileSelect={handleFileSelect}
-          onVoiceRecord={handleVoiceRecord}
-          selectedFiles={selectedFiles}
-          onRemoveFile={handleRemoveFile}
-          isRecording={isRecording}
-        />
+      {/* Simple Chat Input */}
+      <div className="flex-shrink-0 border-t p-3">
+        <div className="flex gap-2">
+          <Input
+            placeholder="Type a message..."
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSendMessage();
+              }
+            }}
+            className="flex-1"
+          />
+          <Button onClick={handleSendMessage} size="icon">
+            <Send className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
     </div>
   );

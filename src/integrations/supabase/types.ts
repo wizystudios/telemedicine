@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      appointment_reminders: {
+        Row: {
+          appointment_id: string
+          created_at: string | null
+          id: string
+          reminder_type: string
+          sent_at: string | null
+          status: string | null
+        }
+        Insert: {
+          appointment_id: string
+          created_at?: string | null
+          id?: string
+          reminder_type: string
+          sent_at?: string | null
+          status?: string | null
+        }
+        Update: {
+          appointment_id?: string
+          created_at?: string | null
+          id?: string
+          reminder_type?: string
+          sent_at?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_reminders_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       appointments: {
         Row: {
           appointment_date: string
@@ -169,6 +204,7 @@ export type Database = {
           message_type: string | null
           read_at: string | null
           sender_id: string | null
+          status: string | null
         }
         Insert: {
           appointment_id?: string | null
@@ -182,6 +218,7 @@ export type Database = {
           message_type?: string | null
           read_at?: string | null
           sender_id?: string | null
+          status?: string | null
         }
         Update: {
           appointment_id?: string | null
@@ -195,6 +232,7 @@ export type Database = {
           message_type?: string | null
           read_at?: string | null
           sender_id?: string | null
+          status?: string | null
         }
         Relationships: [
           {
@@ -1338,10 +1376,7 @@ export type Database = {
         Args: { username_to_check: string }
         Returns: boolean
       }
-      get_current_user_role: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      get_current_user_role: { Args: never; Returns: string }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
@@ -1357,10 +1392,7 @@ export type Database = {
         Args: { post_id_param: string }
         Returns: undefined
       }
-      is_super_admin: {
-        Args: { _user_id: string }
-        Returns: boolean
-      }
+      is_super_admin: { Args: { _user_id: string }; Returns: boolean }
       update_doctor_online_status: {
         Args: { is_online_param: boolean; status_message_param?: string }
         Returns: undefined

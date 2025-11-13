@@ -6,10 +6,10 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { 
   Bot, 
-  Send, 
+  Search,
   Mic,
+  Send,
   Image as ImageIcon,
-  Paperclip,
   MapPin,
   Phone,
   Clock,
@@ -17,15 +17,20 @@ import {
   Calendar,
   Pill,
   AlertCircle,
-  X
+  Check,
+  CheckCheck,
+  X,
+  Paperclip
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 interface Message {
+  id: string;
   content: string;
   type: 'user' | 'bot';
   timestamp: Date;
+  status?: 'sent' | 'delivered' | 'read';
   isVoice?: boolean;
   audioUrl?: string;
   imageUrl?: string;
@@ -56,6 +61,7 @@ export function SmartChatbot({
   const { toast } = useToast();
   const [messages, setMessages] = useState<Message[]>([
     {
+      id: '1',
       content: "Hi! How can I help you today?",
       type: 'bot',
       timestamp: new Date(),
@@ -72,9 +78,11 @@ export function SmartChatbot({
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showQuickReplies, setShowQuickReplies] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showSearch, setShowSearch] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [showQuickReplies, setShowQuickReplies] = useState(true);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const mediaRecorder = useRef<MediaRecorder | null>(null);
@@ -84,6 +92,52 @@ export function SmartChatbot({
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // Simulate message status updates
+  useEffect(() => {
+    messages.forEach((msg, index) => {
+      if (msg.type === 'user' && msg.status === 'sent') {
+        setTimeout(() => {
+          setMessages(prev => prev.map((m, i) => 
+            i === index ? { ...m, status: 'delivered' as const } : m
+          ));
+        }, 500);
+
+        setTimeout(() => {
+          setMessages(prev => prev.map((m, i) => 
+            i === index ? { ...m, status: 'read' as const } : m
+          ));
+        }, 1500);
+      }
+    });
+  }, [messages]);
+
+  const filteredMessages = showSearch && searchQuery
+    ? messages.filter(msg => 
+        msg.content.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : messages;
+
+  const handleQuickReply = async (action: string) => {
+    let messageText = '';
+    switch (action) {
+      case 'find-doctor':
+        messageText = 'I need to find a doctor';
+        break;
+      case 'book-appointment':
+        messageText = 'I want to book an appointment';
+        break;
+      case 'find-pharmacy':
+        messageText = 'Show me nearby pharmacies';
+        break;
+      case 'emergency':
+        messageText = 'I need emergency help';
+        break;
+    }
+    
+    setInput(messageText);
+    setTimeout(() => handleSendMessage(), 100);
+  };
 
   const startVoiceRecording = async () => {
     try {
@@ -97,31 +151,8 @@ export function SmartChatbot({
 
       mediaRecorder.current.onstop = async () => {
         const audioBlob = new Blob(audioChunks.current, { type: 'audio/webm' });
-        const audioUrl = URL.createObjectURL(audioBlob);
-        
-        const userMessage: Message = {
-          content: '🎤 Voice message',
-          type: 'user',
-          timestamp: new Date(),
-          isVoice: true,
-          audioUrl
-        };
-
-        setMessages(prev => [...prev, userMessage]);
-        setShowQuickReplies(false);
-        setIsLoading(true);
-        
-        // Simulate processing
-        setTimeout(() => {
-          const botResponse: Message = {
-            content: "I received your voice message. How can I help you?",
-            type: 'bot',
-            timestamp: new Date()
-          };
-          setMessages(prev => [...prev, botResponse]);
-          setIsLoading(false);
-        }, 1000);
-
+        const audioFile = new File([audioBlob], 'voice-message.webm', { type: 'audio/webm' });
+        setSelectedFile(audioFile);
         stream.getTracks().forEach(track => track.stop());
       };
 
@@ -146,37 +177,16 @@ export function SmartChatbot({
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) {
+      if (file.size > 10 * 1024 * 1024) {
         toast({
           title: "File too large",
-          description: "Please select a file under 5MB",
+          description: "Please select a file under 10MB",
           variant: "destructive"
         });
         return;
       }
       setSelectedFile(file);
     }
-  };
-
-  const handleQuickReply = async (action: string) => {
-    let messageText = '';
-    switch (action) {
-      case 'find-doctor':
-        messageText = 'I need to find a doctor';
-        break;
-      case 'book-appointment':
-        messageText = 'I want to book an appointment';
-        break;
-      case 'find-pharmacy':
-        messageText = 'Show me nearby pharmacies';
-        break;
-      case 'emergency':
-        messageText = 'I need emergency help';
-        break;
-    }
-    
-    setInput(messageText);
-    setTimeout(() => handleSendMessage(), 100);
   };
 
   const processMessage = async (message: string): Promise<Message> => {
@@ -192,7 +202,8 @@ export function SmartChatbot({
 
       if (doctors && doctors.length > 0) {
         return {
-          content: `${doctors.length} madaktari wanapatikana:`,
+          id: Date.now().toString(),
+          content: `Found ${doctors.length} available doctors:`,
           type: 'bot',
           timestamp: new Date(),
           data: { type: 'doctors', items: doctors }
@@ -210,7 +221,8 @@ export function SmartChatbot({
 
       if (hospitals && hospitals.length > 0) {
         return {
-          content: `${hospitals.length} hospitali:`,
+          id: Date.now().toString(),
+          content: `Found ${hospitals.length} hospitals:`,
           type: 'bot',
           timestamp: new Date(),
           data: { type: 'hospitals', items: hospitals }
@@ -228,7 +240,8 @@ export function SmartChatbot({
 
       if (pharmacies && pharmacies.length > 0) {
         return {
-          content: `${pharmacies.length} maduka ya dawa:`,
+          id: Date.now().toString(),
+          content: `Found ${pharmacies.length} pharmacies:`,
           type: 'bot',
           timestamp: new Date(),
           data: { type: 'pharmacies', items: pharmacies }
@@ -237,7 +250,8 @@ export function SmartChatbot({
     }
 
     return {
-      content: "Samahani, sijaeleweka. Uliza kuhusu madaktari, hospitali, au dawa.",
+      id: Date.now().toString(),
+      content: "Sorry, I didn't understand. Ask me about doctors, hospitals, or pharmacies.",
       type: 'bot',
       timestamp: new Date()
     };
@@ -247,16 +261,27 @@ export function SmartChatbot({
     if (!input.trim() && !selectedFile) return;
 
     let imageUrl = '';
+    let isVoice = false;
+    let audioUrl = '';
     
     if (selectedFile) {
-      imageUrl = URL.createObjectURL(selectedFile);
+      if (selectedFile.type.startsWith('audio/')) {
+        audioUrl = URL.createObjectURL(selectedFile);
+        isVoice = true;
+      } else {
+        imageUrl = URL.createObjectURL(selectedFile);
+      }
     }
 
     const userMessage: Message = {
-      content: input || '📎 Attachment',
+      id: Date.now().toString(),
+      content: input || (isVoice ? '🎤 Voice message' : '📎 Attachment'),
       type: 'user',
       timestamp: new Date(),
-      imageUrl
+      status: 'sent',
+      imageUrl,
+      isVoice,
+      audioUrl
     };
 
     setMessages(prev => [...prev, userMessage]);
@@ -276,6 +301,7 @@ export function SmartChatbot({
       handleSendMessage();
     }
   };
+
 
   const renderQuickReplies = (items: any[]) => {
     if (!showQuickReplies) return null;
@@ -431,11 +457,26 @@ export function SmartChatbot({
 
   return (
     <div className="flex flex-col h-full w-full bg-white">
+      {/* Search Bar */}
+      {showSearch && (
+        <div className="border-b p-2">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Search messages..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 rounded-full bg-gray-100 border-0"
+            />
+          </div>
+        </div>
+      )}
+
       {/* Messages Area - iPhone iMessage Style */}
       <div className="flex-1 overflow-y-auto px-3 py-4 space-y-3">
-        {messages.map((msg, index) => (
+        {filteredMessages.map((msg) => (
           <div
-            key={index}
+            key={msg.id}
             className={`flex items-end gap-2 ${msg.type === 'user' ? 'flex-row-reverse' : 'flex-row'}`}
           >
             {msg.type === 'bot' && (
@@ -471,12 +512,25 @@ export function SmartChatbot({
                 <p className="text-[15px] leading-[1.4]">{msg.content}</p>
                 {renderMessageData(msg)}
               </div>
-              <span className={`text-[11px] text-gray-500 px-2 ${msg.type === 'user' ? 'text-right' : 'text-left'}`}>
-                {msg.timestamp.toLocaleTimeString('en-US', { 
-                  hour: 'numeric', 
-                  minute: '2-digit'
-                })}
-              </span>
+              <div className={`flex items-center gap-1 px-2 ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <span className="text-[11px] text-gray-500">
+                  {msg.timestamp.toLocaleTimeString('en-US', { 
+                    hour: 'numeric', 
+                    minute: '2-digit'
+                  })}
+                </span>
+                {msg.type === 'user' && msg.status && (
+                  <span className="text-[#34C759]">
+                    {msg.status === 'read' ? (
+                      <CheckCheck className="h-3 w-3" />
+                    ) : msg.status === 'delivered' ? (
+                      <CheckCheck className="h-3 w-3 opacity-50" />
+                    ) : (
+                      <Check className="h-3 w-3 opacity-50" />
+                    )}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         ))}
@@ -500,11 +554,11 @@ export function SmartChatbot({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* File Preview */}
+      {/* Enhanced Input */}
       {selectedFile && (
         <div className="px-3 py-2 border-t bg-gray-50">
-          <div className="flex items-center gap-2 bg-white rounded-lg p-2 max-w-xs">
-            <ImageIcon className="h-4 w-4 text-gray-500" />
+          <div className="flex items-center gap-2 bg-white rounded-lg p-2">
+            <Paperclip className="h-4 w-4 text-gray-500" />
             <span className="text-sm flex-1 truncate">{selectedFile.name}</span>
             <Button
               size="icon"
@@ -517,9 +571,8 @@ export function SmartChatbot({
           </div>
         </div>
       )}
-
-      {/* Input Area - iPhone iMessage Style */}
-      <div className="border-t bg-white px-2 py-2">
+      
+      <div className="border-t bg-white p-2">
         <div className="flex items-end gap-2">
           <input
             ref={fileInputRef}
@@ -534,6 +587,7 @@ export function SmartChatbot({
             variant="ghost"
             onClick={() => fileInputRef.current?.click()}
             className="h-8 w-8 rounded-full flex-shrink-0 text-gray-600 hover:bg-gray-100"
+            disabled={isLoading}
           >
             <ImageIcon className="h-5 w-5" />
           </Button>
