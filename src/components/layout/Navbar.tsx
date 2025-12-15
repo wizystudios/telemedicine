@@ -47,55 +47,55 @@ export function Navbar() {
   if (!user) return null;
 
   return (
-    <nav className="bg-background/95 backdrop-blur-lg border-b sticky top-0 z-40 safe-area-top">
-      <div className="flex items-center justify-between h-14 px-4 max-w-7xl mx-auto">
-        <Link to="/dashboard" className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-            <HeartPulse className="h-4 w-4 text-primary-foreground" />
+    <nav className="w-full bg-background/95 backdrop-blur-lg border-b sticky top-0 z-40">
+      <div className="flex items-center justify-between h-10 px-3">
+        <Link to="/dashboard" className="flex items-center gap-1.5">
+          <div className="h-6 w-6 rounded-md bg-primary flex items-center justify-center">
+            <HeartPulse className="h-3.5 w-3.5 text-primary-foreground" />
           </div>
-          <span className="font-bold hidden sm:inline">TeleMed</span>
+          <span className="font-semibold text-xs">TeleMed</span>
         </Link>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <ThemeToggle />
           
           <Button 
             variant="ghost" 
             size="icon"
-            className="relative h-9 w-9"
+            className="h-7 w-7"
             onClick={() => navigate('/notifications')}
           >
-            <Bell className="h-5 w-5" />
+            <Bell className="h-3.5 w-3.5" />
           </Button>
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-9 w-9 rounded-full p-0">
-                <Avatar className="h-9 w-9">
+              <Button variant="ghost" className="relative h-7 w-7 rounded-full p-0">
+                <Avatar className="h-7 w-7">
                   <AvatarImage src={user.user_metadata?.avatar_url} />
-                  <AvatarFallback className="text-sm bg-primary/10 text-primary">
+                  <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
                     {user.user_metadata?.first_name?.[0] || user.email?.[0]?.toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 {userRole === 'doctor' && isOnline && (
-                  <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-background rounded-full" />
+                  <div className="absolute bottom-0 right-0 w-2 h-2 bg-green-500 border border-background rounded-full" />
                 )}
               </Button>
             </DropdownMenuTrigger>
             
-            <DropdownMenuContent className="w-56" align="end">
-              <div className="flex items-center gap-3 p-3">
-                <Avatar className="h-10 w-10">
+            <DropdownMenuContent className="w-48" align="end">
+              <div className="flex items-center gap-2 p-2">
+                <Avatar className="h-8 w-8">
                   <AvatarImage src={user.user_metadata?.avatar_url} />
-                  <AvatarFallback className="bg-primary/10 text-primary">
+                  <AvatarFallback className="text-xs bg-primary/10 text-primary">
                     {user.user_metadata?.first_name?.[0] || user.email?.[0]?.toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm truncate">
+                  <p className="font-medium text-xs truncate">
                     {user.user_metadata?.first_name} {user.user_metadata?.last_name}
                   </p>
-                  <Badge variant="secondary" className="text-xs capitalize">
+                  <Badge variant="secondary" className="text-[10px] capitalize px-1 py-0">
                     {userRole}
                   </Badge>
                 </div>
@@ -105,10 +105,10 @@ export function Navbar() {
               
               {userRole === 'doctor' && (
                 <>
-                  <div className="flex items-center justify-between px-3 py-2">
-                    <div className="flex items-center gap-2">
-                      <Activity className="h-4 w-4" />
-                      <span className="text-sm">Online</span>
+                  <div className="flex items-center justify-between px-2 py-1.5">
+                    <div className="flex items-center gap-1.5">
+                      <Activity className="h-3 w-3" />
+                      <span className="text-xs">Online</span>
                     </div>
                     <Switch
                       checked={isOnline}
@@ -122,24 +122,24 @@ export function Navbar() {
                 </>
               )}
               
-              <DropdownMenuItem asChild>
+              <DropdownMenuItem asChild className="text-xs py-1.5">
                 <Link to="/profile" className="flex items-center">
-                  <User className="mr-2 h-4 w-4" />
+                  <User className="mr-2 h-3 w-3" />
                   Profile
                 </Link>
               </DropdownMenuItem>
               
-              <DropdownMenuItem asChild>
+              <DropdownMenuItem asChild className="text-xs py-1.5">
                 <Link to="/profile" className="flex items-center">
-                  <Settings className="mr-2 h-4 w-4" />
-                  Mipangilio
+                  <Settings className="mr-2 h-3 w-3" />
+                  Settings
                 </Link>
               </DropdownMenuItem>
               
               <DropdownMenuSeparator />
               
-              <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
-                <LogOut className="mr-2 h-4 w-4" />
+              <DropdownMenuItem onClick={handleSignOut} className="text-destructive text-xs py-1.5">
+                <LogOut className="mr-2 h-3 w-3" />
                 Toka
               </DropdownMenuItem>
             </DropdownMenuContent>
