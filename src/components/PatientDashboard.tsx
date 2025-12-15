@@ -1,221 +1,403 @@
-import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import { 
-  Calendar,
-  MessageCircle,
+  Send, 
+  Mic, 
+  MicOff, 
+  Bot, 
   Stethoscope,
+  Building,
   Pill,
-  FileText,
-  Clock,
+  TestTube,
   MapPin,
-  Bell,
-  Activity
+  Star,
+  Calendar,
+  Clock,
+  Phone
 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
+import { toast } from '@/hooks/use-toast';
+import { useQuery } from '@tanstack/react-query';
+
+interface Message {
+  id: string;
+  type: 'user' | 'bot';
+  content: string;
+  timestamp: Date;
+  suggestions?: string[];
+  data?: any;
+}
 
 export function PatientDashboard() {
+  const { user } = useAuth();
   const navigate = useNavigate();
-
-  const upcomingAppointments = [
+  
+  const [messages, setMessages] = useState<Message[]>([
     {
-      id: 1,
-      doctor: 'Dr. Sarah Johnson',
-      specialty: 'Cardiology',
-      date: '2024-01-15',
-      time: '10:00 AM',
-      type: 'Video Call',
-      status: 'confirmed'
+      id: '1',
+      type: 'bot',
+      content: `Habari ${user?.user_metadata?.first_name || 'wewe'}! 👋\nNitakusaidia kupata huduma za afya.`,
+      timestamp: new Date(),
+      suggestions: ['🩺 Daktari', '🏥 Hospitali', '💊 Famasi', '📅 Miadi Yangu']
     }
-  ];
+  ]);
+  
+  const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const recognition = useRef<any>(null);
 
-  const recentActivities = [
-    {
-      id: 1,
-      type: 'appointment',
-      message: 'Appointment booked with Dr. Sarah Johnson',
-      time: '2 hours ago'
+  // Fetch upcoming appointments
+  const { data: appointments } = useQuery({
+    queryKey: ['my-appointments', user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('appointments')
+        .select('*, profiles!appointments_doctor_id_fkey(first_name, last_name)')
+        .eq('patient_id', user?.id)
+        .gte('appointment_date', new Date().toISOString())
+        .order('appointment_date', { ascending: true })
+        .limit(3);
+      return data;
     },
-    {
-      id: 2,
-      type: 'message',
-      message: 'New message from Dr. Michael Brown',
-      time: '1 day ago'
+    enabled: !!user?.id
+  });
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  useEffect(() => {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      recognition.current = new SpeechRecognition();
+      recognition.current.continuous = false;
+      recognition.current.lang = 'sw-TZ';
+      recognition.current.onresult = (event: any) => {
+        setInput(event.results[0][0].transcript);
+        setIsListening(false);
+      };
+      recognition.current.onerror = () => setIsListening(false);
+      recognition.current.onend = () => setIsListening(false);
     }
-  ];
+  }, []);
 
-  const quickActions = [
-    {
-      title: 'Find Doctor',
-      description: 'Search for specialists',
-      icon: Stethoscope,
-      action: () => navigate('/chatbot'),
-      color: 'bg-medical-light-blue text-medical-blue'
-    },
-    {
-      title: 'Book Appointment',
-      description: 'Schedule consultation',
-      icon: Calendar,
-      action: () => navigate('/book-appointment'),
-      color: 'bg-medical-light-green text-medical-green'
-    },
-    {
-      title: 'Find Pharmacy',
-      description: 'Locate nearby pharmacy',
-      icon: Pill,
-      action: () => navigate('/chatbot'),
-      color: 'bg-purple-100 text-purple-600'
-    },
-    {
-      title: 'Medical Records',
-      description: 'View your records',
-      icon: FileText,
-      action: () => navigate('/profile'),
-      color: 'bg-orange-100 text-orange-600'
+  const toggleListening = () => {
+    if (recognition.current) {
+      if (isListening) recognition.current.stop();
+      else recognition.current.start();
+      setIsListening(!isListening);
     }
-  ];
+  };
 
-  return (
-    <div className="p-6 space-y-6 bg-medical-gradient-light min-h-screen">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Patient Dashboard</h1>
-          <p className="text-medical-gray">Welcome back! Here's your health overview.</p>
+  const processMessage = async (message: string): Promise<Message> => {
+    const lowerMessage = message.toLowerCase();
+    
+    if (lowerMessage.includes('miadi') || lowerMessage.includes('appointment')) {
+      if (appointments && appointments.length > 0) {
+        return {
+          id: Date.now().toString(),
+          type: 'bot',
+          content: `Una miadi ${appointments.length} zijazo:`,
+          timestamp: new Date(),
+          data: { type: 'appointments', items: appointments }
+        };
+      }
+      return {
+        id: Date.now().toString(),
+        type: 'bot',
+        content: 'Huna miadi sasa. Ungependa kuratiba?',
+        timestamp: new Date(),
+        suggestions: ['🩺 Tafuta Daktari', '📅 Ratiba Miadi']
+      };
+    }
+
+    if (lowerMessage.includes('daktari') || lowerMessage.includes('doctor')) {
+      const { data } = await supabase
+        .from('profiles')
+        .select('id, first_name, last_name, avatar_url')
+        .eq('role', 'doctor')
+        .limit(5);
+      
+      return {
+        id: Date.now().toString(),
+        type: 'bot',
+        content: data?.length ? `Madaktari ${data.length} wanapatikana:` : 'Hakuna daktari sasa.',
+        timestamp: new Date(),
+        data: data?.length ? { type: 'doctors', items: data } : undefined
+      };
+    }
+
+    if (lowerMessage.includes('hospitali') || lowerMessage.includes('hospital')) {
+      const { data } = await supabase.from('hospitals').select('*').eq('is_verified', true).limit(5);
+      return {
+        id: Date.now().toString(),
+        type: 'bot',
+        content: data?.length ? `Hospitali ${data.length}:` : 'Hakuna hospitali.',
+        timestamp: new Date(),
+        data: data?.length ? { type: 'hospitals', items: data } : undefined
+      };
+    }
+
+    if (lowerMessage.includes('dawa') || lowerMessage.includes('famasi') || lowerMessage.includes('pharmacy')) {
+      const { data } = await supabase.from('pharmacies').select('*').eq('is_verified', true).limit(5);
+      return {
+        id: Date.now().toString(),
+        type: 'bot',
+        content: data?.length ? `Maduka ya dawa ${data.length}:` : 'Hakuna maduka.',
+        timestamp: new Date(),
+        data: data?.length ? { type: 'pharmacies', items: data } : undefined
+      };
+    }
+
+    return {
+      id: Date.now().toString(),
+      type: 'bot',
+      content: 'Nisaidie kupata daktari, hospitali, famasi, au kuangalia miadi yako.',
+      timestamp: new Date(),
+      suggestions: ['🩺 Daktari', '🏥 Hospitali', '💊 Famasi', '📅 Miadi Yangu']
+    };
+  };
+
+  const handleSend = async () => {
+    if (!input.trim()) return;
+
+    const userMsg: Message = {
+      id: Date.now().toString(),
+      type: 'user',
+      content: input,
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, userMsg]);
+    setInput('');
+    setIsLoading(true);
+
+    try {
+      const response = await processMessage(input);
+      setMessages(prev => [...prev, response]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleBookAppointment = (doctorId: string) => {
+    navigate(`/book-appointment?doctorId=${doctorId}`);
+  };
+
+  const renderData = (data: any) => {
+    if (!data) return null;
+    const { type, items } = data;
+
+    if (type === 'appointments') {
+      return (
+        <div className="space-y-2 mt-3">
+          {items.map((apt: any) => (
+            <Card key={apt.id} className="bg-white/90 border-0 shadow-sm">
+              <CardContent className="p-3 flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Calendar className="h-5 w-5 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm">Dr. {apt.profiles?.first_name} {apt.profiles?.last_name}</p>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    {new Date(apt.appointment_date).toLocaleDateString('sw-TZ')}
+                  </p>
+                </div>
+                <Badge variant={apt.status === 'confirmed' ? 'default' : 'secondary'} className="text-xs">
+                  {apt.status}
+                </Badge>
+              </CardContent>
+            </Card>
+          ))}
         </div>
-        <Button 
-          onClick={() => navigate('/chatbot')} 
-          className="bg-medical-gradient text-white"
-        >
-          <MessageCircle className="w-4 h-4 mr-2" />
-          Chat Assistant
-        </Button>
-      </div>
+      );
+    }
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {quickActions.map((action, index) => (
-          <Card key={index} className="cursor-pointer hover:shadow-medical-strong transition-shadow bg-white" onClick={action.action}>
-            <CardContent className="p-6">
-              <div className={`w-12 h-12 rounded-lg ${action.color} flex items-center justify-center mb-3`}>
-                <action.icon className="w-6 h-6" />
-              </div>
-              <h3 className="font-semibold text-foreground">{action.title}</h3>
-              <p className="text-sm text-medical-gray">{action.description}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Upcoming Appointments */}
-        <Card className="bg-white shadow-medical">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Calendar className="w-5 h-5 text-medical-blue" />
-              <span>Upcoming Appointments</span>
-            </CardTitle>
-            <CardDescription>Your scheduled consultations</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {upcomingAppointments.length > 0 ? (
-              <div className="space-y-4">
-                {upcomingAppointments.map((appointment) => (
-                  <div key={appointment.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-medical-light-blue rounded-full flex items-center justify-center">
-                        <Stethoscope className="w-5 h-5 text-medical-blue" />
-                      </div>
-                      <div>
-                        <h4 className="font-semibold text-foreground">{appointment.doctor}</h4>
-                        <p className="text-sm text-medical-gray">{appointment.specialty}</p>
-                        <div className="flex items-center space-x-2 text-sm text-medical-gray">
-                          <Clock className="w-4 h-4" />
-                          <span>{appointment.date} at {appointment.time}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <Badge className="bg-medical-light-green text-medical-green mb-2">
-                        {appointment.status}
-                      </Badge>
-                      <p className="text-sm text-medical-gray">{appointment.type}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <Calendar className="w-12 h-12 text-medical-gray mx-auto mb-4" />
-                <p className="text-medical-gray">No upcoming appointments</p>
-                <Button 
-                  className="mt-2 bg-medical-blue hover:bg-medical-blue/90" 
-                  onClick={() => navigate('/book-appointment')}
-                >
-                  Book Appointment
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Recent Activity */}
-        <Card className="bg-white shadow-medical">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Activity className="w-5 h-5 text-medical-green" />
-              <span>Recent Activity</span>
-            </CardTitle>
-            <CardDescription>Your latest health activities</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {recentActivities.map((activity) => (
-                <div key={activity.id} className="flex items-center space-x-3 p-3 border rounded-lg">
-                  <div className="w-8 h-8 bg-medical-light-blue rounded-full flex items-center justify-center">
-                    {activity.type === 'appointment' ? (
-                      <Calendar className="w-4 h-4 text-medical-blue" />
-                    ) : (
-                      <MessageCircle className="w-4 h-4 text-medical-blue" />
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm text-foreground">{activity.message}</p>
-                    <p className="text-xs text-medical-gray">{activity.time}</p>
+    if (type === 'doctors') {
+      return (
+        <div className="space-y-2 mt-3">
+          {items.map((doc: any) => (
+            <Card key={doc.id} className="bg-white/90 border-0 shadow-sm">
+              <CardContent className="p-3 flex items-center gap-3">
+                <Avatar className="h-10 w-10 bg-primary/10">
+                  <AvatarFallback className="bg-primary/10 text-primary">
+                    <Stethoscope className="h-5 w-5" />
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm">Dr. {doc.first_name} {doc.last_name}</p>
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                    <span>4.8</span>
+                    <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">Online</Badge>
                   </div>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+                <Button size="sm" className="h-8" onClick={() => handleBookAppointment(doc.id)}>
+                  Ratiba
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      );
+    }
 
-      {/* Health Tips */}
-      <Card className="bg-white shadow-medical">
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Bell className="w-5 h-5 text-medical-warning" />
-            <span>Health Tips</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-4 bg-medical-light-blue rounded-lg">
-              <h4 className="font-semibold text-medical-blue mb-2">Stay Hydrated</h4>
-              <p className="text-sm text-medical-gray">Drink at least 8 glasses of water daily for optimal health.</p>
-            </div>
-            <div className="p-4 bg-medical-light-green rounded-lg">
-              <h4 className="font-semibold text-medical-green mb-2">Regular Exercise</h4>
-              <p className="text-sm text-medical-gray">30 minutes of daily exercise can improve your overall well-being.</p>
-            </div>
-            <div className="p-4 bg-purple-100 rounded-lg">
-              <h4 className="font-semibold text-purple-600 mb-2">Healthy Sleep</h4>
-              <p className="text-sm text-medical-gray">Aim for 7-9 hours of quality sleep each night.</p>
+    if (type === 'hospitals') {
+      return (
+        <div className="space-y-2 mt-3">
+          {items.map((h: any) => (
+            <Card key={h.id} className="bg-white/90 border-0 shadow-sm">
+              <CardContent className="p-3 flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
+                  <Building className="h-5 w-5 text-green-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm truncate">{h.name}</p>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <MapPin className="h-3 w-3" />{h.address}
+                  </p>
+                </div>
+                {h.phone && (
+                  <Button size="sm" variant="outline" className="h-8">
+                    <Phone className="h-4 w-4" />
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      );
+    }
+
+    if (type === 'pharmacies') {
+      return (
+        <div className="space-y-2 mt-3">
+          {items.map((p: any) => (
+            <Card key={p.id} className="bg-white/90 border-0 shadow-sm">
+              <CardContent className="p-3 flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
+                  <Pill className="h-5 w-5 text-purple-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm truncate">{p.name}</p>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <MapPin className="h-3 w-3" />{p.address}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      );
+    }
+
+    return null;
+  };
+
+  return (
+    <div className="h-[calc(100vh-3.5rem)] flex flex-col bg-gradient-to-b from-primary/5 via-background to-background">
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+        {messages.map((msg) => (
+          <div key={msg.id} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div className={`max-w-[85%] ${msg.type === 'user' ? '' : 'flex gap-2'}`}>
+              {msg.type === 'bot' && (
+                <Avatar className="h-8 w-8 mt-1 flex-shrink-0">
+                  <AvatarFallback className="bg-primary text-primary-foreground">
+                    <Bot className="h-4 w-4" />
+                  </AvatarFallback>
+                </Avatar>
+              )}
+              <div>
+                <div className={`rounded-2xl px-4 py-3 ${
+                  msg.type === 'user'
+                    ? 'bg-primary text-primary-foreground rounded-br-md'
+                    : 'bg-card shadow-sm border rounded-bl-md'
+                }`}>
+                  <p className="text-sm whitespace-pre-line">{msg.content}</p>
+                </div>
+                
+                {renderData(msg.data)}
+                
+                {msg.suggestions && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {msg.suggestions.map((s, i) => (
+                      <Button
+                        key={i}
+                        variant="outline"
+                        size="sm"
+                        className="rounded-full h-8 text-xs bg-background hover:bg-primary/5"
+                        onClick={() => setInput(s.replace(/[^\w\s]/gi, ''))}
+                      >
+                        {s}
+                      </Button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        ))}
+        
+        {isLoading && (
+          <div className="flex gap-2">
+            <Avatar className="h-8 w-8">
+              <AvatarFallback className="bg-primary text-primary-foreground">
+                <Bot className="h-4 w-4" />
+              </AvatarFallback>
+            </Avatar>
+            <div className="bg-card shadow-sm border rounded-2xl rounded-bl-md px-4 py-3">
+              <div className="flex gap-1">
+                <div className="w-2 h-2 bg-muted-foreground/40 rounded-full animate-bounce" />
+                <div className="w-2 h-2 bg-muted-foreground/40 rounded-full animate-bounce [animation-delay:0.1s]" />
+                <div className="w-2 h-2 bg-muted-foreground/40 rounded-full animate-bounce [animation-delay:0.2s]" />
+              </div>
+            </div>
+          </div>
+        )}
+        
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Input */}
+      <div className="p-4 bg-background/80 backdrop-blur-md border-t">
+        <div className="flex items-center gap-2 max-w-2xl mx-auto">
+          <Button
+            variant="ghost"
+            size="icon"
+            className={`h-10 w-10 rounded-full shrink-0 ${isListening ? 'bg-destructive text-destructive-foreground' : ''}`}
+            onClick={toggleListening}
+          >
+            {isListening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+          </Button>
+          
+          <Input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+            placeholder="Andika ujumbe..."
+            className="flex-1 h-11 rounded-full bg-muted border-0"
+          />
+          
+          <Button
+            size="icon"
+            className="h-10 w-10 rounded-full shrink-0"
+            onClick={handleSend}
+            disabled={!input.trim()}
+          >
+            <Send className="h-5 w-5" />
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
