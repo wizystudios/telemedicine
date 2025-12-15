@@ -317,17 +317,17 @@ export default function TeleMedHome() {
   return (
     <div className="h-screen flex flex-col bg-gradient-to-b from-primary/5 via-background to-background">
       {/* Header */}
-      <header className="flex items-center justify-between px-4 py-3 bg-background/80 backdrop-blur-md border-b safe-area-top">
-        <div className="flex items-center gap-2">
-          <div className="h-9 w-9 rounded-xl bg-primary flex items-center justify-center">
-            <HeartPulse className="h-5 w-5 text-primary-foreground" />
+      <header className="w-full flex items-center justify-between px-3 py-2 bg-background/80 backdrop-blur-md border-b">
+        <div className="flex items-center gap-1.5">
+          <div className="h-7 w-7 rounded-lg bg-primary flex items-center justify-center">
+            <HeartPulse className="h-4 w-4 text-primary-foreground" />
           </div>
-          <span className="font-bold text-lg">TeleMed</span>
+          <span className="font-semibold text-sm">TeleMed</span>
         </div>
         <Button 
           variant="ghost" 
           size="sm" 
-          className="font-medium"
+          className="text-xs h-7 px-2"
           onClick={() => navigate('/auth')}
         >
           {user ? 'Dashboard' : 'Ingia'}
@@ -336,36 +336,36 @@ export default function TeleMedHome() {
       </header>
 
       {/* Chat Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+      <div className="flex-1 overflow-y-auto px-3 py-3 space-y-3">
         {messages.map((msg) => (
           <div key={msg.id} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[85%] ${msg.type === 'user' ? '' : 'flex gap-2'}`}>
+            <div className={`max-w-[80%] ${msg.type === 'user' ? '' : 'flex gap-1.5'}`}>
               {msg.type === 'bot' && (
-                <Avatar className="h-8 w-8 mt-1 flex-shrink-0">
+                <Avatar className="h-6 w-6 mt-0.5 flex-shrink-0">
                   <AvatarFallback className="bg-primary text-primary-foreground">
-                    <Bot className="h-4 w-4" />
+                    <Bot className="h-3 w-3" />
                   </AvatarFallback>
                 </Avatar>
               )}
               <div>
-                <div className={`rounded-2xl px-4 py-3 ${
+                <div className={`rounded-xl px-3 py-2 ${
                   msg.type === 'user'
-                    ? 'bg-primary text-primary-foreground rounded-br-md'
-                    : 'bg-card shadow-sm border rounded-bl-md'
+                    ? 'bg-primary text-primary-foreground rounded-br-sm'
+                    : 'bg-card shadow-sm border rounded-bl-sm'
                 }`}>
-                  <p className="text-sm whitespace-pre-line">{msg.content}</p>
+                  <p className="text-xs whitespace-pre-line">{msg.content}</p>
                 </div>
                 
                 {renderData(msg.data)}
                 
                 {msg.suggestions && (
-                  <div className="flex flex-wrap gap-2 mt-2">
+                  <div className="flex flex-wrap gap-1.5 mt-1.5">
                     {msg.suggestions.map((s, i) => (
                       <Button
                         key={i}
                         variant="outline"
                         size="sm"
-                        className="rounded-full h-8 text-xs bg-background hover:bg-primary/5"
+                        className="rounded-full h-6 text-[10px] px-2 bg-background hover:bg-primary/5"
                         onClick={() => setInput(s.replace(/[^\w\s]/gi, ''))}
                       >
                         {s}
@@ -379,17 +379,17 @@ export default function TeleMedHome() {
         ))}
         
         {isLoading && (
-          <div className="flex gap-2">
-            <Avatar className="h-8 w-8">
+          <div className="flex gap-1.5">
+            <Avatar className="h-6 w-6">
               <AvatarFallback className="bg-primary text-primary-foreground">
-                <Bot className="h-4 w-4" />
+                <Bot className="h-3 w-3" />
               </AvatarFallback>
             </Avatar>
-            <div className="bg-card shadow-sm border rounded-2xl rounded-bl-md px-4 py-3">
+            <div className="bg-card shadow-sm border rounded-xl rounded-bl-sm px-3 py-2">
               <div className="flex gap-1">
-                <div className="w-2 h-2 bg-muted-foreground/40 rounded-full animate-bounce" />
-                <div className="w-2 h-2 bg-muted-foreground/40 rounded-full animate-bounce delay-100" />
-                <div className="w-2 h-2 bg-muted-foreground/40 rounded-full animate-bounce delay-200" />
+                <div className="w-1.5 h-1.5 bg-muted-foreground/40 rounded-full animate-bounce" />
+                <div className="w-1.5 h-1.5 bg-muted-foreground/40 rounded-full animate-bounce [animation-delay:0.1s]" />
+                <div className="w-1.5 h-1.5 bg-muted-foreground/40 rounded-full animate-bounce [animation-delay:0.2s]" />
               </div>
             </div>
           </div>
@@ -399,15 +399,15 @@ export default function TeleMedHome() {
       </div>
 
       {/* Input Area */}
-      <div className="p-4 bg-background/80 backdrop-blur-md border-t safe-area-bottom">
-        <div className="flex items-center gap-2 max-w-2xl mx-auto">
+      <div className="w-full p-2 bg-background/80 backdrop-blur-md border-t">
+        <div className="flex items-center gap-1.5">
           <Button
             variant="ghost"
             size="icon"
-            className={`h-10 w-10 rounded-full shrink-0 ${isListening ? 'bg-destructive text-destructive-foreground' : ''}`}
+            className={`h-8 w-8 rounded-full shrink-0 ${isListening ? 'bg-destructive text-destructive-foreground' : ''}`}
             onClick={toggleListening}
           >
-            {isListening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+            {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
           </Button>
           
           <Input
@@ -415,16 +415,16 @@ export default function TeleMedHome() {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
             placeholder="Andika ujumbe..."
-            className="flex-1 h-11 rounded-full bg-muted border-0"
+            className="flex-1 h-8 text-xs rounded-full bg-muted border-0"
           />
           
           <Button
             size="icon"
-            className="h-10 w-10 rounded-full shrink-0"
+            className="h-8 w-8 rounded-full shrink-0"
             onClick={handleSend}
             disabled={!input.trim()}
           >
-            <Send className="h-5 w-5" />
+            <Send className="h-4 w-4" />
           </Button>
         </div>
       </div>
