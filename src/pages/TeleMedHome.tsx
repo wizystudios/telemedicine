@@ -1,8 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
   Send, 
@@ -14,11 +12,13 @@ import {
   Pill,
   TestTube,
   MapPin,
-  Phone,
   Star,
   Calendar,
   HeartPulse,
-  ArrowRight
+  Paperclip,
+  Globe,
+  Sparkles,
+  AlertTriangle
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -32,6 +32,7 @@ interface Message {
   timestamp: Date;
   suggestions?: string[];
   data?: any;
+  isEmergency?: boolean;
 }
 
 declare global {
@@ -45,20 +46,12 @@ export default function TeleMedHome() {
   const { user } = useAuth();
   const navigate = useNavigate();
   
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      type: 'bot',
-      content: 'Karibu TeleMed! 👋\nNisaidie kupata huduma za afya.',
-      timestamp: new Date(),
-      suggestions: ['🩺 Daktari', '🏥 Hospitali', '💊 Duka la Dawa', '🔬 Maabara']
-    }
-  ]);
-  
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const recognition = useRef<any>(null);
 
   useEffect(() => {
@@ -95,8 +88,44 @@ export default function TeleMedHome() {
     }
   };
 
+  const analyzeSymptoms = async (symptoms: string): Promise<Message> => {
+    try {
+      const { data, error } = await supabase.functions.invoke('symptom-checker', {
+        body: { symptoms }
+      });
+
+      if (error) throw error;
+
+      return {
+        id: Date.now().toString(),
+        type: 'bot',
+        content: data.analysis || 'Samahani, sijaweza kuchambua dalili zako.',
+        timestamp: new Date(),
+        data: data.specialists ? { type: 'specialists', items: data.specialists } : undefined,
+        isEmergency: data.isEmergency,
+        suggestions: ['🩺 Pata Daktari', '🏥 Hospitali', '💊 Dawa']
+      };
+    } catch (error) {
+      console.error('Symptom analysis error:', error);
+      return {
+        id: Date.now().toString(),
+        type: 'bot',
+        content: 'Samahani, kuna tatizo la mfumo. Tafadhali jaribu tena.',
+        timestamp: new Date()
+      };
+    }
+  };
+
   const processMessage = async (message: string): Promise<Message> => {
     const lowerMessage = message.toLowerCase();
+    
+    // Check for symptom-related keywords
+    const symptomKeywords = ['maumivu', 'homa', 'kichwa', 'tumbo', 'kifua', 'kikohozi', 'kizunguzungu', 'pain', 'headache', 'fever', 'stomach', 'cough', 'sick', 'nina', 'ninahisi'];
+    const hasSymptoms = symptomKeywords.some(keyword => lowerMessage.includes(keyword));
+    
+    if (hasSymptoms) {
+      return await analyzeSymptoms(message);
+    }
     
     if (lowerMessage.includes('daktari') || lowerMessage.includes('doctor')) {
       const { data } = await supabase
@@ -111,7 +140,7 @@ export default function TeleMedHome() {
         content: data?.length ? `Nimepata madaktari ${data.length}:` : 'Hakuna daktari sasa hivi.',
         timestamp: new Date(),
         data: data?.length ? { type: 'doctors', items: data } : undefined,
-        suggestions: ['📅 Ratiba Miadi', '🔙 Rudi Nyuma']
+        suggestions: ['📅 Ratiba Miadi', '🔙 Nyingine']
       };
     }
 
@@ -166,9 +195,9 @@ export default function TeleMedHome() {
     return {
       id: Date.now().toString(),
       type: 'bot',
-      content: 'Nisaidie kupata daktari, hospitali, duka la dawa, au maabara.',
+      content: 'Karibu TeleMed! Niambie dalili zako au tafuta huduma za afya.',
       timestamp: new Date(),
-      suggestions: ['🩺 Daktari', '🏥 Hospitali', '💊 Duka la Dawa', '🔬 Maabara']
+      suggestions: ['🩺 Daktari', '🏥 Hospitali', '💊 Dawa', '🔬 Maabara']
     };
   };
 
@@ -194,6 +223,13 @@ export default function TeleMedHome() {
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
   const handleBookAppointment = (doctorId: string) => {
     if (!user) {
       navigate('/auth');
@@ -207,26 +243,30 @@ export default function TeleMedHome() {
     
     const { type, items } = data;
 
-    if (type === 'doctors') {
+    if (type === 'specialists' || type === 'doctors') {
       return (
         <div className="space-y-2 mt-3">
-          {items.map((doc: any) => (
-            <Card key={doc.id} className="bg-white/80 backdrop-blur border-0 shadow-sm">
+          {items.map((doc: any, idx: number) => (
+            <Card key={doc.id || idx} className="bg-secondary/50 border-border/50">
               <CardContent className="p-3 flex items-center gap-3">
-                <Avatar className="h-11 w-11 bg-primary/10">
-                  <AvatarFallback className="bg-primary/10 text-primary">
+                <Avatar className="h-10 w-10 bg-primary/20">
+                  <AvatarFallback className="bg-primary/20 text-primary">
                     <Stethoscope className="h-5 w-5" />
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm">Dr. {doc.first_name} {doc.last_name}</p>
+                  <p className="font-medium text-sm text-foreground">
+                    {doc.name || `Dr. ${doc.first_name || ''} ${doc.last_name || ''}`}
+                  </p>
+                  {doc.specialty && (
+                    <p className="text-xs text-muted-foreground">{doc.specialty}</p>
+                  )}
                   <div className="flex items-center gap-1 text-xs text-muted-foreground">
                     <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
                     <span>4.8</span>
-                    <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">Available</Badge>
                   </div>
                 </div>
-                <Button size="sm" className="h-8 px-3" onClick={() => handleBookAppointment(doc.id)}>
+                <Button size="sm" onClick={() => handleBookAppointment(doc.id)}>
                   <Calendar className="h-3.5 w-3.5 mr-1" />
                   Book
                 </Button>
@@ -241,10 +281,10 @@ export default function TeleMedHome() {
       return (
         <div className="space-y-2 mt-3">
           {items.map((h: any) => (
-            <Card key={h.id} className="bg-white/80 backdrop-blur border-0 shadow-sm">
+            <Card key={h.id} className="bg-secondary/50 border-border/50">
               <CardContent className="p-3 flex items-center gap-3">
-                <div className="h-11 w-11 rounded-full bg-green-100 flex items-center justify-center">
-                  <Building className="h-5 w-5 text-green-600" />
+                <div className="h-10 w-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                  <Building className="h-5 w-5 text-emerald-400" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm truncate">{h.name}</p>
@@ -253,11 +293,6 @@ export default function TeleMedHome() {
                     {h.address}
                   </p>
                 </div>
-                {h.phone && (
-                  <Button size="sm" variant="outline" className="h-8">
-                    <Phone className="h-3.5 w-3.5" />
-                  </Button>
-                )}
               </CardContent>
             </Card>
           ))}
@@ -269,10 +304,10 @@ export default function TeleMedHome() {
       return (
         <div className="space-y-2 mt-3">
           {items.map((p: any) => (
-            <Card key={p.id} className="bg-white/80 backdrop-blur border-0 shadow-sm">
+            <Card key={p.id} className="bg-secondary/50 border-border/50">
               <CardContent className="p-3 flex items-center gap-3">
-                <div className="h-11 w-11 rounded-full bg-purple-100 flex items-center justify-center">
-                  <Pill className="h-5 w-5 text-purple-600" />
+                <div className="h-10 w-10 rounded-full bg-purple-500/20 flex items-center justify-center">
+                  <Pill className="h-5 w-5 text-purple-400" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm truncate">{p.name}</p>
@@ -292,10 +327,10 @@ export default function TeleMedHome() {
       return (
         <div className="space-y-2 mt-3">
           {items.map((l: any) => (
-            <Card key={l.id} className="bg-white/80 backdrop-blur border-0 shadow-sm">
+            <Card key={l.id} className="bg-secondary/50 border-border/50">
               <CardContent className="p-3 flex items-center gap-3">
-                <div className="h-11 w-11 rounded-full bg-teal-100 flex items-center justify-center">
-                  <TestTube className="h-5 w-5 text-teal-600" />
+                <div className="h-10 w-10 rounded-full bg-teal-500/20 flex items-center justify-center">
+                  <TestTube className="h-5 w-5 text-teal-400" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm truncate">{l.name}</p>
@@ -314,120 +349,204 @@ export default function TeleMedHome() {
     return null;
   };
 
-  return (
-    <div className="h-screen flex flex-col bg-gradient-to-b from-primary/5 via-background to-background">
-      {/* Header */}
-      <header className="w-full flex items-center justify-between px-3 py-2 bg-background/80 backdrop-blur-md border-b">
-        <div className="flex items-center gap-1.5">
-          <div className="h-7 w-7 rounded-lg bg-primary flex items-center justify-center">
-            <HeartPulse className="h-4 w-4 text-primary-foreground" />
-          </div>
-          <span className="font-semibold text-sm">TeleMed</span>
-        </div>
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="text-xs h-7 px-2"
-          onClick={() => navigate('/auth')}
-        >
-          {user ? 'Dashboard' : 'Ingia'}
-          <ArrowRight className="h-4 w-4 ml-1" />
-        </Button>
-      </header>
+  const hasMessages = messages.length > 0;
 
-      {/* Chat Messages */}
-      <div className="flex-1 overflow-y-auto px-3 py-3 space-y-3">
-        {messages.map((msg) => (
-          <div key={msg.id} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[80%] ${msg.type === 'user' ? '' : 'flex gap-1.5'}`}>
-              {msg.type === 'bot' && (
-                <Avatar className="h-6 w-6 mt-0.5 flex-shrink-0">
-                  <AvatarFallback className="bg-primary text-primary-foreground">
-                    <Bot className="h-3 w-3" />
-                  </AvatarFallback>
-                </Avatar>
-              )}
-              <div>
-                <div className={`rounded-xl px-3 py-2 ${
-                  msg.type === 'user'
-                    ? 'bg-primary text-primary-foreground rounded-br-sm'
-                    : 'bg-card shadow-sm border rounded-bl-sm'
-                }`}>
-                  <p className="text-xs whitespace-pre-line">{msg.content}</p>
+  return (
+    <div className="min-h-screen flex flex-col bg-background">
+      {/* Top Nav */}
+      <nav className="w-full flex items-center justify-between px-4 py-3 border-b border-border/50">
+        <div className="flex items-center gap-2">
+          <HeartPulse className="h-5 w-5 text-primary" />
+          <span className="font-semibold text-foreground">TeleMed</span>
+        </div>
+        <div className="flex items-center gap-2">
+          {user ? (
+            <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')}>
+              Dashboard
+            </Button>
+          ) : (
+            <>
+              <Button variant="outline" size="sm" onClick={() => navigate('/auth')}>
+                Ingia
+              </Button>
+              <Button size="sm" onClick={() => navigate('/auth')}>
+                Jiandikishe
+              </Button>
+            </>
+          )}
+        </div>
+      </nav>
+
+      {/* Main Content */}
+      <main className="flex-1 flex flex-col items-center justify-center px-4">
+        {!hasMessages ? (
+          /* Empty State - Centered */
+          <div className="w-full max-w-2xl text-center animate-fade-in">
+            <h1 className="text-2xl md:text-3xl font-medium text-foreground mb-8">
+              Ninaweza kukusaidiaje?
+            </h1>
+            
+            {/* Chat Input */}
+            <div className="bg-chat-input rounded-2xl border border-border/50 p-2">
+              <div className="flex items-end gap-2">
+                <textarea
+                  ref={inputRef}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Eleza dalili zako au uliza chochote..."
+                  className="flex-1 bg-transparent border-0 resize-none text-foreground placeholder:text-muted-foreground focus:outline-none min-h-[24px] max-h-[120px] py-2 px-2 text-sm"
+                  rows={1}
+                />
+              </div>
+              <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/30">
+                <div className="flex items-center gap-1">
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                    <Paperclip className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                    <Globe className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                    <Sparkles className="h-4 w-4" />
+                  </Button>
                 </div>
-                
-                {renderData(msg.data)}
-                
-                {msg.suggestions && (
-                  <div className="flex flex-wrap gap-1.5 mt-1.5">
-                    {msg.suggestions.map((s, i) => (
-                      <Button
-                        key={i}
-                        variant="outline"
-                        size="sm"
-                        className="rounded-full h-6 text-[10px] px-2 bg-background hover:bg-primary/5"
-                        onClick={() => setInput(s.replace(/[^\w\s]/gi, ''))}
-                      >
-                        {s}
-                      </Button>
-                    ))}
-                  </div>
-                )}
+                <Button 
+                  size="sm"
+                  variant={isListening ? 'destructive' : 'secondary'}
+                  className={`gap-1.5 ${isListening ? 'voice-recording' : ''}`}
+                  onClick={input.trim() ? handleSend : toggleListening}
+                >
+                  {input.trim() ? (
+                    <>
+                      <Send className="h-4 w-4" />
+                      Tuma
+                    </>
+                  ) : (
+                    <>
+                      {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                      Sauti
+                    </>
+                  )}
+                </Button>
               </div>
             </div>
+
+            {/* Quick Actions */}
+            <div className="flex flex-wrap justify-center gap-2 mt-6">
+              {['🩺 Daktari', '🏥 Hospitali', '💊 Dawa', '🔬 Maabara'].map((action) => (
+                <Button
+                  key={action}
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full text-xs"
+                  onClick={() => setInput(action.replace(/[^\w\s]/gi, ''))}
+                >
+                  {action}
+                </Button>
+              ))}
+            </div>
           </div>
-        ))}
-        
-        {isLoading && (
-          <div className="flex gap-1.5">
-            <Avatar className="h-6 w-6">
-              <AvatarFallback className="bg-primary text-primary-foreground">
-                <Bot className="h-3 w-3" />
-              </AvatarFallback>
-            </Avatar>
-            <div className="bg-card shadow-sm border rounded-xl rounded-bl-sm px-3 py-2">
-              <div className="flex gap-1">
-                <div className="w-1.5 h-1.5 bg-muted-foreground/40 rounded-full animate-bounce" />
-                <div className="w-1.5 h-1.5 bg-muted-foreground/40 rounded-full animate-bounce [animation-delay:0.1s]" />
-                <div className="w-1.5 h-1.5 bg-muted-foreground/40 rounded-full animate-bounce [animation-delay:0.2s]" />
+        ) : (
+          /* Chat View */
+          <div className="w-full max-w-2xl flex-1 flex flex-col py-4">
+            <div className="flex-1 overflow-y-auto space-y-4">
+              {messages.map((msg) => (
+                <div key={msg.id} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}>
+                  <div className={`max-w-[85%] ${msg.type === 'user' ? '' : 'flex gap-2'}`}>
+                    {msg.type === 'bot' && (
+                      <Avatar className="h-7 w-7 mt-0.5 flex-shrink-0">
+                        <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                          <Bot className="h-4 w-4" />
+                        </AvatarFallback>
+                      </Avatar>
+                    )}
+                    <div>
+                      {msg.isEmergency && (
+                        <div className="flex items-center gap-2 mb-2 text-destructive text-xs font-medium">
+                          <AlertTriangle className="h-4 w-4" />
+                          DHARURA - Tafadhali tafuta msaada haraka!
+                        </div>
+                      )}
+                      <div className={`rounded-2xl px-4 py-2.5 ${
+                        msg.type === 'user'
+                          ? 'bg-chat-user text-foreground'
+                          : 'bg-chat-bot border border-border/50'
+                      }`}>
+                        <p className="text-sm whitespace-pre-line">{msg.content}</p>
+                      </div>
+                      
+                      {renderData(msg.data)}
+                      
+                      {msg.suggestions && (
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {msg.suggestions.map((s, i) => (
+                            <Button
+                              key={i}
+                              variant="outline"
+                              size="sm"
+                              className="rounded-full text-xs h-7"
+                              onClick={() => setInput(s.replace(/[^\w\s]/gi, ''))}
+                            >
+                              {s}
+                            </Button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+              
+              {isLoading && (
+                <div className="flex gap-2 animate-fade-in">
+                  <Avatar className="h-7 w-7">
+                    <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                      <Bot className="h-4 w-4" />
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="bg-chat-bot border border-border/50 rounded-2xl px-4 py-3">
+                    <div className="flex gap-1.5">
+                      <div className="w-2 h-2 bg-muted-foreground rounded-full typing-dot" />
+                      <div className="w-2 h-2 bg-muted-foreground rounded-full typing-dot" />
+                      <div className="w-2 h-2 bg-muted-foreground rounded-full typing-dot" />
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              <div ref={messagesEndRef} />
+            </div>
+
+            {/* Input at bottom when chatting */}
+            <div className="mt-4 bg-chat-input rounded-2xl border border-border/50 p-2">
+              <div className="flex items-end gap-2">
+                <textarea
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Andika ujumbe..."
+                  className="flex-1 bg-transparent border-0 resize-none text-foreground placeholder:text-muted-foreground focus:outline-none min-h-[24px] max-h-[120px] py-2 px-2 text-sm"
+                  rows={1}
+                />
+                <Button
+                  size="icon"
+                  className="h-8 w-8 shrink-0"
+                  onClick={handleSend}
+                  disabled={!input.trim()}
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
               </div>
             </div>
           </div>
         )}
-        
-        <div ref={messagesEndRef} />
-      </div>
+      </main>
 
-      {/* Input Area */}
-      <div className="w-full p-2 bg-background/80 backdrop-blur-md border-t">
-        <div className="flex items-center gap-1.5">
-          <Button
-            variant="ghost"
-            size="icon"
-            className={`h-8 w-8 rounded-full shrink-0 ${isListening ? 'bg-destructive text-destructive-foreground' : ''}`}
-            onClick={toggleListening}
-          >
-            {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-          </Button>
-          
-          <Input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-            placeholder="Andika ujumbe..."
-            className="flex-1 h-8 text-xs rounded-full bg-muted border-0"
-          />
-          
-          <Button
-            size="icon"
-            className="h-8 w-8 rounded-full shrink-0"
-            onClick={handleSend}
-            disabled={!input.trim()}
-          >
-            <Send className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
+      {/* Footer */}
+      <footer className="w-full text-center py-3 text-xs text-muted-foreground border-t border-border/30">
+        Kwa kutumia TeleMed, unakubali <a href="#" className="underline hover:text-foreground">Masharti</a> na <a href="#" className="underline hover:text-foreground">Sera ya Faragha</a>.
+      </footer>
     </div>
   );
 }
