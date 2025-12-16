@@ -1,14 +1,13 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Phone, Video, ArrowLeft, Download, Play, Pause, FileText, Image as ImageIcon, Mic, Send } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { ArrowLeft, Send, Check, CheckCheck, Loader2, Paperclip, X } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import ContactsList from '@/components/ContactsList';
 
@@ -18,14 +17,15 @@ export default function Messages() {
   const doctorId = searchParams.get('doctor');
   const patientId = searchParams.get('patient');
   const { user } = useAuth();
-  const { toast } = useToast();
   const queryClient = useQueryClient();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [message, setMessage] = useState('');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [isRecording, setIsRecording] = useState(false);
-  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [isTyping, setIsTyping] = useState(false);
+  const [otherUserTyping, setOtherUserTyping] = useState(false);
+  const typingTimeoutRef = useRef<NodeJS.Timeout>();
 
   const otherUserId = doctorId || patientId;
 
@@ -34,43 +34,38 @@ export default function Messages() {
     queryKey: ['user-profile', otherUserId],
     queryFn: async () => {
       if (!otherUserId) return null;
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', otherUserId)
         .single();
-
-      if (error) throw error;
       return data;
     },
     enabled: !!otherUserId
   });
 
-  // Get current user profile for notifications
+  // Get current user profile
   const { data: currentUserProfile } = useQuery({
     queryKey: ['current-user-profile', user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
         .single();
-
-      if (error) throw error;
       return data;
     },
     enabled: !!user?.id
   });
 
-  // Get or create conversation (appointment)
+  // Get or create conversation
   const { data: conversation } = useQuery({
     queryKey: ['conversation', user?.id, otherUserId],
     queryFn: async () => {
       if (!user?.id || !otherUserId) return null;
 
-      // First, try to find existing appointment between these users
-      const { data: existingAppointment, error: appointmentError } = await supabase
+      const { data: existingAppointment } = await supabase
         .from('appointments')
         .select('*')
         .or(`and(patient_id.eq.${user.id},doctor_id.eq.${otherUserId}),and(patient_id.eq.${otherUserId},doctor_id.eq.${user.id})`)
@@ -78,90 +73,85 @@ export default function Messages() {
         .limit(1)
         .maybeSingle();
 
-      if (appointmentError && appointmentError.code !== 'PGRST116') {
-        throw appointmentError;
-      }
+      if (existingAppointment) return existingAppointment;
 
-      if (existingAppointment) {
-        return existingAppointment;
-      }
-
-      // If no appointment exists, create one for messaging
       const isUserPatient = currentUserProfile?.role === 'patient';
-      const { data: newAppointment, error: createError } = await supabase
+      const { data: newAppointment } = await supabase
         .from('appointments')
         .insert({
           patient_id: isUserPatient ? user.id : otherUserId,
           doctor_id: isUserPatient ? otherUserId : user.id,
           appointment_date: new Date().toISOString(),
           status: 'scheduled',
-          consultation_type: 'chat',
-          notes: 'Chat conversation'
+          consultation_type: 'chat'
         })
         .select()
         .single();
 
-      if (createError) throw createError;
       return newAppointment;
     },
     enabled: !!user?.id && !!otherUserId && !!currentUserProfile
   });
 
-  // Get messages for this conversation
+  // Get messages
   const { data: messages = [] } = useQuery({
     queryKey: ['messages', conversation?.id],
     queryFn: async () => {
       if (!conversation?.id) return [];
-      
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('chat_messages')
         .select('*')
         .eq('appointment_id', conversation.id)
         .order('created_at', { ascending: true });
-
-      if (error) throw error;
       return data || [];
     },
     enabled: !!conversation?.id
   });
 
-  // Send message mutation
+  // Mark messages as read
+  const markAsRead = useCallback(async () => {
+    if (!conversation?.id || !user?.id) return;
+    
+    await supabase
+      .from('chat_messages')
+      .update({ is_read: true, read_at: new Date().toISOString() })
+      .eq('appointment_id', conversation.id)
+      .neq('sender_id', user.id)
+      .eq('is_read', false);
+  }, [conversation?.id, user?.id]);
+
+  // Send message
   const sendMessageMutation = useMutation({
     mutationFn: async ({ messageText, files }: { messageText: string; files: File[] }) => {
       if (!conversation?.id || (!messageText.trim() && files.length === 0)) return;
 
       const messagesToSend = [];
 
-      // Send text message if exists
       if (messageText.trim()) {
         messagesToSend.push({
           appointment_id: conversation.id,
           sender_id: user?.id,
           message: messageText.trim(),
-          message_type: 'text'
+          message_type: 'text',
+          status: 'sent'
         });
       }
 
-      // Upload files and create messages for each
       for (const file of files) {
-        try {
-          const fileExt = file.name.split('.').pop();
-          const fileName = `${user?.id}/${Date.now()}.${fileExt}`;
-          
-          const { error: uploadError, data: uploadData } = await supabase.storage
-            .from('chat')
-            .upload(fileName, file);
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${user?.id}/${Date.now()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(fileName, file);
 
-          if (uploadError) throw uploadError;
-
+        if (!uploadError) {
           const { data: { publicUrl } } = supabase.storage
-            .from('chat')
+            .from('avatars')
             .getPublicUrl(fileName);
 
           let messageType = 'file';
           if (file.type.startsWith('image/')) messageType = 'image';
-          else if (file.type.startsWith('video/')) messageType = 'video';
-          else if (file.type.startsWith('audio/')) messageType = 'audio';
 
           messagesToSend.push({
             appointment_id: conversation.id,
@@ -169,44 +159,25 @@ export default function Messages() {
             message: file.name,
             message_type: messageType,
             file_url: publicUrl,
-            file_type: file.type
-          });
-        } catch (error) {
-          console.error('Error uploading file:', error);
-          toast({
-            title: 'Hitilafu',
-            description: `Imeshindwa kupakia faili: ${file.name}`,
-            variant: 'destructive'
+            file_type: file.type,
+            status: 'sent'
           });
         }
       }
 
-      // Insert all messages
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('chat_messages')
         .insert(messagesToSend)
         .select();
 
-      if (error) throw error;
-
-      // Create notification for the recipient
-      const notificationTitle = currentUserProfile?.role === 'doctor' 
-        ? 'Ujumbe Mpya wa Daktari'
-        : 'Ujumbe Mpya wa Mgonjwa';
-      
-      const notificationMessage = messageText.trim() 
-        ? `${currentUserProfile?.first_name || 'Mtu'} amekutumia ujumbe: "${messageText.slice(0, 50)}${messageText.length > 50 ? '...' : ''}"`
-        : `${currentUserProfile?.first_name || 'Mtu'} amekutumia faili`;
-
-      await supabase
-        .from('notifications')
-        .insert({
-          user_id: otherUserId,
-          title: notificationTitle,
-          message: notificationMessage,
-          type: 'message',
-          related_id: conversation.id
-        });
+      // Notify recipient
+      await supabase.from('notifications').insert({
+        user_id: otherUserId,
+        title: 'Ujumbe Mpya',
+        message: messageText.trim() || 'Faili mpya',
+        type: 'message',
+        related_id: conversation.id
+      });
 
       return data;
     },
@@ -214,78 +185,36 @@ export default function Messages() {
       queryClient.invalidateQueries({ queryKey: ['messages', conversation?.id] });
       setMessage('');
       setSelectedFiles([]);
-    },
-    onError: (error: any) => {
-      toast({
-        title: 'Hitilafu',
-        description: 'Imeshindwa kutuma ujumbe',
-        variant: 'destructive'
-      });
-      console.error('Error sending message:', error);
     }
   });
 
-  const handleSendMessage = () => {
-    sendMessageMutation.mutate({ 
-      messageText: message, 
-      files: selectedFiles 
-    });
-  };
-
-  const handleFileSelect = (files: FileList) => {
-    const newFiles = Array.from(files);
-    setSelectedFiles(prev => [...prev, ...newFiles]);
-  };
-
-  const handleRemoveFile = (index: number) => {
-    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const handleVoiceRecord = async () => {
-    if (isRecording) {
-      mediaRecorder?.stop();
-      setIsRecording(false);
-    } else {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        const recorder = new MediaRecorder(stream);
-        
-        recorder.ondataavailable = async (event) => {
-          if (event.data.size > 0) {
-            const audioFile = new File([event.data], `voice-${Date.now()}.webm`, {
-              type: 'audio/webm'
-            });
-            setSelectedFiles(prev => [...prev, audioFile]);
-          }
-        };
-
-        recorder.start();
-        setMediaRecorder(recorder);
-        setIsRecording(true);
-      } catch (error) {
-        console.error('Error accessing microphone:', error);
-        toast({
-          title: 'Hitilafu',
-          description: 'Imeshindwa kufikia kipaza sauti',
-          variant: 'destructive'
-        });
-      }
+  // Handle typing indicator
+  const handleTyping = () => {
+    if (!isTyping) {
+      setIsTyping(true);
+      // Broadcast typing status
+      supabase.channel(`typing-${conversation?.id}`)
+        .send({ type: 'broadcast', event: 'typing', payload: { userId: user?.id } });
     }
+    
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    typingTimeoutRef.current = setTimeout(() => setIsTyping(false), 2000);
   };
 
-  // Auto-scroll to bottom when new messages arrive
+  // Auto-scroll
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    markAsRead();
+  }, [messages, markAsRead]);
 
-  // Real-time subscription for new messages
+  // Real-time subscription
   useEffect(() => {
     if (!conversation?.id) return;
 
     const channel = supabase
-      .channel('chat_messages')
+      .channel(`chat-${conversation.id}`)
       .on('postgres_changes', {
-        event: 'INSERT',
+        event: '*',
         schema: 'public',
         table: 'chat_messages',
         filter: `appointment_id=eq.${conversation.id}`
@@ -294,84 +223,29 @@ export default function Messages() {
       })
       .subscribe();
 
+    // Typing indicator channel
+    const typingChannel = supabase
+      .channel(`typing-${conversation.id}`)
+      .on('broadcast', { event: 'typing' }, ({ payload }) => {
+        if (payload.userId !== user?.id) {
+          setOtherUserTyping(true);
+          setTimeout(() => setOtherUserTyping(false), 2000);
+        }
+      })
+      .subscribe();
+
     return () => {
       supabase.removeChannel(channel);
+      supabase.removeChannel(typingChannel);
     };
-  }, [conversation?.id, queryClient]);
+  }, [conversation?.id, queryClient, user?.id]);
 
-  const renderMessageContent = (msg: any) => {
-    switch (msg.message_type) {
-      case 'image':
-        return (
-          <div className="max-w-sm">
-            <img 
-              src={msg.file_url} 
-              alt={msg.message}
-              className="rounded-lg max-w-full h-auto cursor-pointer"
-              onClick={() => window.open(msg.file_url, '_blank')}
-            />
-            <p className="text-xs text-gray-500 mt-1">{msg.message}</p>
-          </div>
-        );
-      case 'video':
-        return (
-          <div className="max-w-sm">
-            <video 
-              controls
-              className="rounded-lg max-w-full h-auto"
-              preload="metadata"
-            >
-              <source src={msg.file_url} type={msg.file_type} />
-              Video haiwezi kuonyeshwa
-            </video>
-            <p className="text-xs text-gray-500 mt-1">{msg.message}</p>
-          </div>
-        );
-      case 'audio':
-        return (
-          <div className="flex items-center space-x-2 bg-gray-100 dark:bg-gray-700 rounded-lg p-3">
-            <audio controls className="max-w-xs">
-              <source src={msg.file_url} type={msg.file_type} />
-              Sauti haiwezi kuchezwa
-            </audio>
-          </div>
-        );
-      case 'file':
-        return (
-          <div className="flex items-center space-x-2 bg-gray-100 dark:bg-gray-700 rounded-lg p-3 max-w-xs">
-            <FileText className="w-8 h-8 text-blue-600" />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">{msg.message}</p>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => window.open(msg.file_url, '_blank')}
-                className="text-xs text-blue-600 p-0 h-auto"
-              >
-                <Download className="w-3 h-3 mr-1" />
-                Pakua
-              </Button>
-            </div>
-          </div>
-        );
-      default:
-        return <p className="whitespace-pre-wrap">{msg.message}</p>;
-    }
-  };
+  if (!otherUserId) return <ContactsList />;
 
-  // If no specific user selected, show contacts list
-  if (!otherUserId) {
-    return <ContactsList />;
-  }
-
-  // Loading state
   if (!otherUser || !conversation) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-300">Inapakia mazungumzo...</p>
-        </div>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
       </div>
     );
   }
@@ -380,106 +254,141 @@ export default function Messages() {
     (otherUser.role === 'doctor' ? 'Daktari' : 'Mgonjwa');
 
   return (
-    <div className="flex flex-col h-screen bg-background">
+    <div className="flex flex-col h-[calc(100vh-3.5rem)] bg-background">
       {/* Header */}
-      <div className="bg-card border-b px-4 py-3 flex-shrink-0">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => navigate(-1)}
-              className="lg:hidden"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-            
-            <Avatar className="w-10 h-10">
-              <AvatarImage src={otherUser.avatar_url} />
-              <AvatarFallback className="bg-emerald-500 text-white">
-                {otherUser.first_name?.[0] || otherUser.email?.[0]?.toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            
-            <div>
-              <h2 className="font-semibold text-foreground">
-                {displayName}
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                {otherUser.role === 'doctor' ? 'Daktari' : 'Mgonjwa'}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <Button variant="ghost" size="icon">
-              <Phone className="w-5 h-5" />
-            </Button>
-            <Button variant="ghost" size="icon">
-              <Video className="w-5 h-5" />
-            </Button>
-          </div>
+      <div className="border-b px-3 py-2 flex items-center gap-3 shrink-0">
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(-1)}>
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <Avatar className="h-8 w-8">
+          <AvatarImage src={otherUser.avatar_url} />
+          <AvatarFallback className="text-xs bg-primary/10 text-primary">
+            {otherUser.first_name?.[0] || 'U'}
+          </AvatarFallback>
+        </Avatar>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium truncate">{displayName}</p>
+          <p className="text-[10px] text-muted-foreground">
+            {otherUserTyping ? 'Anaandika...' : otherUser.role === 'doctor' ? 'Daktari' : 'Mgonjwa'}
+          </p>
         </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-6 space-y-4 pb-[calc(env(safe-area-inset-bottom)+120px)] bg-gradient-to-b from-muted/30 to-background dark:from-muted/10">
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`flex ${msg.sender_id === user?.id ? 'justify-end' : 'justify-start'} mb-3`}
-          >
-            {msg.sender_id === user?.id ? (
-              <div className="bg-primary text-primary-foreground rounded-2xl rounded-tr-sm px-4 py-3 max-w-[75%] md:max-w-md shadow-md">
-                <div className="break-words break-all hyphens-auto text-base">
-                  {renderMessageContent(msg)}
-                </div>
-                <p className="text-xs mt-1 opacity-75">
-                  {format(new Date(msg.created_at), 'HH:mm')}
-                </p>
-              </div>
-            ) : (
-              <div className="flex items-start space-x-2 max-w-[85%] md:max-w-md">
-                <Avatar className="w-8 h-8 flex-shrink-0">
-                  <AvatarImage src={otherUser.avatar_url} />
-                  <AvatarFallback className="bg-emerald-500 text-white text-xs">
-                    {otherUser.first_name?.[0] || otherUser.email?.[0]?.toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="bg-muted/60 dark:bg-muted/30 backdrop-blur-sm shadow-sm rounded-2xl rounded-tl-sm px-4 py-3 max-w-[75%]">
-                  <div className="break-words break-all hyphens-auto text-base text-foreground">
-                    {renderMessageContent(msg)}
-                  </div>
-                  <p className="text-xs mt-1 text-muted-foreground">
+      <div className="flex-1 overflow-y-auto px-3 py-4 space-y-3">
+        {messages.map((msg: any) => {
+          const isMe = msg.sender_id === user?.id;
+          return (
+            <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+              <div className={`max-w-[80%] rounded-2xl px-3 py-2 ${
+                isMe ? 'bg-primary text-primary-foreground rounded-br-sm' : 'bg-muted rounded-bl-sm'
+              }`}>
+                {msg.message_type === 'image' && msg.file_url && (
+                  <img src={msg.file_url} alt="" className="rounded-lg max-w-full mb-1" />
+                )}
+                <p className="text-sm whitespace-pre-wrap break-words">{msg.message}</p>
+                <div className="flex items-center justify-end gap-1 mt-1">
+                  <span className="text-[10px] opacity-70">
                     {format(new Date(msg.created_at), 'HH:mm')}
-                  </p>
+                  </span>
+                  {isMe && (
+                    msg.is_read ? (
+                      <CheckCheck className="h-3 w-3 text-blue-400" />
+                    ) : (
+                      <Check className="h-3 w-3 opacity-70" />
+                    )
+                  )}
                 </div>
               </div>
-            )}
+            </div>
+          );
+        })}
+        
+        {otherUserTyping && (
+          <div className="flex justify-start">
+            <div className="bg-muted rounded-2xl rounded-bl-sm px-3 py-2">
+              <div className="flex gap-1">
+                <div className="w-2 h-2 bg-muted-foreground/40 rounded-full animate-bounce" />
+                <div className="w-2 h-2 bg-muted-foreground/40 rounded-full animate-bounce [animation-delay:0.1s]" />
+                <div className="w-2 h-2 bg-muted-foreground/40 rounded-full animate-bounce [animation-delay:0.2s]" />
+              </div>
+            </div>
           </div>
-        ))}
+        )}
+        
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Simple Chat Input */}
-      <div className="flex-shrink-0 border-t p-3">
-        <div className="flex gap-2">
-          <Input
-            placeholder="Type a message..."
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyPress={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSendMessage();
-              }
-            }}
-            className="flex-1"
-          />
-          <Button onClick={handleSendMessage} size="icon">
-            <Send className="h-4 w-4" />
-          </Button>
+      {/* Selected files preview */}
+      {selectedFiles.length > 0 && (
+        <div className="px-3 py-2 border-t flex gap-2 overflow-x-auto">
+          {selectedFiles.map((file, i) => (
+            <div key={i} className="relative shrink-0">
+              {file.type.startsWith('image/') ? (
+                <img src={URL.createObjectURL(file)} className="h-16 w-16 object-cover rounded-lg" />
+              ) : (
+                <div className="h-16 w-16 bg-muted rounded-lg flex items-center justify-center text-xs">
+                  {file.name.slice(0, 8)}
+                </div>
+              )}
+              <Button
+                size="icon"
+                variant="destructive"
+                className="absolute -top-1 -right-1 h-5 w-5 rounded-full"
+                onClick={() => setSelectedFiles(prev => prev.filter((_, idx) => idx !== i))}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </div>
+          ))}
         </div>
+      )}
+
+      {/* Input */}
+      <div className="border-t p-3 flex gap-2 shrink-0">
+        <input
+          type="file"
+          ref={fileInputRef}
+          className="hidden"
+          multiple
+          accept="image/*,.pdf,.doc,.docx"
+          onChange={(e) => {
+            if (e.target.files) {
+              setSelectedFiles(prev => [...prev, ...Array.from(e.target.files!)]);
+            }
+          }}
+        />
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-9 w-9 shrink-0"
+          onClick={() => fileInputRef.current?.click()}
+        >
+          <Paperclip className="h-4 w-4" />
+        </Button>
+        <Input
+          placeholder="Andika ujumbe..."
+          value={message}
+          onChange={(e) => {
+            setMessage(e.target.value);
+            handleTyping();
+          }}
+          onKeyPress={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              sendMessageMutation.mutate({ messageText: message, files: selectedFiles });
+            }
+          }}
+          className="flex-1 h-9"
+        />
+        <Button
+          size="icon"
+          className="h-9 w-9 shrink-0"
+          onClick={() => sendMessageMutation.mutate({ messageText: message, files: selectedFiles })}
+          disabled={!message.trim() && selectedFiles.length === 0}
+        >
+          <Send className="h-4 w-4" />
+        </Button>
       </div>
     </div>
   );
