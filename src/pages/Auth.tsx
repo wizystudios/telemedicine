@@ -73,7 +73,10 @@ export default function Auth() {
         }
 
         toast({ title: 'Umefanikiwa!', description: 'Angalia email yako.' });
-        navigate('/dashboard');
+        
+        // Navigate to role-specific dashboard
+        const dashboardPath = '/dashboard';
+        navigate(dashboardPath);
       }
     } catch (error: any) {
       toast({ 

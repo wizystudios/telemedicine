@@ -15,9 +15,6 @@ import {
   Star,
   Calendar,
   HeartPulse,
-  Paperclip,
-  Globe,
-  Sparkles,
   AlertTriangle
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -387,7 +384,7 @@ export default function TeleMedHome() {
             </h1>
             
             {/* Chat Input */}
-            <div className="bg-chat-input rounded-2xl border border-border/50 p-2">
+            <div className="bg-chat-input rounded-2xl border border-border/50 p-3">
               <div className="flex items-end gap-2">
                 <textarea
                   ref={inputRef}
@@ -398,53 +395,44 @@ export default function TeleMedHome() {
                   className="flex-1 bg-transparent border-0 resize-none text-foreground placeholder:text-muted-foreground focus:outline-none min-h-[24px] max-h-[120px] py-2 px-2 text-sm"
                   rows={1}
                 />
-              </div>
-              <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/30">
-                <div className="flex items-center gap-1">
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
-                    <Paperclip className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
-                    <Globe className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
-                    <Sparkles className="h-4 w-4" />
-                  </Button>
-                </div>
                 <Button 
                   size="sm"
-                  variant={isListening ? 'destructive' : 'secondary'}
-                  className={`gap-1.5 ${isListening ? 'voice-recording' : ''}`}
+                  variant={isListening ? 'destructive' : 'default'}
+                  className="shrink-0"
                   onClick={input.trim() ? handleSend : toggleListening}
                 >
                   {input.trim() ? (
-                    <>
-                      <Send className="h-4 w-4" />
-                      Tuma
-                    </>
+                    <Send className="h-4 w-4" />
+                  ) : isListening ? (
+                    <MicOff className="h-4 w-4" />
                   ) : (
-                    <>
-                      {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-                      Sauti
-                    </>
+                    <Mic className="h-4 w-4" />
                   )}
                 </Button>
               </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="flex flex-wrap justify-center gap-2 mt-6">
-              {['🩺 Daktari', '🏥 Hospitali', '💊 Dawa', '🔬 Maabara'].map((action) => (
-                <Button
-                  key={action}
-                  variant="outline"
-                  size="sm"
-                  className="rounded-full text-xs"
-                  onClick={() => setInput(action.replace(/[^\w\s]/gi, ''))}
-                >
-                  {action}
-                </Button>
-              ))}
+              
+              {/* Action Buttons */}
+              <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-border/30">
+                {[
+                  { label: '🩺 Daktari', value: 'Daktari', icon: Stethoscope },
+                  { label: '🏥 Hospitali', value: 'Hospitali', icon: Building },
+                  { label: '💊 Dawa', value: 'Dawa', icon: Pill },
+                  { label: '🔬 Maabara', value: 'Maabara', icon: TestTube },
+                ].map((action) => (
+                  <Button
+                    key={action.value}
+                    variant="outline"
+                    size="sm"
+                    className="rounded-full text-xs flex-1 min-w-[80px]"
+                    onClick={() => {
+                      setInput(action.value);
+                      setTimeout(() => handleSend(), 100);
+                    }}
+                  >
+                    {action.label}
+                  </Button>
+                ))}
+              </div>
             </div>
           </div>
         ) : (
