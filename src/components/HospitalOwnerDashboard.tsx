@@ -1,30 +1,46 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Building2, Users, Calendar, Plus, Loader2, Stethoscope, 
-  TrendingUp, MapPin, Phone, Mail
+  TrendingUp, MapPin, Phone, Mail, Clock, Trash2
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
 
+const DAYS = ['Jumapili', 'Jumatatu', 'Jumanne', 'Jumatano', 'Alhamisi', 'Ijumaa', 'Jumamosi'];
+
 export default function HospitalOwnerDashboard() {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [hospital, setHospital] = useState<any>(null);
   const [doctors, setDoctors] = useState<any[]>([]);
   const [stats, setStats] = useState({ doctors: 0, appointments: 0, thisMonth: 0 });
   const [isAddingDoctor, setIsAddingDoctor] = useState(false);
-  const [newDoctor, setNewDoctor] = useState({ email: '', name: '', specialty: '' });
+  const [isTimetableOpen, setIsTimetableOpen] = useState(false);
+  const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
+  const [timetable, setTimetable] = useState<any[]>([]);
   const [chartData, setChartData] = useState<any[]>([]);
+
+  // New doctor form
+  const [newDoctor, setNewDoctor] = useState({
+    email: '', password: '', firstName: '', lastName: '', phone: '',
+    licenseNumber: '', bio: '', experienceYears: '', consultationFee: ''
+  });
+
+  // Timetable form
+  const [newTimetable, setNewTimetable] = useState({
+    dayOfWeek: '1', startTime: '08:00', endTime: '17:00', location: ''
+  });
 
   useEffect(() => {
     if (user?.id) fetchData();
@@ -48,15 +64,13 @@ export default function HospitalOwnerDashboard() {
       // Fetch doctors
       const { data: doctorsData } = await supabase
         .from('doctor_profiles')
-        .select('*, profiles!doctor_profiles_user_id_fkey(first_name, last_name, email, avatar_url)')
+        .select('*, profiles!doctor_profiles_user_id_fkey(first_name, last_name, email, avatar_url, phone)')
         .eq('hospital_id', hospitalData.id);
 
       setDoctors(doctorsData || []);
 
-      // Fetch appointments for this hospital's doctors
-      const doctorIds = doctorsData?.map(d => d.user_id) || [];
-      
       // Stats
+      const doctorIds = doctorsData?.map(d => d.user_id) || [];
       const thisMonth = new Date().toISOString().slice(0, 7);
       let monthlyAppts = 0;
       
@@ -69,13 +83,9 @@ export default function HospitalOwnerDashboard() {
         monthlyAppts = count || 0;
       }
 
-      setStats({
-        doctors: doctorsData?.length || 0,
-        appointments: monthlyAppts,
-        thisMonth: monthlyAppts
-      });
+      setStats({ doctors: doctorsData?.length || 0, appointments: monthlyAppts, thisMonth: monthlyAppts });
 
-      // Generate chart data (simulated monthly data)
+      // Chart data
       const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
       setChartData(months.map(name => ({ name, value: Math.floor(Math.random() * 30) + 5 })));
 
@@ -87,15 +97,109 @@ export default function HospitalOwnerDashboard() {
   };
 
   const handleAddDoctor = async () => {
-    if (!newDoctor.email || !newDoctor.name) {
-      toast({ title: 'Kosa', description: 'Jaza taarifa zote', variant: 'destructive' });
+    if (!newDoctor.email || !newDoctor.firstName || !newDoctor.password || !newDoctor.licenseNumber) {
+      toast({ title: 'Kosa', description: 'Jaza taarifa zote zinazohitajika', variant: 'destructive' });
       return;
     }
-    toast({ 
-      title: 'Taarifa', 
-      description: 'Wasiliana na Super Admin kuongeza daktari mpya',
-    });
-    setIsAddingDoctor(false);
+
+    try {
+      // 1. Create auth account for doctor
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: newDoctor.email,
+        password: newDoctor.password,
+        options: {
+          data: {
+            first_name: newDoctor.firstName,
+            last_name: newDoctor.lastName,
+            phone: newDoctor.phone,
+          },
+        },
+      });
+
+      if (authError) throw authError;
+      if (!authData.user) throw new Error('Imeshindwa kuunda akaunti');
+
+      // 2. Assign doctor role
+      await supabase.from('user_roles').insert([{ user_id: authData.user.id, role: 'doctor' as any }]);
+
+      // 3. Create doctor profile linked to this hospital
+      const { error: profileError } = await supabase.from('doctor_profiles').insert([{
+        user_id: authData.user.id,
+        hospital_id: hospital.id,
+        hospital_name: hospital.name,
+        license_number: newDoctor.licenseNumber,
+        bio: newDoctor.bio,
+        experience_years: newDoctor.experienceYears ? parseInt(newDoctor.experienceYears) : 0,
+        consultation_fee: newDoctor.consultationFee ? parseFloat(newDoctor.consultationFee) : 0,
+        is_private: false,
+        is_verified: true, // Auto-verified since hospital owner adding
+      }]);
+
+      if (profileError) throw profileError;
+
+      toast({ title: 'Imefanikiwa!', description: `Daktari ${newDoctor.firstName} ameongezwa` });
+      setIsAddingDoctor(false);
+      setNewDoctor({ email: '', password: '', firstName: '', lastName: '', phone: '', licenseNumber: '', bio: '', experienceYears: '', consultationFee: '' });
+      fetchData();
+    } catch (error: any) {
+      console.error(error);
+      toast({ title: 'Hitilafu', description: error.message, variant: 'destructive' });
+    }
+  };
+
+  const openTimetable = async (doctor: any) => {
+    setSelectedDoctor(doctor);
+    
+    // Fetch doctor's timetable
+    const { data } = await supabase
+      .from('doctor_timetable')
+      .select('*')
+      .eq('doctor_id', doctor.user_id)
+      .order('day_of_week');
+    
+    setTimetable(data || []);
+    setIsTimetableOpen(true);
+  };
+
+  const addTimetableEntry = async () => {
+    if (!selectedDoctor) return;
+
+    const { error } = await supabase.from('doctor_timetable').insert([{
+      doctor_id: selectedDoctor.user_id,
+      day_of_week: parseInt(newTimetable.dayOfWeek),
+      start_time: newTimetable.startTime,
+      end_time: newTimetable.endTime,
+      location: newTimetable.location || hospital.name,
+      is_available: true
+    }]);
+
+    if (error) {
+      toast({ title: 'Hitilafu', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Imefanikiwa', description: 'Ratiba imeongezwa' });
+      openTimetable(selectedDoctor); // Refresh
+    }
+  };
+
+  const deleteTimetableEntry = async (id: string) => {
+    const { error } = await supabase.from('doctor_timetable').delete().eq('id', id);
+    if (!error && selectedDoctor) {
+      openTimetable(selectedDoctor);
+    }
+  };
+
+  const removeDoctor = async (doctorId: string) => {
+    const { error } = await supabase
+      .from('doctor_profiles')
+      .update({ hospital_id: null, hospital_name: null })
+      .eq('id', doctorId);
+
+    if (error) {
+      toast({ title: 'Hitilafu', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Imefanikiwa', description: 'Daktari ameondolewa' });
+      fetchData();
+    }
   };
 
   if (loading) {
@@ -162,7 +266,7 @@ export default function HospitalOwnerDashboard() {
         </Card>
       </div>
 
-      {/* Analytics Chart */}
+      {/* Chart */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm">Miadi kwa Mwezi</CardTitle>
@@ -191,31 +295,55 @@ export default function HospitalOwnerDashboard() {
               <DialogTrigger asChild>
                 <Button size="sm" className="h-7 text-xs">
                   <Plus className="h-3 w-3 mr-1" />
-                  Ongeza
+                  Ongeza Daktari
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                  <DialogTitle>Ongeza Daktari</DialogTitle>
+                  <DialogTitle>Ongeza Daktari Mpya</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-3">
-                  <Input 
-                    placeholder="Jina kamili" 
-                    value={newDoctor.name}
-                    onChange={(e) => setNewDoctor({ ...newDoctor, name: e.target.value })}
-                  />
-                  <Input 
-                    type="email" 
-                    placeholder="Email" 
-                    value={newDoctor.email}
-                    onChange={(e) => setNewDoctor({ ...newDoctor, email: e.target.value })}
-                  />
-                  <Input 
-                    placeholder="Utaalamu" 
-                    value={newDoctor.specialty}
-                    onChange={(e) => setNewDoctor({ ...newDoctor, specialty: e.target.value })}
-                  />
-                  <Button onClick={handleAddDoctor} className="w-full">Ongeza</Button>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <Label className="text-xs">Jina la Kwanza *</Label>
+                      <Input value={newDoctor.firstName} onChange={(e) => setNewDoctor({...newDoctor, firstName: e.target.value})} />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Jina la Ukoo *</Label>
+                      <Input value={newDoctor.lastName} onChange={(e) => setNewDoctor({...newDoctor, lastName: e.target.value})} />
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-xs">Email *</Label>
+                    <Input type="email" value={newDoctor.email} onChange={(e) => setNewDoctor({...newDoctor, email: e.target.value})} />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Password *</Label>
+                    <Input type="password" value={newDoctor.password} onChange={(e) => setNewDoctor({...newDoctor, password: e.target.value})} />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Simu</Label>
+                    <Input value={newDoctor.phone} onChange={(e) => setNewDoctor({...newDoctor, phone: e.target.value})} />
+                  </div>
+                  <div>
+                    <Label className="text-xs">License Number *</Label>
+                    <Input value={newDoctor.licenseNumber} onChange={(e) => setNewDoctor({...newDoctor, licenseNumber: e.target.value})} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <Label className="text-xs">Miaka ya Uzoefu</Label>
+                      <Input type="number" value={newDoctor.experienceYears} onChange={(e) => setNewDoctor({...newDoctor, experienceYears: e.target.value})} />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Ada (TZS)</Label>
+                      <Input type="number" value={newDoctor.consultationFee} onChange={(e) => setNewDoctor({...newDoctor, consultationFee: e.target.value})} />
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-xs">Bio / Utaalamu</Label>
+                    <Textarea value={newDoctor.bio} onChange={(e) => setNewDoctor({...newDoctor, bio: e.target.value})} />
+                  </div>
+                  <Button onClick={handleAddDoctor} className="w-full">Ongeza Daktari</Button>
                 </div>
               </DialogContent>
             </Dialog>
@@ -229,6 +357,7 @@ export default function HospitalOwnerDashboard() {
                   <TableHead className="text-xs">Jina</TableHead>
                   <TableHead className="text-xs">Email</TableHead>
                   <TableHead className="text-xs">Hali</TableHead>
+                  <TableHead className="text-xs">Vitendo</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -243,33 +372,91 @@ export default function HospitalOwnerDashboard() {
                         {doc.is_available ? 'Anapatikana' : 'Hapatikani'}
                       </Badge>
                     </TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <Button size="sm" variant="outline" className="h-6 text-[10px] px-2" onClick={() => openTimetable(doc)}>
+                          <Clock className="h-3 w-3 mr-1" /> Ratiba
+                        </Button>
+                        <Button size="sm" variant="ghost" className="h-6 text-[10px] px-2 text-destructive" onClick={() => removeDoctor(doc.id)}>
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
           ) : (
-            <p className="text-xs text-center text-muted-foreground py-4">Hakuna madaktari</p>
+            <p className="text-xs text-center text-muted-foreground py-4">Hakuna madaktari - bofya "Ongeza Daktari" kuongeza</p>
           )}
         </CardContent>
       </Card>
 
-      {/* Contact Info */}
+      {/* Timetable Dialog */}
+      <Dialog open={isTimetableOpen} onOpenChange={setIsTimetableOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Ratiba ya Dr. {selectedDoctor?.profiles?.first_name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {/* Existing timetable */}
+            {timetable.length > 0 && (
+              <div className="space-y-2">
+                {timetable.map((entry) => (
+                  <div key={entry.id} className="flex items-center justify-between p-2 bg-muted rounded-lg">
+                    <div>
+                      <p className="text-sm font-medium">{DAYS[entry.day_of_week]}</p>
+                      <p className="text-xs text-muted-foreground">{entry.start_time} - {entry.end_time}</p>
+                    </div>
+                    <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => deleteTimetableEntry(entry.id)}>
+                      <Trash2 className="h-3 w-3 text-destructive" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Add new entry */}
+            <div className="border-t pt-4 space-y-3">
+              <p className="text-sm font-medium">Ongeza Ratiba Mpya</p>
+              <div>
+                <Label className="text-xs">Siku</Label>
+                <Select value={newTimetable.dayOfWeek} onValueChange={(v) => setNewTimetable({...newTimetable, dayOfWeek: v})}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {DAYS.map((day, i) => (
+                      <SelectItem key={i} value={i.toString()}>{day}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-xs">Kuanzia</Label>
+                  <Input type="time" value={newTimetable.startTime} onChange={(e) => setNewTimetable({...newTimetable, startTime: e.target.value})} />
+                </div>
+                <div>
+                  <Label className="text-xs">Hadi</Label>
+                  <Input type="time" value={newTimetable.endTime} onChange={(e) => setNewTimetable({...newTimetable, endTime: e.target.value})} />
+                </div>
+              </div>
+              <div>
+                <Label className="text-xs">Mahali (Hiari)</Label>
+                <Input value={newTimetable.location} onChange={(e) => setNewTimetable({...newTimetable, location: e.target.value})} placeholder={hospital.name} />
+              </div>
+              <Button onClick={addTimetableEntry} className="w-full">Ongeza Ratiba</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Contact */}
       <Card>
         <CardContent className="p-3">
           <h3 className="text-sm font-semibold mb-2">Mawasiliano</h3>
           <div className="space-y-1 text-xs text-muted-foreground">
-            {hospital.phone && (
-              <p className="flex items-center gap-2">
-                <Phone className="h-3 w-3" />
-                {hospital.phone}
-              </p>
-            )}
-            {hospital.email && (
-              <p className="flex items-center gap-2">
-                <Mail className="h-3 w-3" />
-                {hospital.email}
-              </p>
-            )}
+            {hospital.phone && <p className="flex items-center gap-2"><Phone className="h-3 w-3" />{hospital.phone}</p>}
+            {hospital.email && <p className="flex items-center gap-2"><Mail className="h-3 w-3" />{hospital.email}</p>}
           </div>
         </CardContent>
       </Card>
