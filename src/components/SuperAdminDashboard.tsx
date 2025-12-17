@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Shield, Users, Building, Pill, TestTube, Activity } from 'lucide-react';
 import RegisterOrganizationForm from '@/components/super-admin/RegisterOrganizationForm';
 import RegisterDoctorForm from '@/components/super-admin/RegisterDoctorForm';
+import RegisterUserForm from '@/components/super-admin/RegisterUserForm';
 
 export default function SuperAdminDashboard() {
   const { toast } = useToast();
@@ -211,9 +212,10 @@ export default function SuperAdminDashboard() {
 
       {/* Tabs for Users and Organizations */}
       <Tabs defaultValue="users" className="space-y-4">
-        <TabsList>
+        <TabsList className="flex-wrap">
           <TabsTrigger value="users">Users</TabsTrigger>
           <TabsTrigger value="organizations">Organizations</TabsTrigger>
+          <TabsTrigger value="register-user">Sajili Mtumiaji</TabsTrigger>
           <TabsTrigger value="register-org">Register Organization</TabsTrigger>
           <TabsTrigger value="register-doctor">Register Doctor</TabsTrigger>
         </TabsList>
@@ -309,6 +311,10 @@ export default function SuperAdminDashboard() {
               </Table>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="register-user">
+          <RegisterUserForm />
         </TabsContent>
 
         <TabsContent value="register-org">
