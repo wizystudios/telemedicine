@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
+import { useNav } from '@/contexts/NavContext';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
@@ -19,6 +20,7 @@ import { useEffect, useState } from 'react';
 export function Navbar() {
   const { user, signOut } = useAuth();
   const { updateOnlineStatus } = useOnlineStatus();
+  const { hideNav } = useNav();
   const navigate = useNavigate();
   const [isOnline, setIsOnline] = useState(false);
 
@@ -44,6 +46,8 @@ export function Navbar() {
     navigate('/');
   };
 
+  // Hide navbar when in chat mode
+  if (hideNav) return null;
   if (!user) return null;
 
   return (

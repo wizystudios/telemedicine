@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useNav } from '@/contexts/NavContext';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 
@@ -32,6 +33,7 @@ interface Message {
 
 export function PatientDashboard() {
   const { user } = useAuth();
+  const { setHideNav } = useNav();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -66,6 +68,12 @@ export function PatientDashboard() {
   const [chatAppointmentId, setChatAppointmentId] = useState<string | null>(null);
   const [doctorMessages, setDoctorMessages] = useState<any[]>([]);
   const [doctorTyping, setDoctorTyping] = useState(false);
+
+  // Hide nav when in doctor chat mode
+  useEffect(() => {
+    setHideNav(chatMode === 'doctor');
+    return () => setHideNav(false);
+  }, [chatMode, setHideNav]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
