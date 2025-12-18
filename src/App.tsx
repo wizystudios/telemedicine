@@ -5,10 +5,12 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { NavProvider } from "@/contexts/NavContext";
 import { Navbar } from "@/components/layout/Navbar";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { useRealtimeChatNotifications } from "@/hooks/useRealtimeChatNotifications";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 import TeleMedHome from "./pages/TeleMedHome";
 import Auth from "./pages/Auth";
@@ -40,6 +42,7 @@ function AppContent() {
   const { user, loading } = useAuth();
   
   useRealtimeChatNotifications();
+  usePushNotifications(); // Enable push notifications
 
   if (loading) return <LoadingScreen />;
   
@@ -76,15 +79,17 @@ function AppContent() {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AuthProvider>
-            <AppContent />
-          </AuthProvider>
-        </BrowserRouter>
-      </TooltipProvider>
+      <NavProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AuthProvider>
+              <AppContent />
+            </AuthProvider>
+          </BrowserRouter>
+        </TooltipProvider>
+      </NavProvider>
     </ThemeProvider>
   </QueryClientProvider>
 );

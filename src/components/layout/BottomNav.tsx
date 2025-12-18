@@ -1,5 +1,6 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useNav } from '@/contexts/NavContext';
 import { Home, MessageCircle, Calendar, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -7,7 +8,10 @@ export function BottomNav() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const { hideNav } = useNav();
 
+  // Hide bottom nav when in chat mode or on auth page
+  if (hideNav) return null;
   if (location.pathname === '/auth') return null;
 
   const navItems = user 
