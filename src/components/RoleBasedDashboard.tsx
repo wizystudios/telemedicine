@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Navigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { PatientDashboard } from '@/components/PatientDashboard';
+import { UnifiedChatbot } from '@/components/UnifiedChatbot';
 import { DoctorDashboard } from '@/components/DoctorDashboard';
 import HospitalOwnerDashboard from '@/components/HospitalOwnerDashboard';
 import SuperAdminDashboard from '@/components/SuperAdminDashboard';
@@ -35,7 +35,7 @@ export default function RoleBasedDashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
@@ -53,8 +53,9 @@ export default function RoleBasedDashboard() {
     case 'lab_owner':
       return <LabOwnerDashboard />;
     case 'polyclinic_owner':
-      return <HospitalOwnerDashboard />; // Use hospital dashboard for polyclinics
+      return <HospitalOwnerDashboard />;
     default:
-      return <PatientDashboard />;
+      // Patients see the unified chatbot as their main interface - NO navigation pages
+      return <UnifiedChatbot />;
   }
 }
