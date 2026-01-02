@@ -289,6 +289,42 @@ export type Database = {
           },
         ]
       }
+      content_likes: {
+        Row: {
+          content_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          content_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          content_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_likes_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "institution_content"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       doctor_availability: {
         Row: {
           created_at: string | null
@@ -545,6 +581,7 @@ export type Database = {
           id: string
           is_promoted: boolean | null
           is_verified: boolean | null
+          logo_url: string | null
           name: string
           owner_id: string
           phone: string | null
@@ -563,6 +600,7 @@ export type Database = {
           id?: string
           is_promoted?: boolean | null
           is_verified?: boolean | null
+          logo_url?: string | null
           name: string
           owner_id: string
           phone?: string | null
@@ -581,6 +619,7 @@ export type Database = {
           id?: string
           is_promoted?: boolean | null
           is_verified?: boolean | null
+          logo_url?: string | null
           name?: string
           owner_id?: string
           phone?: string | null
@@ -601,57 +640,140 @@ export type Database = {
           },
         ]
       }
+      institution_content: {
+        Row: {
+          content_type: string
+          content_url: string | null
+          created_at: string
+          description: string | null
+          duration_minutes: number | null
+          id: string
+          institution_id: string | null
+          institution_type: string
+          is_published: boolean | null
+          likes_count: number | null
+          owner_id: string
+          tags: string[] | null
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+          views_count: number | null
+        }
+        Insert: {
+          content_type?: string
+          content_url?: string | null
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number | null
+          id?: string
+          institution_id?: string | null
+          institution_type: string
+          is_published?: boolean | null
+          likes_count?: number | null
+          owner_id: string
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+          views_count?: number | null
+        }
+        Update: {
+          content_type?: string
+          content_url?: string | null
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number | null
+          id?: string
+          institution_id?: string | null
+          institution_type?: string
+          is_published?: boolean | null
+          likes_count?: number | null
+          owner_id?: string
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+          views_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "institution_content_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       laboratories: {
         Row: {
           address: string
           created_at: string
           description: string | null
           email: string | null
+          emergency_available: boolean | null
+          fax: string | null
           id: string
           is_promoted: boolean | null
           is_verified: boolean | null
+          logo_url: string | null
           name: string
+          opening_hours: Json | null
           owner_id: string
           phone: string | null
+          po_box: string | null
           promotion_expires_at: string | null
           rating: number | null
           test_types: string[] | null
           total_reviews: number | null
           updated_at: string
+          website: string | null
         }
         Insert: {
           address: string
           created_at?: string
           description?: string | null
           email?: string | null
+          emergency_available?: boolean | null
+          fax?: string | null
           id?: string
           is_promoted?: boolean | null
           is_verified?: boolean | null
+          logo_url?: string | null
           name: string
+          opening_hours?: Json | null
           owner_id: string
           phone?: string | null
+          po_box?: string | null
           promotion_expires_at?: string | null
           rating?: number | null
           test_types?: string[] | null
           total_reviews?: number | null
           updated_at?: string
+          website?: string | null
         }
         Update: {
           address?: string
           created_at?: string
           description?: string | null
           email?: string | null
+          emergency_available?: boolean | null
+          fax?: string | null
           id?: string
           is_promoted?: boolean | null
           is_verified?: boolean | null
+          logo_url?: string | null
           name?: string
+          opening_hours?: Json | null
           owner_id?: string
           phone?: string | null
+          po_box?: string | null
           promotion_expires_at?: string | null
           rating?: number | null
           test_types?: string[] | null
           total_reviews?: number | null
           updated_at?: string
+          website?: string | null
         }
         Relationships: [
           {
@@ -659,6 +781,53 @@ export type Database = {
             columns: ["owner_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      laboratory_services: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_available: boolean | null
+          laboratory_id: string
+          name: string
+          preparation_required: string | null
+          price: number | null
+          waiting_hours: number | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_available?: boolean | null
+          laboratory_id: string
+          name: string
+          preparation_required?: string | null
+          price?: number | null
+          waiting_hours?: number | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_available?: boolean | null
+          laboratory_id?: string
+          name?: string
+          preparation_required?: string | null
+          price?: number | null
+          waiting_hours?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "laboratory_services_laboratory_id_fkey"
+            columns: ["laboratory_id"]
+            isOneToOne: false
+            referencedRelation: "laboratories"
             referencedColumns: ["id"]
           },
         ]
@@ -991,16 +1160,22 @@ export type Database = {
           created_at: string
           description: string | null
           email: string | null
+          emergency_available: boolean | null
+          fax: string | null
           id: string
           is_promoted: boolean | null
           is_verified: boolean | null
           location_lat: number | null
           location_lng: number | null
+          logo_url: string | null
           medications_available: string[] | null
           name: string
+          opening_hours: Json | null
           owner_id: string
           phone: string | null
+          po_box: string | null
           promotion_expires_at: string | null
+          quote_of_day: string | null
           rating: number | null
           services: string[] | null
           total_reviews: number | null
@@ -1011,16 +1186,22 @@ export type Database = {
           created_at?: string
           description?: string | null
           email?: string | null
+          emergency_available?: boolean | null
+          fax?: string | null
           id?: string
           is_promoted?: boolean | null
           is_verified?: boolean | null
           location_lat?: number | null
           location_lng?: number | null
+          logo_url?: string | null
           medications_available?: string[] | null
           name: string
+          opening_hours?: Json | null
           owner_id: string
           phone?: string | null
+          po_box?: string | null
           promotion_expires_at?: string | null
+          quote_of_day?: string | null
           rating?: number | null
           services?: string[] | null
           total_reviews?: number | null
@@ -1031,16 +1212,22 @@ export type Database = {
           created_at?: string
           description?: string | null
           email?: string | null
+          emergency_available?: boolean | null
+          fax?: string | null
           id?: string
           is_promoted?: boolean | null
           is_verified?: boolean | null
           location_lat?: number | null
           location_lng?: number | null
+          logo_url?: string | null
           medications_available?: string[] | null
           name?: string
+          opening_hours?: Json | null
           owner_id?: string
           phone?: string | null
+          po_box?: string | null
           promotion_expires_at?: string | null
+          quote_of_day?: string | null
           rating?: number | null
           services?: string[] | null
           total_reviews?: number | null
@@ -1061,31 +1248,46 @@ export type Database = {
           category: string | null
           created_at: string | null
           description: string | null
+          dosage: string | null
           id: string
           in_stock: boolean | null
           name: string
           pharmacy_id: string
           price: number | null
+          requires_prescription: boolean | null
+          side_effects: string | null
+          target_audience: string | null
+          usage_instructions: string | null
         }
         Insert: {
           category?: string | null
           created_at?: string | null
           description?: string | null
+          dosage?: string | null
           id?: string
           in_stock?: boolean | null
           name: string
           pharmacy_id: string
           price?: number | null
+          requires_prescription?: boolean | null
+          side_effects?: string | null
+          target_audience?: string | null
+          usage_instructions?: string | null
         }
         Update: {
           category?: string | null
           created_at?: string | null
           description?: string | null
+          dosage?: string | null
           id?: string
           in_stock?: boolean | null
           name?: string
           pharmacy_id?: string
           price?: number | null
+          requires_prescription?: boolean | null
+          side_effects?: string | null
+          target_audience?: string | null
+          usage_instructions?: string | null
         }
         Relationships: [
           {
@@ -1286,6 +1488,42 @@ export type Database = {
           },
         ]
       }
+      saved_content: {
+        Row: {
+          content_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          content_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          content_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_content_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "institution_content"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "saved_content_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       saved_doctors: {
         Row: {
           created_at: string
@@ -1387,6 +1625,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      increment_content_views: {
+        Args: { content_id_param: string }
+        Returns: undefined
       }
       increment_post_views: {
         Args: { post_id_param: string }
