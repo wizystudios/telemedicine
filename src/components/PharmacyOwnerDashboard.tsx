@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { LogoUpload } from '@/components/LogoUpload';
 
 export default function PharmacyOwnerDashboard() {
   const { user } = useAuth();
@@ -253,13 +254,12 @@ export default function PharmacyOwnerDashboard() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="h-12 w-12 rounded-lg bg-pink-100 dark:bg-pink-900/20 flex items-center justify-center">
-            {pharmacy.logo_url ? (
-              <img src={pharmacy.logo_url} alt={pharmacy.name} className="h-10 w-10 rounded object-cover" />
-            ) : (
-              <Pill className="h-6 w-6 text-pink-600" />
-            )}
-          </div>
+          <LogoUpload
+            currentLogoUrl={pharmacy.logo_url}
+            entityId={pharmacy.id}
+            entityType="pharmacy"
+            onLogoUpdated={(url) => setPharmacy({ ...pharmacy, logo_url: url })}
+          />
           <div>
             <h1 className="text-lg font-bold">{pharmacy.name}</h1>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">

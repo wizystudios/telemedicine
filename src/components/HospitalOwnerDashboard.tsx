@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
+import { LogoUpload } from '@/components/LogoUpload';
 
 const DAYS = ['Jumapili', 'Jumatatu', 'Jumanne', 'Jumatano', 'Alhamisi', 'Ijumaa', 'Jumamosi'];
 
@@ -225,9 +226,12 @@ export default function HospitalOwnerDashboard() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-            <Building2 className="h-5 w-5 text-primary" />
-          </div>
+          <LogoUpload
+            currentLogoUrl={hospital.logo_url}
+            entityId={hospital.id}
+            entityType="hospital"
+            onLogoUpdated={(url) => setHospital({ ...hospital, logo_url: url })}
+          />
           <div>
             <h1 className="text-lg font-bold">{hospital.name}</h1>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
