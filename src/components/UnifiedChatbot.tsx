@@ -4,20 +4,23 @@ import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerClose, DrawerFooter } from '@/components/ui/drawer';
 import { Calendar } from '@/components/ui/calendar';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { 
   Send, Mic, MicOff, Bot, Stethoscope, Building, Pill, TestTube, MapPin, Star, 
   Calendar as CalendarIcon, Clock, Phone, X, MessageCircle, ArrowLeft, Check, CheckCheck,
-  User, Mail, FileText, Globe, Video, PhoneCall, AlertTriangle
+  User, Mail, FileText, Globe, Video, PhoneCall, AlertTriangle, LogOut, Settings,
+  Sun, Moon, Heart, Bookmark, Play, Image as ImageIcon
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface Message {
   id: string;
@@ -26,7 +29,7 @@ interface Message {
   timestamp: Date;
   suggestions?: string[];
   data?: {
-    type: 'doctors' | 'hospitals' | 'pharmacies' | 'labs' | 'appointments' | 'timetable' | 'alternative-times';
+    type: 'doctors' | 'hospitals' | 'pharmacies' | 'labs' | 'appointments' | 'timetable' | 'alternative-times' | 'content';
     items: any[];
     doctorId?: string;
   };
@@ -42,14 +45,15 @@ interface DoctorTimetable {
 const DAYS = ['Jumapili', 'Jumatatu', 'Jumanne', 'Jumatano', 'Alhamisi', 'Ijumaa', 'Jumamosi'];
 
 export function UnifiedChatbot() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
       type: 'bot',
       content: `Habari${user?.user_metadata?.first_name ? ` ${user.user_metadata.first_name}` : ''}! 👋\nNinaweza kukusaidia kupata daktari, hospitali, maduka ya dawa, au maabara. Bofya chaguo au andika swali.`,
       timestamp: new Date(),
-      suggestions: ['🩺 Daktari', '🏥 Hospitali', '💊 Dawa', '🔬 Maabara', '📅 Miadi Yangu']
+      suggestions: ['🩺 Daktari', '🏥 Hospitali', '💊 Dawa', '🔬 Maabara', '📅 Miadi Yangu', '🎬 Maudhui']
     }
   ]);
   
@@ -58,13 +62,15 @@ export function UnifiedChatbot() {
   const [isListening, setIsListening] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const recognition = useRef<any>(null);
+  const [userRole, setUserRole] = useState<string>('patient');
 
-  // Modal states
+  // Drawer states (replacing Dialog)
   const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
   const [selectedHospital, setSelectedHospital] = useState<any>(null);
   const [selectedPharmacy, setSelectedPharmacy] = useState<any>(null);
   const [selectedLab, setSelectedLab] = useState<any>(null);
   const [doctorTimetable, setDoctorTimetable] = useState<DoctorTimetable[]>([]);
+  const [showProfile, setShowProfile] = useState(false);
   
   // Booking state
   const [bookingDoctor, setBookingDoctor] = useState<any>(null);
@@ -80,9 +86,24 @@ export function UnifiedChatbot() {
   const [chatAppointmentId, setChatAppointmentId] = useState<string | null>(null);
   const [doctorMessages, setDoctorMessages] = useState<any[]>([]);
 
+  // Hospital doctors and services
+  const [hospitalDoctors, setHospitalDoctors] = useState<any[]>([]);
+  const [pharmacyMedicines, setPharmacyMedicines] = useState<any[]>([]);
+  const [labServices, setLabServices] = useState<any[]>([]);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, doctorMessages]);
+
+  // Fetch user role
+  useEffect(() => {
+    async function fetchRole() {
+      if (!user) return;
+      const { data } = await supabase.from('user_roles').select('role').eq('user_id', user.id).single();
+      setUserRole(data?.role || 'patient');
+    }
+    fetchRole();
+  }, [user]);
 
   useEffect(() => {
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
@@ -126,6 +147,11 @@ export function UnifiedChatbot() {
       else recognition.current.start();
       setIsListening(!isListening);
     }
+  };
+
+  const handleLogout = async () => {
+    await signOut();
+    toast({ title: 'Umefanikiwa kutoka', description: 'Kwaheri!' });
   };
 
   // Fetch doctor's timetable
@@ -206,9 +232,72 @@ export function UnifiedChatbot() {
     }
   };
 
+  // Fetch hospital doctors
+  const fetchHospitalDoctors = async (hospitalId: string) => {
+    const { data } = await supabase
+      .from('doctor_profiles')
+      .select(`*, profiles!doctor_profiles_user_id_fkey(first_name, last_name, avatar_url), specialties(name)`)
+      .eq('hospital_id', hospitalId);
+    setHospitalDoctors(data || []);
+  };
+
+  // Fetch pharmacy medicines
+  const fetchPharmacyMedicines = async (pharmacyId: string) => {
+    const { data } = await supabase
+      .from('pharmacy_medicines')
+      .select('*')
+      .eq('pharmacy_id', pharmacyId);
+    setPharmacyMedicines(data || []);
+  };
+
+  // Fetch lab services
+  const fetchLabServices = async (labId: string) => {
+    const { data } = await supabase
+      .from('laboratory_services')
+      .select('*')
+      .eq('laboratory_id', labId);
+    setLabServices(data || []);
+  };
+
+  // Like content
+  const likeContent = async (contentId: string) => {
+    if (!user) return;
+    const { error } = await supabase.from('content_likes').insert({ content_id: contentId, user_id: user.id });
+    if (!error) {
+      toast({ title: 'Imependwa!' });
+    }
+  };
+
+  // Save content
+  const saveContent = async (contentId: string) => {
+    if (!user) return;
+    const { error } = await supabase.from('saved_content').insert({ content_id: contentId, user_id: user.id });
+    if (!error) {
+      toast({ title: 'Imehifadhiwa!' });
+    }
+  };
+
   const processMessage = async (message: string): Promise<Message> => {
     const lower = message.toLowerCase();
     
+    // Content/video search
+    if (lower.includes('maudhui') || lower.includes('video') || lower.includes('tutorial') || lower.includes('elimu')) {
+      const { data } = await supabase
+        .from('institution_content')
+        .select('*')
+        .eq('is_published', true)
+        .order('created_at', { ascending: false })
+        .limit(10);
+      
+      return {
+        id: Date.now().toString(),
+        type: 'bot',
+        content: data?.length ? `Maudhui ${data.length} yanapatikana. Tazama na uhifadhi:` : 'Hakuna maudhui sasa.',
+        timestamp: new Date(),
+        data: data?.length ? { type: 'content', items: data } : undefined
+      };
+    }
+
     // Check for chat/wasiliana intent - enter doctor chat mode
     if (lower.includes('wasiliana') || lower.includes('ongea') || lower.includes('chat')) {
       const { data: doctors } = await supabase
@@ -312,7 +401,7 @@ export function UnifiedChatbot() {
       type: 'bot',
       content: 'Nisaidie kupata daktari, hospitali, dawa, au maabara.',
       timestamp: new Date(),
-      suggestions: ['🩺 Daktari', '🏥 Hospitali', '💊 Dawa', '🔬 Maabara']
+      suggestions: ['🩺 Daktari', '🏥 Hospitali', '💊 Dawa', '🔬 Maabara', '🎬 Maudhui']
     };
   };
 
@@ -427,6 +516,21 @@ export function UnifiedChatbot() {
   const openDoctorDetail = async (doctor: any) => {
     setSelectedDoctor(doctor);
     await fetchDoctorTimetable(doctor.user_id || doctor.profiles?.id);
+  };
+
+  const openHospitalDetail = async (hospital: any) => {
+    setSelectedHospital(hospital);
+    await fetchHospitalDoctors(hospital.id);
+  };
+
+  const openPharmacyDetail = async (pharmacy: any) => {
+    setSelectedPharmacy(pharmacy);
+    await fetchPharmacyMedicines(pharmacy.id);
+  };
+
+  const openLabDetail = async (lab: any) => {
+    setSelectedLab(lab);
+    await fetchLabServices(lab.id);
   };
 
   const startBooking = (doctor: any) => {
@@ -553,12 +657,19 @@ export function UnifiedChatbot() {
     <Card 
       key={h.id} 
       className="cursor-pointer hover:shadow-md transition-all border-border/50 bg-card/80"
-      onClick={() => setSelectedHospital(h)}
+      onClick={() => openHospitalDetail(h)}
     >
       <CardContent className="p-3 flex items-center gap-3">
-        <div className="h-12 w-12 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-          <Building className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-        </div>
+        {h.logo_url ? (
+          <Avatar className="h-12 w-12">
+            <AvatarImage src={h.logo_url} />
+            <AvatarFallback><Building className="h-6 w-6" /></AvatarFallback>
+          </Avatar>
+        ) : (
+          <div className="h-12 w-12 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+            <Building className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+          </div>
+        )}
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-sm truncate">{h.name}</p>
           <p className="text-xs text-muted-foreground flex items-center gap-1">
@@ -580,17 +691,27 @@ export function UnifiedChatbot() {
     <Card 
       key={p.id} 
       className="cursor-pointer hover:shadow-md transition-all border-border/50 bg-card/80"
-      onClick={() => setSelectedPharmacy(p)}
+      onClick={() => openPharmacyDetail(p)}
     >
       <CardContent className="p-3 flex items-center gap-3">
-        <div className="h-12 w-12 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-          <Pill className="h-6 w-6 text-green-600 dark:text-green-400" />
-        </div>
+        {p.logo_url ? (
+          <Avatar className="h-12 w-12">
+            <AvatarImage src={p.logo_url} />
+            <AvatarFallback><Pill className="h-6 w-6" /></AvatarFallback>
+          </Avatar>
+        ) : (
+          <div className="h-12 w-12 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+            <Pill className="h-6 w-6 text-green-600 dark:text-green-400" />
+          </div>
+        )}
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-sm truncate">{p.name}</p>
           <p className="text-xs text-muted-foreground flex items-center gap-1">
             <MapPin className="h-3 w-3" />{p.address}
           </p>
+          {p.quote_of_day && (
+            <p className="text-xs italic text-primary mt-1">"{p.quote_of_day}"</p>
+          )}
         </div>
       </CardContent>
     </Card>
@@ -601,17 +722,56 @@ export function UnifiedChatbot() {
     <Card 
       key={l.id} 
       className="cursor-pointer hover:shadow-md transition-all border-border/50 bg-card/80"
-      onClick={() => setSelectedLab(l)}
+      onClick={() => openLabDetail(l)}
     >
       <CardContent className="p-3 flex items-center gap-3">
-        <div className="h-12 w-12 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-          <TestTube className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-        </div>
+        {l.logo_url ? (
+          <Avatar className="h-12 w-12">
+            <AvatarImage src={l.logo_url} />
+            <AvatarFallback><TestTube className="h-6 w-6" /></AvatarFallback>
+          </Avatar>
+        ) : (
+          <div className="h-12 w-12 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+            <TestTube className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+          </div>
+        )}
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-sm truncate">{l.name}</p>
           <p className="text-xs text-muted-foreground flex items-center gap-1">
             <MapPin className="h-3 w-3" />{l.address}
           </p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  // Render content card
+  const renderContentCard = (content: any) => (
+    <Card key={content.id} className="border-border/50 bg-card/80">
+      <CardContent className="p-3">
+        <div className="flex gap-3">
+          {content.thumbnail_url ? (
+            <img src={content.thumbnail_url} className="h-16 w-24 rounded object-cover" />
+          ) : (
+            <div className="h-16 w-24 rounded bg-muted flex items-center justify-center">
+              {content.content_type === 'video' ? <Play className="h-6 w-6" /> : <FileText className="h-6 w-6" />}
+            </div>
+          )}
+          <div className="flex-1 min-w-0">
+            <p className="font-medium text-sm line-clamp-1">{content.title}</p>
+            <p className="text-xs text-muted-foreground line-clamp-2">{content.description}</p>
+            <div className="flex items-center gap-3 mt-2">
+              <Button variant="ghost" size="sm" className="h-6 px-2" onClick={() => likeContent(content.id)}>
+                <Heart className="h-3 w-3 mr-1" /> {content.likes_count || 0}
+              </Button>
+              <Button variant="ghost" size="sm" className="h-6 px-2" onClick={() => saveContent(content.id)}>
+                <Bookmark className="h-3 w-3 mr-1" /> Hifadhi
+              </Button>
+              {content.content_url && (
+                <a href={content.content_url} target="_blank" className="text-xs text-primary">Tazama</a>
+              )}
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>
@@ -633,6 +793,9 @@ export function UnifiedChatbot() {
     }
     if (type === 'labs') {
       return <div className="space-y-2 mt-3">{items.map(renderLabCard)}</div>;
+    }
+    if (type === 'content') {
+      return <div className="space-y-2 mt-3">{items.map(renderContentCard)}</div>;
     }
     if (type === 'appointments') {
       return (
@@ -747,17 +910,20 @@ export function UnifiedChatbot() {
   // Main chatbot UI
   return (
     <div className="h-screen flex flex-col bg-background">
-      {/* Header */}
+      {/* Header with profile access */}
       <div className="flex items-center gap-3 p-4 border-b bg-card/50">
         <Avatar className="h-10 w-10 bg-primary">
           <AvatarFallback className="bg-primary text-primary-foreground">
             <Bot className="h-5 w-5" />
           </AvatarFallback>
         </Avatar>
-        <div>
+        <div className="flex-1">
           <p className="font-semibold">TeleMed Assistant</p>
           <p className="text-xs text-muted-foreground">Huduma 24/7</p>
         </div>
+        <Button variant="ghost" size="icon" onClick={() => setShowProfile(true)}>
+          <Settings className="h-5 w-5" />
+        </Button>
       </div>
 
       {/* Messages */}
@@ -853,7 +1019,7 @@ export function UnifiedChatbot() {
           
           {/* Quick actions */}
           <div className="flex flex-wrap gap-2 mt-3">
-            {['🩺 Daktari', '🏥 Hospitali', '💊 Dawa', '🔬 Maabara'].map((action) => (
+            {['🩺 Daktari', '🏥 Hospitali', '💊 Dawa', '🔬 Maabara', '🎬 Maudhui'].map((action) => (
               <Button
                 key={action}
                 variant="secondary"
@@ -871,91 +1037,156 @@ export function UnifiedChatbot() {
         </div>
       </div>
 
-      {/* Doctor Detail Modal */}
-      <Dialog open={!!selectedDoctor} onOpenChange={() => setSelectedDoctor(null)}>
-        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <div className="flex items-center gap-3">
-              <Avatar className="h-16 w-16 border-2 border-primary/20">
-                <AvatarImage src={selectedDoctor?.profiles?.avatar_url} />
-                <AvatarFallback className="bg-primary/10">
-                  <Stethoscope className="h-8 w-8 text-primary" />
-                </AvatarFallback>
+      {/* Profile Drawer */}
+      <Drawer open={showProfile} onOpenChange={setShowProfile}>
+        <DrawerContent className="max-h-[85vh]">
+          <DrawerHeader>
+            <DrawerTitle>Wasifu Wako</DrawerTitle>
+          </DrawerHeader>
+          <div className="p-4 space-y-6">
+            {/* User info */}
+            <div className="flex items-center gap-4">
+              <Avatar className="h-16 w-16">
+                <AvatarImage src={user?.user_metadata?.avatar_url} />
+                <AvatarFallback className="text-lg">{user?.email?.[0].toUpperCase()}</AvatarFallback>
               </Avatar>
               <div>
-                <DialogTitle>Dr. {selectedDoctor?.profiles?.first_name} {selectedDoctor?.profiles?.last_name}</DialogTitle>
-                <p className="text-sm text-muted-foreground">{selectedDoctor?.specialties?.name || 'Daktari Mkuu'}</p>
-                {selectedDoctor?.rating > 0 && (
-                  <div className="flex items-center gap-1 mt-1">
-                    <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-                    <span className="text-sm">{selectedDoctor.rating.toFixed(1)}</span>
-                    <span className="text-xs text-muted-foreground">({selectedDoctor.total_reviews} reviews)</span>
+                <p className="font-semibold">{user?.user_metadata?.first_name} {user?.user_metadata?.last_name}</p>
+                <p className="text-sm text-muted-foreground">{user?.email}</p>
+                <Badge variant="outline" className="mt-1">{userRole}</Badge>
+              </div>
+            </div>
+
+            {/* Theme toggle */}
+            <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+              <div className="flex items-center gap-3">
+                {theme === 'dark' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+                <div>
+                  <p className="font-medium">Mwonekano</p>
+                  <p className="text-xs text-muted-foreground">{theme === 'dark' ? 'Giza' : 'Mwanga'}</p>
+                </div>
+              </div>
+              <Switch checked={theme === 'dark'} onCheckedChange={toggleTheme} />
+            </div>
+
+            {/* Language */}
+            <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <Globe className="h-5 w-5" />
+                <div>
+                  <p className="font-medium">Lugha</p>
+                  <p className="text-xs text-muted-foreground">Kiswahili</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Role info */}
+            <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <User className="h-5 w-5" />
+                <div>
+                  <p className="font-medium">Jukumu</p>
+                  <p className="text-xs text-muted-foreground capitalize">{userRole}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <DrawerFooter>
+            <Button variant="destructive" onClick={handleLogout} className="w-full">
+              <LogOut className="h-4 w-4 mr-2" />
+              Toka
+            </Button>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+
+      {/* Doctor Detail Drawer */}
+      <Drawer open={!!selectedDoctor} onOpenChange={() => setSelectedDoctor(null)}>
+        <DrawerContent className="max-h-[90vh]">
+          <ScrollArea className="max-h-[80vh]">
+            <DrawerHeader>
+              <div className="flex items-center gap-3">
+                <Avatar className="h-16 w-16 border-2 border-primary/20">
+                  <AvatarImage src={selectedDoctor?.profiles?.avatar_url} />
+                  <AvatarFallback className="bg-primary/10">
+                    <Stethoscope className="h-8 w-8 text-primary" />
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <DrawerTitle>Dr. {selectedDoctor?.profiles?.first_name} {selectedDoctor?.profiles?.last_name}</DrawerTitle>
+                  <p className="text-sm text-muted-foreground">{selectedDoctor?.specialties?.name || 'Daktari Mkuu'}</p>
+                  {selectedDoctor?.rating > 0 && (
+                    <div className="flex items-center gap-1 mt-1">
+                      <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                      <span className="text-sm">{selectedDoctor.rating.toFixed(1)}</span>
+                      <span className="text-xs text-muted-foreground">({selectedDoctor.total_reviews} reviews)</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </DrawerHeader>
+            
+            <div className="p-4 space-y-4">
+              {/* Info */}
+              <div className="space-y-2">
+                {selectedDoctor?.profiles?.phone && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Phone className="h-4 w-4 text-muted-foreground" />
+                    {selectedDoctor.profiles.phone}
+                  </div>
+                )}
+                {selectedDoctor?.profiles?.email && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    {selectedDoctor.profiles.email}
+                  </div>
+                )}
+                {selectedDoctor?.hospital_name && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Building className="h-4 w-4 text-muted-foreground" />
+                    {selectedDoctor.hospital_name}
+                  </div>
+                )}
+                {selectedDoctor?.experience_years > 0 && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    Uzoefu: Miaka {selectedDoctor.experience_years}
+                  </div>
+                )}
+                {selectedDoctor?.consultation_fee && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <FileText className="h-4 w-4 text-muted-foreground" />
+                    Ada: Tsh {Number(selectedDoctor.consultation_fee).toLocaleString()}
                   </div>
                 )}
               </div>
-            </div>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            {/* Info */}
-            <div className="space-y-2">
-              {selectedDoctor?.profiles?.phone && (
-                <div className="flex items-center gap-2 text-sm">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
-                  {selectedDoctor.profiles.phone}
+
+              {/* Bio */}
+              {selectedDoctor?.bio && (
+                <div>
+                  <h4 className="text-sm font-medium mb-1">Maelezo</h4>
+                  <p className="text-sm text-muted-foreground">{selectedDoctor.bio}</p>
                 </div>
               )}
-              {selectedDoctor?.profiles?.email && (
-                <div className="flex items-center gap-2 text-sm">
-                  <Mail className="h-4 w-4 text-muted-foreground" />
-                  {selectedDoctor.profiles.email}
-                </div>
-              )}
-              {selectedDoctor?.hospital_name && (
-                <div className="flex items-center gap-2 text-sm">
-                  <Building className="h-4 w-4 text-muted-foreground" />
-                  {selectedDoctor.hospital_name}
-                </div>
-              )}
-              {selectedDoctor?.experience_years > 0 && (
-                <div className="flex items-center gap-2 text-sm">
-                  <User className="h-4 w-4 text-muted-foreground" />
-                  Uzoefu: Miaka {selectedDoctor.experience_years}
-                </div>
-              )}
-              {selectedDoctor?.consultation_fee && (
-                <div className="flex items-center gap-2 text-sm">
-                  <FileText className="h-4 w-4 text-muted-foreground" />
-                  Ada: Tsh {Number(selectedDoctor.consultation_fee).toLocaleString()}
+
+              {/* Timetable */}
+              {doctorTimetable.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-medium mb-2">Ratiba</h4>
+                  <div className="space-y-1">
+                    {doctorTimetable.map((t, i) => (
+                      <div key={i} className="flex justify-between text-sm bg-muted/50 px-3 py-1.5 rounded">
+                        <span>{DAYS[t.day_of_week]}</span>
+                        <span className="text-muted-foreground">{t.start_time} - {t.end_time}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
-
-            {/* Bio */}
-            {selectedDoctor?.bio && (
-              <div>
-                <h4 className="text-sm font-medium mb-1">Maelezo</h4>
-                <p className="text-sm text-muted-foreground">{selectedDoctor.bio}</p>
-              </div>
-            )}
-
-            {/* Timetable */}
-            {doctorTimetable.length > 0 && (
-              <div>
-                <h4 className="text-sm font-medium mb-2">Ratiba</h4>
-                <div className="space-y-1">
-                  {doctorTimetable.map((t, i) => (
-                    <div key={i} className="flex justify-between text-sm bg-muted/50 px-3 py-1.5 rounded">
-                      <span>{DAYS[t.day_of_week]}</span>
-                      <span className="text-muted-foreground">{t.start_time} - {t.end_time}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Actions */}
-            <div className="flex gap-2 pt-2">
+          </ScrollArea>
+          <DrawerFooter>
+            <div className="flex gap-2">
               <Button className="flex-1" onClick={() => startBooking(selectedDoctor)}>
                 <CalendarIcon className="h-4 w-4 mr-2" />
                 Weka Miadi
@@ -965,76 +1196,79 @@ export function UnifiedChatbot() {
                 Wasiliana
               </Button>
             </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
 
-      {/* Booking Modal */}
-      <Dialog open={!!bookingDoctor} onOpenChange={() => setBookingDoctor(null)}>
-        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Weka Miadi</DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-              <Avatar>
-                <AvatarImage src={bookingDoctor?.profiles?.avatar_url} />
-                <AvatarFallback><Stethoscope className="h-4 w-4" /></AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="font-medium">Dr. {bookingDoctor?.profiles?.first_name} {bookingDoctor?.profiles?.last_name}</p>
-                <p className="text-xs text-muted-foreground">{bookingDoctor?.specialties?.name || 'Daktari'}</p>
-              </div>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium mb-2 block">Chagua Tarehe</label>
-              <Calendar
-                mode="single"
-                selected={bookingDate}
-                onSelect={handleDateSelect}
-                disabled={(date) => date < new Date()}
-                className="rounded-md border"
-              />
-            </div>
-
-            {bookingDate && availableTimes.length > 0 && (
-              <div>
-                <label className="text-sm font-medium mb-2 block">Chagua Saa</label>
-                <div className="grid grid-cols-4 gap-2">
-                  {availableTimes.map((time) => (
-                    <Button
-                      key={time}
-                      variant={bookingTime === time ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setBookingTime(time)}
-                      disabled={bookedTimes.includes(time)}
-                    >
-                      {time}
-                    </Button>
-                  ))}
+      {/* Booking Drawer */}
+      <Drawer open={!!bookingDoctor} onOpenChange={() => setBookingDoctor(null)}>
+        <DrawerContent className="max-h-[90vh]">
+          <ScrollArea className="max-h-[80vh]">
+            <DrawerHeader>
+              <DrawerTitle>Weka Miadi</DrawerTitle>
+            </DrawerHeader>
+            
+            <div className="p-4 space-y-4">
+              <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+                <Avatar>
+                  <AvatarImage src={bookingDoctor?.profiles?.avatar_url} />
+                  <AvatarFallback><Stethoscope className="h-4 w-4" /></AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="font-medium">Dr. {bookingDoctor?.profiles?.first_name} {bookingDoctor?.profiles?.last_name}</p>
+                  <p className="text-xs text-muted-foreground">{bookingDoctor?.specialties?.name || 'Daktari'}</p>
                 </div>
               </div>
-            )}
 
-            {bookingDate && availableTimes.length === 0 && (
-              <div className="text-center p-4 bg-destructive/10 rounded-lg">
-                <AlertTriangle className="h-6 w-6 mx-auto mb-2 text-destructive" />
-                <p className="text-sm text-destructive">Daktari hapatikani siku hii. Chagua siku nyingine.</p>
+              <div>
+                <label className="text-sm font-medium mb-2 block">Chagua Tarehe</label>
+                <Calendar
+                  mode="single"
+                  selected={bookingDate}
+                  onSelect={handleDateSelect}
+                  disabled={(date) => date < new Date()}
+                  className="rounded-md border"
+                />
               </div>
-            )}
 
-            <div>
-              <label className="text-sm font-medium mb-2 block">Dalili / Maelezo (hiari)</label>
-              <Textarea
-                value={bookingSymptoms}
-                onChange={(e) => setBookingSymptoms(e.target.value)}
-                placeholder="Eleza dalili zako kwa ufupi..."
-                rows={3}
-              />
+              {bookingDate && availableTimes.length > 0 && (
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Chagua Saa</label>
+                  <div className="grid grid-cols-4 gap-2">
+                    {availableTimes.map((time) => (
+                      <Button
+                        key={time}
+                        variant={bookingTime === time ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setBookingTime(time)}
+                        disabled={bookedTimes.includes(time)}
+                      >
+                        {time}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {bookingDate && availableTimes.length === 0 && (
+                <div className="text-center p-4 bg-destructive/10 rounded-lg">
+                  <AlertTriangle className="h-6 w-6 mx-auto mb-2 text-destructive" />
+                  <p className="text-sm text-destructive">Daktari hapatikani siku hii. Chagua siku nyingine.</p>
+                </div>
+              )}
+
+              <div>
+                <label className="text-sm font-medium mb-2 block">Dalili / Maelezo (hiari)</label>
+                <Textarea
+                  value={bookingSymptoms}
+                  onChange={(e) => setBookingSymptoms(e.target.value)}
+                  placeholder="Eleza dalili zako kwa ufupi..."
+                  rows={3}
+                />
+              </div>
             </div>
-
+          </ScrollArea>
+          <DrawerFooter>
             <Button 
               className="w-full" 
               onClick={handleBookAppointment}
@@ -1042,139 +1276,294 @@ export function UnifiedChatbot() {
             >
               Tuma Ombi la Miadi
             </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
 
-      {/* Hospital Detail Modal */}
-      <Dialog open={!!selectedHospital} onOpenChange={() => setSelectedHospital(null)}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <div className="flex items-center gap-3">
-              <div className="h-14 w-14 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                <Building className="h-7 w-7 text-blue-600 dark:text-blue-400" />
-              </div>
-              <div>
-                <DialogTitle>{selectedHospital?.name}</DialogTitle>
-                <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                  <MapPin className="h-4 w-4" />
-                  {selectedHospital?.address}
+      {/* Hospital Detail Drawer */}
+      <Drawer open={!!selectedHospital} onOpenChange={() => setSelectedHospital(null)}>
+        <DrawerContent className="max-h-[90vh]">
+          <ScrollArea className="max-h-[80vh]">
+            <DrawerHeader>
+              <div className="flex items-center gap-3">
+                {selectedHospital?.logo_url ? (
+                  <Avatar className="h-14 w-14">
+                    <AvatarImage src={selectedHospital.logo_url} />
+                    <AvatarFallback><Building className="h-7 w-7" /></AvatarFallback>
+                  </Avatar>
+                ) : (
+                  <div className="h-14 w-14 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                    <Building className="h-7 w-7 text-blue-600 dark:text-blue-400" />
+                  </div>
+                )}
+                <div>
+                  <DrawerTitle>{selectedHospital?.name}</DrawerTitle>
+                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                    <MapPin className="h-4 w-4" />
+                    {selectedHospital?.address}
+                  </div>
                 </div>
               </div>
-            </div>
-          </DialogHeader>
-          
-          <div className="space-y-3">
-            {selectedHospital?.phone && (
-              <div className="flex items-center gap-2 text-sm">
-                <Phone className="h-4 w-4 text-muted-foreground" />
-                {selectedHospital.phone}
-              </div>
-            )}
-            {selectedHospital?.email && (
-              <div className="flex items-center gap-2 text-sm">
-                <Mail className="h-4 w-4 text-muted-foreground" />
-                {selectedHospital.email}
-              </div>
-            )}
-            {selectedHospital?.website && (
-              <div className="flex items-center gap-2 text-sm">
-                <Globe className="h-4 w-4 text-muted-foreground" />
-                {selectedHospital.website}
-              </div>
-            )}
-            {selectedHospital?.description && (
-              <p className="text-sm text-muted-foreground">{selectedHospital.description}</p>
-            )}
-            {selectedHospital?.services?.length > 0 && (
-              <div>
-                <h4 className="text-sm font-medium mb-2">Huduma</h4>
-                <div className="flex flex-wrap gap-1">
-                  {selectedHospital.services.map((s: string, i: number) => (
-                    <Badge key={i} variant="secondary" className="text-xs">{s}</Badge>
-                  ))}
+            </DrawerHeader>
+            
+            <div className="p-4 space-y-4">
+              {selectedHospital?.phone && (
+                <div className="flex items-center gap-2 text-sm">
+                  <Phone className="h-4 w-4 text-muted-foreground" />
+                  {selectedHospital.phone}
                 </div>
-              </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+              )}
+              {selectedHospital?.email && (
+                <div className="flex items-center gap-2 text-sm">
+                  <Mail className="h-4 w-4 text-muted-foreground" />
+                  {selectedHospital.email}
+                </div>
+              )}
+              {selectedHospital?.website && (
+                <div className="flex items-center gap-2 text-sm">
+                  <Globe className="h-4 w-4 text-muted-foreground" />
+                  {selectedHospital.website}
+                </div>
+              )}
+              {selectedHospital?.description && (
+                <p className="text-sm text-muted-foreground">{selectedHospital.description}</p>
+              )}
+              {selectedHospital?.services?.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-medium mb-2">Huduma</h4>
+                  <div className="flex flex-wrap gap-1">
+                    {selectedHospital.services.map((s: string, i: number) => (
+                      <Badge key={i} variant="secondary" className="text-xs">{s}</Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-      {/* Pharmacy Detail Modal */}
-      <Dialog open={!!selectedPharmacy} onOpenChange={() => setSelectedPharmacy(null)}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <div className="flex items-center gap-3">
-              <div className="h-14 w-14 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                <Pill className="h-7 w-7 text-green-600 dark:text-green-400" />
-              </div>
-              <div>
-                <DialogTitle>{selectedPharmacy?.name}</DialogTitle>
-                <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                  <MapPin className="h-4 w-4" />
-                  {selectedPharmacy?.address}
+              {/* Hospital Doctors */}
+              {hospitalDoctors.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-medium mb-2">Madaktari ({hospitalDoctors.length})</h4>
+                  <div className="space-y-2">
+                    {hospitalDoctors.map((doc) => (
+                      <Card key={doc.id} className="cursor-pointer" onClick={() => { setSelectedHospital(null); openDoctorDetail(doc); }}>
+                        <CardContent className="p-2 flex items-center gap-2">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={doc.profiles?.avatar_url} />
+                            <AvatarFallback><Stethoscope className="h-4 w-4" /></AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="text-sm font-medium">Dr. {doc.profiles?.first_name} {doc.profiles?.last_name}</p>
+                            <p className="text-xs text-muted-foreground">{doc.specialties?.name || 'Daktari'}</p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
-          </DialogHeader>
-          
-          <div className="space-y-3">
-            {selectedPharmacy?.phone && (
-              <div className="flex items-center gap-2 text-sm">
-                <Phone className="h-4 w-4 text-muted-foreground" />
-                {selectedPharmacy.phone}
-              </div>
-            )}
-            {selectedPharmacy?.description && (
-              <p className="text-sm text-muted-foreground">{selectedPharmacy.description}</p>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+          </ScrollArea>
+        </DrawerContent>
+      </Drawer>
 
-      {/* Lab Detail Modal */}
-      <Dialog open={!!selectedLab} onOpenChange={() => setSelectedLab(null)}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <div className="flex items-center gap-3">
-              <div className="h-14 w-14 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                <TestTube className="h-7 w-7 text-purple-600 dark:text-purple-400" />
-              </div>
-              <div>
-                <DialogTitle>{selectedLab?.name}</DialogTitle>
-                <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                  <MapPin className="h-4 w-4" />
-                  {selectedLab?.address}
+      {/* Pharmacy Detail Drawer */}
+      <Drawer open={!!selectedPharmacy} onOpenChange={() => setSelectedPharmacy(null)}>
+        <DrawerContent className="max-h-[90vh]">
+          <ScrollArea className="max-h-[80vh]">
+            <DrawerHeader>
+              <div className="flex items-center gap-3">
+                {selectedPharmacy?.logo_url ? (
+                  <Avatar className="h-14 w-14">
+                    <AvatarImage src={selectedPharmacy.logo_url} />
+                    <AvatarFallback><Pill className="h-7 w-7" /></AvatarFallback>
+                  </Avatar>
+                ) : (
+                  <div className="h-14 w-14 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                    <Pill className="h-7 w-7 text-green-600 dark:text-green-400" />
+                  </div>
+                )}
+                <div>
+                  <DrawerTitle>{selectedPharmacy?.name}</DrawerTitle>
+                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                    <MapPin className="h-4 w-4" />
+                    {selectedPharmacy?.address}
+                  </div>
                 </div>
               </div>
+            </DrawerHeader>
+            
+            <div className="p-4 space-y-4">
+              {selectedPharmacy?.quote_of_day && (
+                <div className="p-3 bg-primary/10 rounded-lg">
+                  <p className="text-sm italic text-primary">"{selectedPharmacy.quote_of_day}"</p>
+                </div>
+              )}
+              {selectedPharmacy?.phone && (
+                <div className="flex items-center gap-2 text-sm">
+                  <Phone className="h-4 w-4 text-muted-foreground" />
+                  {selectedPharmacy.phone}
+                </div>
+              )}
+              {selectedPharmacy?.email && (
+                <div className="flex items-center gap-2 text-sm">
+                  <Mail className="h-4 w-4 text-muted-foreground" />
+                  {selectedPharmacy.email}
+                </div>
+              )}
+              {selectedPharmacy?.fax && (
+                <div className="flex items-center gap-2 text-sm">
+                  <FileText className="h-4 w-4 text-muted-foreground" />
+                  Fax: {selectedPharmacy.fax}
+                </div>
+              )}
+              {selectedPharmacy?.po_box && (
+                <div className="flex items-center gap-2 text-sm">
+                  <Mail className="h-4 w-4 text-muted-foreground" />
+                  P.O. Box: {selectedPharmacy.po_box}
+                </div>
+              )}
+              {selectedPharmacy?.description && (
+                <p className="text-sm text-muted-foreground">{selectedPharmacy.description}</p>
+              )}
+              {selectedPharmacy?.emergency_available && (
+                <Badge className="bg-red-500">Huduma za Dharura 24/7</Badge>
+              )}
+
+              {/* Medicines */}
+              {pharmacyMedicines.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-medium mb-2">Dawa ({pharmacyMedicines.length})</h4>
+                  <div className="space-y-2">
+                    {pharmacyMedicines.map((med) => (
+                      <Card key={med.id}>
+                        <CardContent className="p-3">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <p className="font-medium text-sm">{med.name}</p>
+                              {med.category && <Badge variant="outline" className="text-[10px]">{med.category}</Badge>}
+                            </div>
+                            {med.price && <p className="text-sm font-medium text-primary">Tsh {med.price.toLocaleString()}</p>}
+                          </div>
+                          {med.description && <p className="text-xs text-muted-foreground mt-1">{med.description}</p>}
+                          {med.usage_instructions && (
+                            <p className="text-xs mt-1"><span className="font-medium">Matumizi:</span> {med.usage_instructions}</p>
+                          )}
+                          {med.target_audience && (
+                            <p className="text-xs"><span className="font-medium">Kwa:</span> {med.target_audience}</p>
+                          )}
+                          {med.requires_prescription && (
+                            <Badge variant="destructive" className="text-[10px] mt-1">Inahitaji Cheti</Badge>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
-          </DialogHeader>
-          
-          <div className="space-y-3">
-            {selectedLab?.phone && (
-              <div className="flex items-center gap-2 text-sm">
-                <Phone className="h-4 w-4 text-muted-foreground" />
-                {selectedLab.phone}
-              </div>
-            )}
-            {selectedLab?.description && (
-              <p className="text-sm text-muted-foreground">{selectedLab.description}</p>
-            )}
-            {selectedLab?.test_types?.length > 0 && (
-              <div>
-                <h4 className="text-sm font-medium mb-2">Vipimo</h4>
-                <div className="flex flex-wrap gap-1">
-                  {selectedLab.test_types.map((t: any, i: number) => (
-                    <Badge key={i} variant="secondary" className="text-xs">
-                      {typeof t === 'string' ? t : t.name}
-                    </Badge>
-                  ))}
+          </ScrollArea>
+        </DrawerContent>
+      </Drawer>
+
+      {/* Lab Detail Drawer */}
+      <Drawer open={!!selectedLab} onOpenChange={() => setSelectedLab(null)}>
+        <DrawerContent className="max-h-[90vh]">
+          <ScrollArea className="max-h-[80vh]">
+            <DrawerHeader>
+              <div className="flex items-center gap-3">
+                {selectedLab?.logo_url ? (
+                  <Avatar className="h-14 w-14">
+                    <AvatarImage src={selectedLab.logo_url} />
+                    <AvatarFallback><TestTube className="h-7 w-7" /></AvatarFallback>
+                  </Avatar>
+                ) : (
+                  <div className="h-14 w-14 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                    <TestTube className="h-7 w-7 text-purple-600 dark:text-purple-400" />
+                  </div>
+                )}
+                <div>
+                  <DrawerTitle>{selectedLab?.name}</DrawerTitle>
+                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                    <MapPin className="h-4 w-4" />
+                    {selectedLab?.address}
+                  </div>
                 </div>
               </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+            </DrawerHeader>
+            
+            <div className="p-4 space-y-4">
+              {selectedLab?.phone && (
+                <div className="flex items-center gap-2 text-sm">
+                  <Phone className="h-4 w-4 text-muted-foreground" />
+                  {selectedLab.phone}
+                </div>
+              )}
+              {selectedLab?.email && (
+                <div className="flex items-center gap-2 text-sm">
+                  <Mail className="h-4 w-4 text-muted-foreground" />
+                  {selectedLab.email}
+                </div>
+              )}
+              {selectedLab?.fax && (
+                <div className="flex items-center gap-2 text-sm">
+                  <FileText className="h-4 w-4 text-muted-foreground" />
+                  Fax: {selectedLab.fax}
+                </div>
+              )}
+              {selectedLab?.po_box && (
+                <div className="flex items-center gap-2 text-sm">
+                  <Mail className="h-4 w-4 text-muted-foreground" />
+                  P.O. Box: {selectedLab.po_box}
+                </div>
+              )}
+              {selectedLab?.website && (
+                <div className="flex items-center gap-2 text-sm">
+                  <Globe className="h-4 w-4 text-muted-foreground" />
+                  {selectedLab.website}
+                </div>
+              )}
+              {selectedLab?.description && (
+                <p className="text-sm text-muted-foreground">{selectedLab.description}</p>
+              )}
+              {selectedLab?.emergency_available && (
+                <Badge className="bg-red-500">Huduma za Dharura 24/7</Badge>
+              )}
+
+              {/* Lab Services */}
+              {labServices.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-medium mb-2">Vipimo ({labServices.length})</h4>
+                  <div className="space-y-2">
+                    {labServices.map((service) => (
+                      <Card key={service.id}>
+                        <CardContent className="p-3">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <p className="font-medium text-sm">{service.name}</p>
+                              {service.category && <Badge variant="outline" className="text-[10px]">{service.category}</Badge>}
+                            </div>
+                            {service.price && <p className="text-sm font-medium text-primary">Tsh {service.price.toLocaleString()}</p>}
+                          </div>
+                          {service.description && <p className="text-xs text-muted-foreground mt-1">{service.description}</p>}
+                          {service.waiting_hours && (
+                            <p className="text-xs mt-1 flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              Matokeo: Masaa {service.waiting_hours}
+                            </p>
+                          )}
+                          {service.preparation_required && (
+                            <p className="text-xs"><span className="font-medium">Maandalizi:</span> {service.preparation_required}</p>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 }

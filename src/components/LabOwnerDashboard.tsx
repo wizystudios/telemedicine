@@ -17,6 +17,7 @@ import {
   MapPin, Clock, Upload, Video, Loader2, Globe, AlertCircle
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { LogoUpload } from '@/components/LogoUpload';
 
 export default function LabOwnerDashboard() {
   const { user } = useAuth();
@@ -237,13 +238,12 @@ export default function LabOwnerDashboard() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="h-12 w-12 rounded-lg bg-teal-100 dark:bg-teal-900/20 flex items-center justify-center">
-            {lab.logo_url ? (
-              <img src={lab.logo_url} alt={lab.name} className="h-10 w-10 rounded object-cover" />
-            ) : (
-              <TestTube className="h-6 w-6 text-teal-600" />
-            )}
-          </div>
+          <LogoUpload
+            currentLogoUrl={lab.logo_url}
+            entityId={lab.id}
+            entityType="laboratory"
+            onLogoUpdated={(url) => setLab({ ...lab, logo_url: url })}
+          />
           <div>
             <h1 className="text-lg font-bold">{lab.name}</h1>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
