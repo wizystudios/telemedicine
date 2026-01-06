@@ -10,11 +10,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { 
   Send, Mic, MicOff, Bot, Stethoscope, Building, Pill, TestTube, MapPin, Star, 
   Calendar as CalendarIcon, Clock, Phone, X, MessageCircle, ArrowLeft, Check, CheckCheck,
   User, Mail, FileText, Globe, Video, PhoneCall, AlertTriangle, LogOut, Settings,
-  Sun, Moon, Heart, Bookmark, Play, Image as ImageIcon
+  Sun, Moon, Heart, Bookmark, Play, Image as ImageIcon, ChevronDown, ChevronRight,
+  Ambulance, MoreVertical, Users
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -71,12 +74,14 @@ export function UnifiedChatbot() {
   const [selectedLab, setSelectedLab] = useState<any>(null);
   const [doctorTimetable, setDoctorTimetable] = useState<DoctorTimetable[]>([]);
   const [showProfile, setShowProfile] = useState(false);
+  const [showAllDoctors, setShowAllDoctors] = useState(false);
   
   // Booking state
   const [bookingDoctor, setBookingDoctor] = useState<any>(null);
   const [bookingDate, setBookingDate] = useState<Date | undefined>();
   const [bookingTime, setBookingTime] = useState('');
   const [bookingSymptoms, setBookingSymptoms] = useState('');
+  const [bookingService, setBookingService] = useState<any>(null);
   const [availableTimes, setAvailableTimes] = useState<string[]>([]);
   const [bookedTimes, setBookedTimes] = useState<string[]>([]);
   
@@ -88,6 +93,7 @@ export function UnifiedChatbot() {
 
   // Hospital doctors and services
   const [hospitalDoctors, setHospitalDoctors] = useState<any[]>([]);
+  const [hospitalServices, setHospitalServices] = useState<any[]>([]);
   const [pharmacyMedicines, setPharmacyMedicines] = useState<any[]>([]);
   const [labServices, setLabServices] = useState<any[]>([]);
 
@@ -190,7 +196,22 @@ export function UnifiedChatbot() {
   // Generate available time slots based on timetable
   const generateTimeSlots = (timetable: DoctorTimetable[], dayOfWeek: number, booked: string[]) => {
     const daySchedule = timetable.find(t => t.day_of_week === dayOfWeek);
-    if (!daySchedule) return [];
+    
+    // If no timetable for this day, generate default slots (9 AM to 5 PM)
+    if (!daySchedule) {
+      const defaultSlots: string[] = [];
+      for (let hour = 9; hour < 17; hour++) {
+        const time = `${hour.toString().padStart(2, '0')}:00`;
+        if (!booked.includes(time)) {
+          defaultSlots.push(time);
+        }
+        const halfTime = `${hour.toString().padStart(2, '0')}:30`;
+        if (!booked.includes(halfTime)) {
+          defaultSlots.push(halfTime);
+        }
+      }
+      return defaultSlots;
+    }
 
     const slots: string[] = [];
     const [startHour] = daySchedule.start_time.split(':').map(Number);
@@ -218,15 +239,21 @@ export function UnifiedChatbot() {
     const doctorId = bookingDoctor.user_id || bookingDoctor.profiles?.id;
     const dayOfWeek = date.getDay();
     
+    // Fetch timetable if not already fetched
+    let tt = doctorTimetable;
+    if (tt.length === 0) {
+      tt = await fetchDoctorTimetable(doctorId);
+    }
+    
     const booked = await checkBookedTimes(doctorId, date);
-    const slots = generateTimeSlots(doctorTimetable, dayOfWeek, booked);
+    const slots = generateTimeSlots(tt, dayOfWeek, booked);
     
     setAvailableTimes(slots);
     
     if (slots.length === 0) {
       toast({
         title: 'Hakuna nafasi',
-        description: `Daktari hapatikani ${DAYS[dayOfWeek]}. Chagua siku nyingine.`,
+        description: `Hakuna nafasi zilizobaki ${DAYS[dayOfWeek]}. Chagua siku nyingine.`,
         variant: 'destructive'
       });
     }
@@ -236,9 +263,21 @@ export function UnifiedChatbot() {
   const fetchHospitalDoctors = async (hospitalId: string) => {
     const { data } = await supabase
       .from('doctor_profiles')
-      .select(`*, profiles!doctor_profiles_user_id_fkey(first_name, last_name, avatar_url), specialties(name)`)
+      .select(`*, profiles!doctor_profiles_user_id_fkey(first_name, last_name, avatar_url, phone, email), specialties(name)`)
       .eq('hospital_id', hospitalId);
     setHospitalDoctors(data || []);
+    return data || [];
+  };
+
+  // Fetch hospital services
+  const fetchHospitalServices = async (hospitalId: string) => {
+    const { data } = await supabase
+      .from('hospital_services')
+      .select('*')
+      .eq('hospital_id', hospitalId)
+      .eq('is_available', true);
+    setHospitalServices(data || []);
+    return data || [];
   };
 
   // Fetch pharmacy medicines
@@ -257,6 +296,17 @@ export function UnifiedChatbot() {
       .select('*')
       .eq('laboratory_id', labId);
     setLabServices(data || []);
+  };
+
+  // Call ambulance
+  const callAmbulance = (hospital: any) => {
+    const ambulancePhone = hospital.ambulance_phone || hospital.phone;
+    if (ambulancePhone) {
+      window.location.href = `tel:${ambulancePhone}`;
+      toast({ title: 'Inapigia simu...', description: `Ambulance: ${ambulancePhone}` });
+    } else {
+      toast({ title: 'Hakuna nambari', description: 'Hospitali haina nambari ya ambulance.', variant: 'destructive' });
+    }
   };
 
   // Like content
@@ -520,7 +570,21 @@ export function UnifiedChatbot() {
 
   const openHospitalDetail = async (hospital: any) => {
     setSelectedHospital(hospital);
-    await fetchHospitalDoctors(hospital.id);
+    await Promise.all([
+      fetchHospitalDoctors(hospital.id),
+      fetchHospitalServices(hospital.id)
+    ]);
+  };
+
+  // Start booking with specific service
+  const startServiceBooking = (service: any, hospital: any) => {
+    setBookingService(service);
+    // If hospital has doctors, allow patient to pick one
+    if (hospitalDoctors.length > 0) {
+      setShowAllDoctors(true);
+    } else {
+      toast({ title: 'Hakuna daktari', description: 'Hospitali haina daktari aliyesajiliwa.', variant: 'destructive' });
+    }
   };
 
   const openPharmacyDetail = async (pharmacy: any) => {
@@ -1296,7 +1360,7 @@ export function UnifiedChatbot() {
                     <Building className="h-7 w-7 text-blue-600 dark:text-blue-400" />
                   </div>
                 )}
-                <div>
+                <div className="flex-1">
                   <DrawerTitle>{selectedHospital?.name}</DrawerTitle>
                   <div className="flex items-center gap-1 text-sm text-muted-foreground">
                     <MapPin className="h-4 w-4" />
@@ -1307,28 +1371,91 @@ export function UnifiedChatbot() {
             </DrawerHeader>
             
             <div className="p-4 space-y-4">
-              {selectedHospital?.phone && (
-                <div className="flex items-center gap-2 text-sm">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
-                  {selectedHospital.phone}
-                </div>
+              {/* Ambulance Button */}
+              {(selectedHospital?.has_ambulance || selectedHospital?.ambulance_phone) && (
+                <Button 
+                  variant="destructive" 
+                  className="w-full gap-2"
+                  onClick={() => callAmbulance(selectedHospital)}
+                >
+                  <Ambulance className="h-5 w-5" />
+                  Piga Simu Ambulance
+                  {selectedHospital?.ambulance_available_24h && <Badge variant="secondary" className="ml-2 text-[10px]">24/7</Badge>}
+                </Button>
               )}
-              {selectedHospital?.email && (
-                <div className="flex items-center gap-2 text-sm">
-                  <Mail className="h-4 w-4 text-muted-foreground" />
-                  {selectedHospital.email}
-                </div>
-              )}
-              {selectedHospital?.website && (
-                <div className="flex items-center gap-2 text-sm">
-                  <Globe className="h-4 w-4 text-muted-foreground" />
-                  {selectedHospital.website}
-                </div>
-              )}
+
+              {/* Contact Info */}
+              <div className="space-y-2">
+                {selectedHospital?.phone && (
+                  <a href={`tel:${selectedHospital.phone}`} className="flex items-center gap-2 text-sm hover:text-primary">
+                    <Phone className="h-4 w-4 text-muted-foreground" />
+                    {selectedHospital.phone}
+                  </a>
+                )}
+                {selectedHospital?.email && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    {selectedHospital.email}
+                  </div>
+                )}
+                {selectedHospital?.website && (
+                  <a href={selectedHospital.website} target="_blank" className="flex items-center gap-2 text-sm hover:text-primary">
+                    <Globe className="h-4 w-4 text-muted-foreground" />
+                    {selectedHospital.website}
+                  </a>
+                )}
+              </div>
+
               {selectedHospital?.description && (
                 <p className="text-sm text-muted-foreground">{selectedHospital.description}</p>
               )}
-              {selectedHospital?.services?.length > 0 && (
+
+              {/* Hospital Services - Clickable for booking */}
+              {hospitalServices.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    Huduma ({hospitalServices.length})
+                  </h4>
+                  <div className="space-y-2">
+                    {hospitalServices.map((service: any) => (
+                      <Card key={service.id} className="cursor-pointer hover:bg-muted/50 transition-colors">
+                        <CardContent className="p-3">
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <p className="font-medium text-sm">{service.name}</p>
+                              {service.category && <Badge variant="outline" className="text-[10px]">{service.category}</Badge>}
+                              {service.description && <p className="text-xs text-muted-foreground mt-1">{service.description}</p>}
+                            </div>
+                            <div className="flex flex-col items-end gap-1">
+                              {service.price && <p className="text-sm font-medium text-primary">Tsh {Number(service.price).toLocaleString()}</p>}
+                              <Button 
+                                size="sm" 
+                                className="h-7 text-xs"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (hospitalDoctors.length > 0) {
+                                    setBookingService(service);
+                                    setShowAllDoctors(true);
+                                  } else {
+                                    toast({ title: 'Hakuna daktari', description: 'Chagua daktari kwanza.', variant: 'destructive' });
+                                  }
+                                }}
+                              >
+                                <CalendarIcon className="h-3 w-3 mr-1" />
+                                Weka Miadi
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Legacy services array */}
+              {selectedHospital?.services?.length > 0 && hospitalServices.length === 0 && (
                 <div>
                   <h4 className="text-sm font-medium mb-2">Huduma</h4>
                   <div className="flex flex-wrap gap-1">
@@ -1339,28 +1466,163 @@ export function UnifiedChatbot() {
                 </div>
               )}
 
-              {/* Hospital Doctors */}
+              {/* Hospital Doctors - Collapsible with "See All" */}
               {hospitalDoctors.length > 0 && (
                 <div>
-                  <h4 className="text-sm font-medium mb-2">Madaktari ({hospitalDoctors.length})</h4>
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="text-sm font-medium flex items-center gap-2">
+                      <Users className="h-4 w-4" />
+                      Madaktari ({hospitalDoctors.length})
+                    </h4>
+                    {hospitalDoctors.length > 3 && (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="h-7 text-xs"
+                        onClick={() => setShowAllDoctors(true)}
+                      >
+                        Ona wote
+                        <ChevronRight className="h-3 w-3 ml-1" />
+                      </Button>
+                    )}
+                  </div>
                   <div className="space-y-2">
-                    {hospitalDoctors.map((doc) => (
-                      <Card key={doc.id} className="cursor-pointer" onClick={() => { setSelectedHospital(null); openDoctorDetail(doc); }}>
+                    {hospitalDoctors.slice(0, 3).map((doc) => (
+                      <Card key={doc.id} className="border-border/50">
                         <CardContent className="p-2 flex items-center gap-2">
-                          <Avatar className="h-8 w-8">
+                          <Avatar className="h-10 w-10">
                             <AvatarImage src={doc.profiles?.avatar_url} />
                             <AvatarFallback><Stethoscope className="h-4 w-4" /></AvatarFallback>
                           </Avatar>
-                          <div>
-                            <p className="text-sm font-medium">Dr. {doc.profiles?.first_name} {doc.profiles?.last_name}</p>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">Dr. {doc.profiles?.first_name} {doc.profiles?.last_name}</p>
                             <p className="text-xs text-muted-foreground">{doc.specialties?.name || 'Daktari'}</p>
                           </div>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => { setSelectedHospital(null); openDoctorDetail(doc); }}>
+                                <User className="h-4 w-4 mr-2" />
+                                Tazama Wasifu
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => { setSelectedHospital(null); startBooking(doc); }}>
+                                <CalendarIcon className="h-4 w-4 mr-2" />
+                                Weka Miadi
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => { setSelectedHospital(null); startDoctorChat(doc); }}>
+                                <MessageCircle className="h-4 w-4 mr-2" />
+                                Wasiliana
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </CardContent>
                       </Card>
                     ))}
                   </div>
                 </div>
               )}
+            </div>
+          </ScrollArea>
+        </DrawerContent>
+      </Drawer>
+
+      {/* All Doctors Full-Page Drawer */}
+      <Drawer open={showAllDoctors} onOpenChange={setShowAllDoctors}>
+        <DrawerContent className="h-[95vh]">
+          <DrawerHeader className="border-b">
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" size="icon" onClick={() => setShowAllDoctors(false)}>
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div>
+                <DrawerTitle>
+                  {bookingService ? `Chagua Daktari - ${bookingService.name}` : 'Madaktari Wote'}
+                </DrawerTitle>
+                <p className="text-sm text-muted-foreground">{hospitalDoctors.length} madaktari wanapatikana</p>
+              </div>
+            </div>
+          </DrawerHeader>
+          <ScrollArea className="flex-1 p-4">
+            <div className="space-y-3">
+              {hospitalDoctors.map((doc) => (
+                <Card key={doc.id} className="border-border/50 bg-card/80">
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-3">
+                      <Avatar className="h-14 w-14 border-2 border-primary/20">
+                        <AvatarImage src={doc.profiles?.avatar_url} />
+                        <AvatarFallback className="bg-primary/10">
+                          <Stethoscope className="h-6 w-6 text-primary" />
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold">Dr. {doc.profiles?.first_name} {doc.profiles?.last_name}</p>
+                        <p className="text-sm text-muted-foreground">{doc.specialties?.name || 'Daktari Mkuu'}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          {doc.rating > 0 && (
+                            <span className="text-xs flex items-center gap-0.5">
+                              <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                              {doc.rating.toFixed(1)}
+                            </span>
+                          )}
+                          {doc.experience_years > 0 && (
+                            <span className="text-xs text-muted-foreground">Miaka {doc.experience_years}</span>
+                          )}
+                          {doc.consultation_fee && (
+                            <Badge variant="secondary" className="text-[10px]">
+                              Tsh {Number(doc.consultation_fee).toLocaleString()}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 mt-3">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={() => { 
+                          setShowAllDoctors(false);
+                          setSelectedHospital(null);
+                          openDoctorDetail(doc); 
+                        }}
+                      >
+                        <User className="h-4 w-4 mr-1" />
+                        Wasifu
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={() => { 
+                          setShowAllDoctors(false);
+                          setSelectedHospital(null);
+                          setBookingService(null);
+                          startBooking(doc); 
+                        }}
+                      >
+                        <CalendarIcon className="h-4 w-4 mr-1" />
+                        Miadi
+                      </Button>
+                      <Button 
+                        variant="secondary" 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={() => { 
+                          setShowAllDoctors(false);
+                          setSelectedHospital(null);
+                          startDoctorChat(doc); 
+                        }}
+                      >
+                        <MessageCircle className="h-4 w-4 mr-1" />
+                        Chat
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </ScrollArea>
         </DrawerContent>
