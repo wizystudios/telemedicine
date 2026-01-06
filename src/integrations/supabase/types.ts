@@ -572,12 +572,65 @@ export type Database = {
         }
         Relationships: []
       }
+      hospital_services: {
+        Row: {
+          ambulance_available: boolean | null
+          ambulance_phone: string | null
+          category: string | null
+          created_at: string
+          description: string | null
+          hospital_id: string
+          id: string
+          is_available: boolean | null
+          name: string
+          price: number | null
+          updated_at: string
+        }
+        Insert: {
+          ambulance_available?: boolean | null
+          ambulance_phone?: string | null
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          hospital_id: string
+          id?: string
+          is_available?: boolean | null
+          name: string
+          price?: number | null
+          updated_at?: string
+        }
+        Update: {
+          ambulance_available?: boolean | null
+          ambulance_phone?: string | null
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          hospital_id?: string
+          id?: string
+          is_available?: boolean | null
+          name?: string
+          price?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hospital_services_hospital_id_fkey"
+            columns: ["hospital_id"]
+            isOneToOne: false
+            referencedRelation: "hospitals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hospitals: {
         Row: {
           address: string
+          ambulance_available_24h: boolean | null
+          ambulance_phone: string | null
           created_at: string
           description: string | null
           email: string | null
+          has_ambulance: boolean | null
           id: string
           is_promoted: boolean | null
           is_verified: boolean | null
@@ -594,9 +647,12 @@ export type Database = {
         }
         Insert: {
           address: string
+          ambulance_available_24h?: boolean | null
+          ambulance_phone?: string | null
           created_at?: string
           description?: string | null
           email?: string | null
+          has_ambulance?: boolean | null
           id?: string
           is_promoted?: boolean | null
           is_verified?: boolean | null
@@ -613,9 +669,12 @@ export type Database = {
         }
         Update: {
           address?: string
+          ambulance_available_24h?: boolean | null
+          ambulance_phone?: string | null
           created_at?: string
           description?: string | null
           email?: string | null
+          has_ambulance?: boolean | null
           id?: string
           is_promoted?: boolean | null
           is_verified?: boolean | null
