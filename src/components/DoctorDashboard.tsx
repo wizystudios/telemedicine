@@ -126,7 +126,7 @@ export function DoctorDashboard() {
       .from('appointments')
       .select('id')
       .eq('doctor_id', user?.id)
-      .eq('status', 'confirmed')
+      .eq('status', 'approved')
       .neq('id', appointmentId)
       .gte('appointment_date', startTime)
       .lte('appointment_date', endTime);
@@ -153,7 +153,7 @@ export function DoctorDashboard() {
     // Update appointment status
     const { error } = await supabase
       .from('appointments')
-      .update({ status: 'confirmed' })
+      .update({ status: 'approved' })
       .eq('id', appointment.id);
 
     if (error) {
