@@ -3,21 +3,19 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerClose, DrawerFooter } from '@/components/ui/drawer';
+import { Card, CardContent } from '@/components/ui/card';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '@/components/ui/drawer';
 import { Calendar } from '@/components/ui/calendar';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { 
   Send, Mic, MicOff, Bot, Stethoscope, Building, Pill, TestTube, MapPin, Star, 
-  Calendar as CalendarIcon, Clock, Phone, X, MessageCircle, ArrowLeft, Check, CheckCheck,
+  Calendar as CalendarIcon, Clock, Phone, MessageCircle, ArrowLeft,
   User, Mail, FileText, Globe, Video, PhoneCall, AlertTriangle, LogOut, Settings,
-  Sun, Moon, Heart, Bookmark, Play, Image as ImageIcon, ChevronDown, ChevronRight,
-  Ambulance, MoreVertical, Users
+  Sun, Moon, Heart, Bookmark, Play, ChevronRight,
+  Ambulance, MoreVertical, Users, HeartPulse
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -50,15 +48,8 @@ const DAYS = ['Jumapili', 'Jumatatu', 'Jumanne', 'Jumatano', 'Alhamisi', 'Ijumaa
 export function UnifiedChatbot() {
   const { user, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      type: 'bot',
-      content: `Habari${user?.user_metadata?.first_name ? ` ${user.user_metadata.first_name}` : ''}! 👋\nNinaweza kukusaidia kupata daktari, hospitali, maduka ya dawa, au maabara. Bofya chaguo au andika swali.`,
-      timestamp: new Date(),
-      suggestions: ['🩺 Daktari', '🏥 Hospitali', '💊 Dawa', '🔬 Maabara', '📅 Miadi Yangu', '🎬 Maudhui']
-    }
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [hasStartedChat, setHasStartedChat] = useState(false);
   
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -67,7 +58,7 @@ export function UnifiedChatbot() {
   const recognition = useRef<any>(null);
   const [userRole, setUserRole] = useState<string>('patient');
 
-  // Drawer states (replacing Dialog)
+  // Drawer states
   const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
   const [selectedHospital, setSelectedHospital] = useState<any>(null);
   const [selectedPharmacy, setSelectedPharmacy] = useState<any>(null);
@@ -173,7 +164,7 @@ export function UnifiedChatbot() {
     return data || [];
   };
 
-  // Check booked times for a specific date
+  // Check booked times for a specific date - use correct status values
   const checkBookedTimes = async (doctorId: string, date: Date) => {
     const startOfDay = new Date(date);
     startOfDay.setHours(0, 0, 0, 0);
@@ -186,7 +177,7 @@ export function UnifiedChatbot() {
       .eq('doctor_id', doctorId)
       .gte('appointment_date', startOfDay.toISOString())
       .lte('appointment_date', endOfDay.toISOString())
-      .in('status', ['scheduled', 'confirmed', 'pending']);
+      .in('status', ['scheduled', 'approved']); // Fixed: use correct status values
 
     const booked = data?.map(apt => format(new Date(apt.appointment_date), 'HH:mm')) || [];
     setBookedTimes(booked);
@@ -239,7 +230,6 @@ export function UnifiedChatbot() {
     const doctorId = bookingDoctor.user_id || bookingDoctor.profiles?.id;
     const dayOfWeek = date.getDay();
     
-    // Fetch timetable if not already fetched
     let tt = doctorTimetable;
     if (tt.length === 0) {
       tt = await fetchDoctorTimetable(doctorId);
@@ -348,7 +338,7 @@ export function UnifiedChatbot() {
       };
     }
 
-    // Check for chat/wasiliana intent - enter doctor chat mode
+    // Check for chat/wasiliana intent
     if (lower.includes('wasiliana') || lower.includes('ongea') || lower.includes('chat')) {
       const { data: doctors } = await supabase
         .from('doctor_profiles')
@@ -365,13 +355,52 @@ export function UnifiedChatbot() {
       };
     }
 
-    // Doctor search
-    if (lower.includes('daktari') || lower.includes('doctor') || lower.includes('tafuta')) {
-      const { data } = await supabase
+    // Smart doctor search - check for specific name
+    if (lower.includes('daktari') || lower.includes('doctor') || lower.includes('dr') || lower.includes('tafuta')) {
+      // Extract potential name from query
+      const words = lower.split(' ').filter(w => w.length > 2 && !['daktari', 'doctor', 'tafuta', 'nataka', 'nipatie'].includes(w));
+      
+      let query = supabase
         .from('doctor_profiles')
         .select(`*, profiles!doctor_profiles_user_id_fkey(id, first_name, last_name, avatar_url, phone, email), specialties(name)`)
-        .eq('is_verified', true)
-        .limit(10);
+        .eq('is_verified', true);
+      
+      // If there's a potential name, search for it
+      if (words.length > 0) {
+        const searchName = words.join(' ');
+        const { data: matchedDoctors } = await supabase
+          .from('doctor_profiles')
+          .select(`*, profiles!doctor_profiles_user_id_fkey(id, first_name, last_name, avatar_url, phone, email), specialties(name)`)
+          .eq('is_verified', true);
+        
+        // Filter by name match
+        const filtered = matchedDoctors?.filter(d => {
+          const fullName = `${d.profiles?.first_name || ''} ${d.profiles?.last_name || ''}`.toLowerCase();
+          return words.some(w => fullName.includes(w));
+        }) || [];
+        
+        if (filtered.length > 0) {
+          if (filtered.length > 10) {
+            return {
+              id: Date.now().toString(),
+              type: 'bot',
+              content: `Karibu! Tumepata madaktari ${filtered.length} wenye jina hilo kutoka hospitali mbalimbali. Je, nikupe orodha yote au unataka daktari kutoka hospitali gani?`,
+              timestamp: new Date(),
+              suggestions: ['Ona wote', 'Hospitali ya Taifa', 'Hospitali nyingine'],
+              data: { type: 'doctors', items: filtered.slice(0, 10) }
+            };
+          }
+          return {
+            id: Date.now().toString(),
+            type: 'bot',
+            content: `Tumepata madaktari ${filtered.length}. Bofya daktari kuona maelezo:`,
+            timestamp: new Date(),
+            data: { type: 'doctors', items: filtered }
+          };
+        }
+      }
+      
+      const { data } = await query.limit(10);
       
       return {
         id: Date.now().toString(),
@@ -441,17 +470,15 @@ export function UnifiedChatbot() {
         id: Date.now().toString(),
         type: 'bot',
         content: 'Huna miadi. Tafuta daktari kwanza ili kuweka miadi.',
-        timestamp: new Date(),
-        suggestions: ['🩺 Daktari']
+        timestamp: new Date()
       };
     }
 
     return {
       id: Date.now().toString(),
       type: 'bot',
-      content: 'Nisaidie kupata daktari, hospitali, dawa, au maabara.',
-      timestamp: new Date(),
-      suggestions: ['🩺 Daktari', '🏥 Hospitali', '💊 Dawa', '🔬 Maabara', '🎬 Maudhui']
+      content: 'Nisaidie kupata daktari, hospitali, dawa, au maabara. Andika kile unachotaka.',
+      timestamp: new Date()
     };
   };
 
@@ -463,6 +490,8 @@ export function UnifiedChatbot() {
       await sendDoctorMessage();
       return;
     }
+
+    if (!hasStartedChat) setHasStartedChat(true);
 
     const userMsg: Message = {
       id: Date.now().toString(),
@@ -483,6 +512,26 @@ export function UnifiedChatbot() {
     }
   };
 
+  const handleQuickAction = (action: string) => {
+    setInput(action);
+    setTimeout(() => {
+      if (!hasStartedChat) setHasStartedChat(true);
+      const userMsg: Message = {
+        id: Date.now().toString(),
+        type: 'user',
+        content: action,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, userMsg]);
+      setInput('');
+      setIsLoading(true);
+      processMessage(action).then(response => {
+        setMessages(prev => [...prev, response]);
+        setIsLoading(false);
+      });
+    }, 100);
+  };
+
   const handleBookAppointment = async () => {
     if (!user) {
       toast({ title: 'Ingia kwanza', description: 'Unahitaji kuingia ili kuweka miadi.', variant: 'destructive' });
@@ -498,16 +547,15 @@ export function UnifiedChatbot() {
     const [hours, minutes] = bookingTime.split(':');
     appointmentDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
-    // Double-check for conflicts
+    // Double-check for conflicts - use correct status values
     const { data: conflicts } = await supabase
       .from('appointments')
       .select('id')
       .eq('doctor_id', doctorId)
       .eq('appointment_date', appointmentDate.toISOString())
-      .in('status', ['scheduled', 'confirmed', 'pending']);
+      .in('status', ['scheduled', 'approved']); // Fixed: use correct status values
 
     if (conflicts && conflicts.length > 0) {
-      // Find alternative times
       const booked = await checkBookedTimes(doctorId, bookingDate);
       const dayOfWeek = bookingDate.getDay();
       const alternatives = generateTimeSlots(doctorTimetable, dayOfWeek, booked).slice(0, 3);
@@ -524,13 +572,13 @@ export function UnifiedChatbot() {
       return;
     }
 
-    // Create appointment as pending (request)
+    // Create appointment with 'scheduled' status (correct value)
     const { error } = await supabase.from('appointments').insert({
       patient_id: user.id,
       doctor_id: doctorId,
       appointment_date: appointmentDate.toISOString(),
       symptoms: bookingSymptoms,
-      status: 'pending', // Request status - doctor must accept
+      status: 'scheduled', // Fixed: use correct status value
       consultation_type: 'video'
     });
 
@@ -576,17 +624,6 @@ export function UnifiedChatbot() {
     ]);
   };
 
-  // Start booking with specific service
-  const startServiceBooking = (service: any, hospital: any) => {
-    setBookingService(service);
-    // If hospital has doctors, allow patient to pick one
-    if (hospitalDoctors.length > 0) {
-      setShowAllDoctors(true);
-    } else {
-      toast({ title: 'Hakuna daktari', description: 'Hospitali haina daktari aliyesajiliwa.', variant: 'destructive' });
-    }
-  };
-
   const openPharmacyDetail = async (pharmacy: any) => {
     setSelectedPharmacy(pharmacy);
     await fetchPharmacyMedicines(pharmacy.id);
@@ -616,7 +653,7 @@ export function UnifiedChatbot() {
       .select('id')
       .eq('patient_id', user.id)
       .eq('doctor_id', doctorId)
-      .in('status', ['scheduled', 'confirmed', 'pending'])
+      .in('status', ['scheduled', 'approved']) // Fixed: use correct status values
       .order('created_at', { ascending: false })
       .limit(1)
       .single();
@@ -628,7 +665,7 @@ export function UnifiedChatbot() {
         patient_id: user.id,
         doctor_id: doctorId,
         appointment_date: new Date().toISOString(),
-        status: 'scheduled',
+        status: 'scheduled', // Fixed: use correct status value
         consultation_type: 'chat'
       }).select().single();
 
@@ -773,9 +810,6 @@ export function UnifiedChatbot() {
           <p className="text-xs text-muted-foreground flex items-center gap-1">
             <MapPin className="h-3 w-3" />{p.address}
           </p>
-          {p.quote_of_day && (
-            <p className="text-xs italic text-primary mt-1">"{p.quote_of_day}"</p>
-          )}
         </div>
       </CardContent>
     </Card>
@@ -809,94 +843,97 @@ export function UnifiedChatbot() {
     </Card>
   );
 
-  // Render content card
-  const renderContentCard = (content: any) => (
-    <Card key={content.id} className="border-border/50 bg-card/80">
-      <CardContent className="p-3">
-        <div className="flex gap-3">
-          {content.thumbnail_url ? (
-            <img src={content.thumbnail_url} className="h-16 w-24 rounded object-cover" />
-          ) : (
-            <div className="h-16 w-24 rounded bg-muted flex items-center justify-center">
-              {content.content_type === 'video' ? <Play className="h-6 w-6" /> : <FileText className="h-6 w-6" />}
-            </div>
-          )}
-          <div className="flex-1 min-w-0">
-            <p className="font-medium text-sm line-clamp-1">{content.title}</p>
-            <p className="text-xs text-muted-foreground line-clamp-2">{content.description}</p>
-            <div className="flex items-center gap-3 mt-2">
-              <Button variant="ghost" size="sm" className="h-6 px-2" onClick={() => likeContent(content.id)}>
-                <Heart className="h-3 w-3 mr-1" /> {content.likes_count || 0}
-              </Button>
-              <Button variant="ghost" size="sm" className="h-6 px-2" onClick={() => saveContent(content.id)}>
-                <Bookmark className="h-3 w-3 mr-1" /> Hifadhi
-              </Button>
-              {content.content_url && (
-                <a href={content.content_url} target="_blank" className="text-xs text-primary">Tazama</a>
-              )}
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-
-  // Render data
-  const renderData = (data: any) => {
+  // Render data based on type
+  const renderData = (data?: Message['data']) => {
     if (!data) return null;
-    const { type, items } = data;
-
-    if (type === 'doctors') {
-      return <div className="space-y-2 mt-3">{items.map(renderDoctorCard)}</div>;
-    }
-    if (type === 'hospitals') {
-      return <div className="space-y-2 mt-3">{items.map(renderHospitalCard)}</div>;
-    }
-    if (type === 'pharmacies') {
-      return <div className="space-y-2 mt-3">{items.map(renderPharmacyCard)}</div>;
-    }
-    if (type === 'labs') {
-      return <div className="space-y-2 mt-3">{items.map(renderLabCard)}</div>;
-    }
-    if (type === 'content') {
-      return <div className="space-y-2 mt-3">{items.map(renderContentCard)}</div>;
-    }
-    if (type === 'appointments') {
+    
+    if (data.type === 'doctors') {
       return (
-        <div className="space-y-2 mt-3">
-          {items.map((apt: any) => (
+        <div className="space-y-2 mt-2">
+          {data.items.map(renderDoctorCard)}
+        </div>
+      );
+    }
+    
+    if (data.type === 'hospitals') {
+      return (
+        <div className="space-y-2 mt-2">
+          {data.items.map(renderHospitalCard)}
+        </div>
+      );
+    }
+    
+    if (data.type === 'pharmacies') {
+      return (
+        <div className="space-y-2 mt-2">
+          {data.items.map(renderPharmacyCard)}
+        </div>
+      );
+    }
+    
+    if (data.type === 'labs') {
+      return (
+        <div className="space-y-2 mt-2">
+          {data.items.map(renderLabCard)}
+        </div>
+      );
+    }
+    
+    if (data.type === 'appointments') {
+      return (
+        <div className="space-y-2 mt-2">
+          {data.items.map((apt: any) => (
             <Card key={apt.id} className="border-border/50 bg-card/80">
-              <CardContent className="p-3 flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                  <CalendarIcon className="h-5 w-5 text-primary" />
+              <CardContent className="p-3">
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={apt.doctor?.avatar_url} />
+                    <AvatarFallback><Stethoscope className="h-4 w-4" /></AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Dr. {apt.doctor?.first_name} {apt.doctor?.last_name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      📅 {format(new Date(apt.appointment_date), 'dd/MM/yyyy HH:mm')}
+                    </p>
+                  </div>
+                  <Badge variant={apt.status === 'approved' ? 'default' : 'secondary'}>
+                    {apt.status === 'scheduled' ? 'Inasubiri' : apt.status === 'approved' ? 'Imekubaliwa' : apt.status}
+                  </Badge>
                 </div>
-                <div className="flex-1">
-                  <p className="font-medium text-sm">Dr. {apt.doctor?.first_name} {apt.doctor?.last_name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {format(new Date(apt.appointment_date), 'dd/MM/yyyy HH:mm')}
-                  </p>
-                </div>
-                <Badge variant={apt.status === 'confirmed' ? 'default' : apt.status === 'pending' ? 'secondary' : 'outline'}>
-                  {apt.status === 'pending' ? 'Inasubiri' : apt.status === 'confirmed' ? 'Imekubaliwa' : apt.status}
-                </Badge>
               </CardContent>
             </Card>
           ))}
         </div>
       );
     }
-    if (type === 'alternative-times') {
+
+    if (data.type === 'content') {
       return (
-        <div className="flex flex-wrap gap-2 mt-3">
-          {items.map((item: any) => (
-            <Button
-              key={item.time}
-              variant="outline"
-              size="sm"
-              onClick={() => setBookingTime(item.time)}
-            >
-              {item.time}
-            </Button>
+        <div className="space-y-2 mt-2">
+          {data.items.map((content: any) => (
+            <Card key={content.id} className="border-border/50 bg-card/80">
+              <CardContent className="p-3">
+                <div className="flex items-start gap-3">
+                  <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                    {content.content_type === 'video' ? <Play className="h-5 w-5 text-primary" /> : <FileText className="h-5 w-5 text-primary" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{content.title}</p>
+                    <p className="text-xs text-muted-foreground line-clamp-2">{content.description}</p>
+                    <div className="flex items-center gap-3 mt-2">
+                      <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => likeContent(content.id)}>
+                        <Heart className="h-3 w-3 mr-1" />
+                        {content.likes_count || 0}
+                      </Button>
+                      <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => saveContent(content.id)}>
+                        <Bookmark className="h-3 w-3 mr-1" />
+                        Hifadhi
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
       );
@@ -908,7 +945,6 @@ export function UnifiedChatbot() {
   if (chatMode === 'doctor' && chatDoctor) {
     return (
       <div className="h-screen flex flex-col bg-background">
-        {/* Doctor chat header */}
         <div className="flex items-center gap-3 p-4 border-b bg-card/50">
           <Button variant="ghost" size="icon" onClick={exitDoctorChat}>
             <ArrowLeft className="h-5 w-5" />
@@ -931,7 +967,6 @@ export function UnifiedChatbot() {
           </div>
         </div>
 
-        {/* Messages */}
         <ScrollArea className="flex-1 p-4">
           <div className="space-y-3">
             {doctorMessages.map((msg) => (
@@ -952,7 +987,6 @@ export function UnifiedChatbot() {
           </div>
         </ScrollArea>
 
-        {/* Input */}
         <div className="p-4 border-t bg-card/50">
           <div className="flex gap-2">
             <Input
@@ -974,138 +1008,181 @@ export function UnifiedChatbot() {
   // Main chatbot UI
   return (
     <div className="h-screen flex flex-col bg-background">
-      {/* Header with profile access */}
-      <div className="flex items-center gap-3 p-4 border-b bg-card/50">
-        <Avatar className="h-10 w-10 bg-primary">
-          <AvatarFallback className="bg-primary text-primary-foreground">
-            <Bot className="h-5 w-5" />
-          </AvatarFallback>
-        </Avatar>
-        <div className="flex-1">
-          <p className="font-semibold">TeleMed Assistant</p>
-          <p className="text-xs text-muted-foreground">Huduma 24/7</p>
+      {/* Header - Logo centered, Settings on right */}
+      <div className="flex items-center justify-between p-4 border-b bg-card/50">
+        <div className="w-10" />
+        <div className="flex items-center gap-2">
+          <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center">
+            <HeartPulse className="h-5 w-5 text-primary-foreground" />
+          </div>
+          <span className="font-bold text-lg">TeleMed</span>
         </div>
         <Button variant="ghost" size="icon" onClick={() => setShowProfile(true)}>
           <Settings className="h-5 w-5" />
         </Button>
       </div>
 
-      {/* Messages */}
-      <ScrollArea className="flex-1 p-4">
-        <div className="space-y-4 max-w-2xl mx-auto">
-          {messages.map((msg) => (
-            <div key={msg.id} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[85%] ${msg.type === 'bot' ? 'flex gap-2' : ''}`}>
-                {msg.type === 'bot' && (
-                  <Avatar className="h-8 w-8 mt-0.5 flex-shrink-0">
-                    <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+      {/* Messages Area or Welcome Screen */}
+      {!hasStartedChat ? (
+        // Welcome screen - centered
+        <div className="flex-1 flex flex-col items-center justify-center px-6">
+          <div className="text-center mb-8">
+            <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+              <Bot className="h-8 w-8 text-primary" />
+            </div>
+            <h2 className="text-xl font-semibold mb-2">
+              Habari{user?.user_metadata?.first_name ? ` ${user.user_metadata.first_name}` : ''}! 👋
+            </h2>
+            <p className="text-muted-foreground text-sm">
+              Ninaweza kukusaidia kupata daktari, hospitali, maduka ya dawa, au maabara.
+            </p>
+          </div>
+
+          {/* Input box with quick actions inside */}
+          <div className="w-full max-w-md space-y-4">
+            <div className="relative">
+              <div className="flex gap-2">
+                <Button
+                  variant={isListening ? 'destructive' : 'outline'}
+                  size="icon"
+                  onClick={toggleListening}
+                  className="flex-shrink-0"
+                >
+                  {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                </Button>
+                <Input
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder="Andika swali lako..."
+                  onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                  className="flex-1"
+                />
+                <Button onClick={handleSend} disabled={!input.trim()}>
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            
+            {/* Quick actions */}
+            <div className="flex flex-wrap gap-2 justify-center">
+              {['Daktari', 'Hospitali', 'Dawa', 'Maabara', 'Maudhui'].map((action) => (
+                <Button
+                  key={action}
+                  variant="secondary"
+                  size="sm"
+                  className="rounded-full text-xs"
+                  onClick={() => handleQuickAction(action)}
+                >
+                  {action === 'Daktari' && '🩺'}
+                  {action === 'Hospitali' && '🏥'}
+                  {action === 'Dawa' && '💊'}
+                  {action === 'Maabara' && '🔬'}
+                  {action === 'Maudhui' && '🎬'}
+                  {' '}{action}
+                </Button>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : (
+        // Chat messages
+        <>
+          <ScrollArea className="flex-1 p-4">
+            <div className="space-y-4 max-w-2xl mx-auto">
+              {messages.map((msg) => (
+                <div key={msg.id} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-[85%] ${msg.type === 'bot' ? 'flex gap-2' : ''}`}>
+                    {msg.type === 'bot' && (
+                      <Avatar className="h-8 w-8 mt-0.5 flex-shrink-0">
+                        <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                          <Bot className="h-4 w-4" />
+                        </AvatarFallback>
+                      </Avatar>
+                    )}
+                    <div>
+                      <div className={`rounded-2xl px-4 py-2.5 ${
+                        msg.type === 'user' 
+                          ? 'bg-primary text-primary-foreground' 
+                          : 'bg-muted'
+                      }`}>
+                        <p className="text-sm whitespace-pre-line">{msg.content}</p>
+                      </div>
+                      
+                      {renderData(msg.data)}
+                      
+                      {msg.suggestions && (
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {msg.suggestions.map((s, i) => (
+                            <Button
+                              key={i}
+                              variant="outline"
+                              size="sm"
+                              className="rounded-full text-xs"
+                              onClick={() => handleQuickAction(s.replace(/[^\w\s]/gi, ''))}
+                            >
+                              {s}
+                            </Button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+              
+              {isLoading && (
+                <div className="flex gap-2">
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback className="bg-primary text-primary-foreground">
                       <Bot className="h-4 w-4" />
                     </AvatarFallback>
                   </Avatar>
-                )}
-                <div>
-                  <div className={`rounded-2xl px-4 py-2.5 ${
-                    msg.type === 'user' 
-                      ? 'bg-primary text-primary-foreground' 
-                      : 'bg-muted'
-                  }`}>
-                    <p className="text-sm whitespace-pre-line">{msg.content}</p>
-                  </div>
-                  
-                  {renderData(msg.data)}
-                  
-                  {msg.suggestions && (
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {msg.suggestions.map((s, i) => (
-                        <Button
-                          key={i}
-                          variant="outline"
-                          size="sm"
-                          className="rounded-full text-xs"
-                          onClick={() => {
-                            setInput(s.replace(/[^\w\s]/gi, ''));
-                            setTimeout(() => handleSend(), 100);
-                          }}
-                        >
-                          {s}
-                        </Button>
-                      ))}
+                  <div className="bg-muted rounded-2xl px-4 py-2.5">
+                    <div className="flex gap-1">
+                      <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" />
+                      <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce delay-100" />
+                      <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce delay-200" />
                     </div>
-                  )}
+                  </div>
                 </div>
-              </div>
+              )}
+              
+              <div ref={messagesEndRef} />
             </div>
-          ))}
-          
-          {isLoading && (
-            <div className="flex gap-2">
-              <Avatar className="h-8 w-8">
-                <AvatarFallback className="bg-primary text-primary-foreground">
-                  <Bot className="h-4 w-4" />
-                </AvatarFallback>
-              </Avatar>
-              <div className="bg-muted rounded-2xl px-4 py-2.5">
-                <div className="flex gap-1">
-                  <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" />
-                  <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce delay-100" />
-                  <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce delay-200" />
-                </div>
-              </div>
-            </div>
-          )}
-          
-          <div ref={messagesEndRef} />
-        </div>
-      </ScrollArea>
+          </ScrollArea>
 
-      {/* Input */}
-      <div className="p-4 border-t bg-card/50">
-        <div className="max-w-2xl mx-auto">
-          <div className="flex gap-2">
-            <Button
-              variant={isListening ? 'destructive' : 'outline'}
-              size="icon"
-              onClick={toggleListening}
-            >
-              {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-            </Button>
-            <Input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Andika ujumbe au bofya kitufe..."
-              onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-              className="flex-1"
-            />
-            <Button onClick={handleSend} disabled={!input.trim()}>
-              <Send className="h-4 w-4" />
-            </Button>
+          {/* Input at bottom */}
+          <div className="p-4 border-t bg-card/50">
+            <div className="max-w-2xl mx-auto">
+              <div className="flex gap-2">
+                <Button
+                  variant={isListening ? 'destructive' : 'outline'}
+                  size="icon"
+                  onClick={toggleListening}
+                >
+                  {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                </Button>
+                <Input
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder="Andika ujumbe au bofya kitufe..."
+                  onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                  className="flex-1"
+                />
+                <Button onClick={handleSend} disabled={!input.trim()}>
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
           </div>
-          
-          {/* Quick actions */}
-          <div className="flex flex-wrap gap-2 mt-3">
-            {['🩺 Daktari', '🏥 Hospitali', '💊 Dawa', '🔬 Maabara', '🎬 Maudhui'].map((action) => (
-              <Button
-                key={action}
-                variant="secondary"
-                size="sm"
-                className="rounded-full text-xs"
-                onClick={() => {
-                  setInput(action.split(' ')[1]);
-                  setTimeout(() => handleSend(), 100);
-                }}
-              >
-                {action}
-              </Button>
-            ))}
-          </div>
-        </div>
-      </div>
+        </>
+      )}
 
       {/* Profile Drawer */}
       <Drawer open={showProfile} onOpenChange={setShowProfile}>
         <DrawerContent className="max-h-[85vh]">
           <DrawerHeader>
-            <DrawerTitle>Wasifu Wako</DrawerTitle>
+            <DrawerTitle>Mipangilio</DrawerTitle>
           </DrawerHeader>
           <div className="p-4 space-y-6">
             {/* User info */}
@@ -1117,7 +1194,7 @@ export function UnifiedChatbot() {
               <div>
                 <p className="font-semibold">{user?.user_metadata?.first_name} {user?.user_metadata?.last_name}</p>
                 <p className="text-sm text-muted-foreground">{user?.email}</p>
-                <Badge variant="outline" className="mt-1">{userRole}</Badge>
+                <Badge variant="outline" className="mt-1 capitalize">{userRole}</Badge>
               </div>
             </div>
 
@@ -1154,6 +1231,22 @@ export function UnifiedChatbot() {
                 </div>
               </div>
             </div>
+
+            {/* Add phone number (for existing email users) */}
+            {user && !user.phone && (
+              <div className="p-4 bg-muted/50 rounded-lg">
+                <div className="flex items-center gap-3 mb-2">
+                  <Phone className="h-5 w-5" />
+                  <p className="font-medium">Ongeza Nambari ya Simu</p>
+                </div>
+                <p className="text-xs text-muted-foreground mb-3">
+                  Ongeza nambari ya simu ili uweze kuingia kwa simu pia.
+                </p>
+                <Button variant="outline" size="sm" onClick={() => toast({ title: 'Inakuja', description: 'Huduma hii inakuja hivi karibuni.' })}>
+                  Ongeza Simu
+                </Button>
+              </div>
+            )}
           </div>
           <DrawerFooter>
             <Button variant="destructive" onClick={handleLogout} className="w-full">
@@ -1191,7 +1284,6 @@ export function UnifiedChatbot() {
             </DrawerHeader>
             
             <div className="p-4 space-y-4">
-              {/* Info */}
               <div className="space-y-2">
                 {selectedDoctor?.profiles?.phone && (
                   <div className="flex items-center gap-2 text-sm">
@@ -1225,7 +1317,6 @@ export function UnifiedChatbot() {
                 )}
               </div>
 
-              {/* Bio */}
               {selectedDoctor?.bio && (
                 <div>
                   <h4 className="text-sm font-medium mb-1">Maelezo</h4>
@@ -1233,7 +1324,6 @@ export function UnifiedChatbot() {
                 </div>
               )}
 
-              {/* Timetable */}
               {doctorTimetable.length > 0 && (
                 <div>
                   <h4 className="text-sm font-medium mb-2">Ratiba</h4>
@@ -1371,7 +1461,6 @@ export function UnifiedChatbot() {
             </DrawerHeader>
             
             <div className="p-4 space-y-4">
-              {/* Ambulance Button */}
               {(selectedHospital?.has_ambulance || selectedHospital?.ambulance_phone) && (
                 <Button 
                   variant="destructive" 
@@ -1384,7 +1473,6 @@ export function UnifiedChatbot() {
                 </Button>
               )}
 
-              {/* Contact Info */}
               <div className="space-y-2">
                 {selectedHospital?.phone && (
                   <a href={`tel:${selectedHospital.phone}`} className="flex items-center gap-2 text-sm hover:text-primary">
@@ -1410,7 +1498,6 @@ export function UnifiedChatbot() {
                 <p className="text-sm text-muted-foreground">{selectedHospital.description}</p>
               )}
 
-              {/* Hospital Services - Clickable for booking */}
               {hospitalServices.length > 0 && (
                 <div>
                   <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
@@ -1454,7 +1541,6 @@ export function UnifiedChatbot() {
                 </div>
               )}
 
-              {/* Legacy services array */}
               {selectedHospital?.services?.length > 0 && hospitalServices.length === 0 && (
                 <div>
                   <h4 className="text-sm font-medium mb-2">Huduma</h4>
@@ -1466,7 +1552,6 @@ export function UnifiedChatbot() {
                 </div>
               )}
 
-              {/* Hospital Doctors - Collapsible with "See All" */}
               {hospitalDoctors.length > 0 && (
                 <div>
                   <div className="flex items-center justify-between mb-2">
@@ -1691,7 +1776,6 @@ export function UnifiedChatbot() {
                 <Badge className="bg-red-500">Huduma za Dharura 24/7</Badge>
               )}
 
-              {/* Medicines */}
               {pharmacyMedicines.length > 0 && (
                 <div>
                   <h4 className="text-sm font-medium mb-2">Dawa ({pharmacyMedicines.length})</h4>
@@ -1791,7 +1875,6 @@ export function UnifiedChatbot() {
                 <Badge className="bg-red-500">Huduma za Dharura 24/7</Badge>
               )}
 
-              {/* Lab Services */}
               {labServices.length > 0 && (
                 <div>
                   <h4 className="text-sm font-medium mb-2">Vipimo ({labServices.length})</h4>
