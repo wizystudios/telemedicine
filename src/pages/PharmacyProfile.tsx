@@ -1,10 +1,15 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Phone, MapPin, Mail, Star, Clock, Pill } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { 
+  ArrowLeft, Phone, MapPin, Mail, Star, Clock, Pill,
+  Shield, CheckCircle2, AlertCircle, Package
+} from 'lucide-react';
+import { CollapsibleSection } from '@/components/CollapsibleSection';
+import { InsuranceDisplay } from '@/components/InsuranceSelector';
 
 export default function PharmacyProfile() {
   const { pharmacyId } = useParams();
@@ -17,7 +22,8 @@ export default function PharmacyProfile() {
         .from('pharmacies')
         .select(`
           *,
-          pharmacy_medicines (id, name, description, price, in_stock, category)
+          pharmacy_medicines (id, name, description, price, in_stock, category, dosage, requires_prescription),
+          pharmacy_insurance (insurance_id)
         `)
         .eq('id', pharmacyId)
         .single();
@@ -50,129 +56,195 @@ export default function PharmacyProfile() {
     );
   }
 
+  const medicines = pharmacy.pharmacy_medicines || [];
+  const insuranceIds = pharmacy.pharmacy_insurance?.map((pi: any) => pi.insurance_id).filter(Boolean) || [];
+  const inStockMedicines = medicines.filter((m: any) => m.in_stock);
+  const services = pharmacy.services || [];
+
   return (
     <div className="min-h-screen bg-background pb-20">
-      {/* Header */}
-      <div className="bg-card border-b border-border p-4">
-        <div className="max-w-4xl mx-auto">
-          <Button variant="ghost" onClick={() => navigate(-1)} className="mb-4">
+      {/* Professional Header */}
+      <div className="bg-gradient-to-br from-purple-600 to-pink-600 text-white">
+        <div className="max-w-4xl mx-auto p-4">
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate(-1)} 
+            className="mb-4 text-white hover:bg-white/10"
+          >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Rudi Nyuma
           </Button>
+          
+          <div className="flex items-start gap-4">
+            <Avatar className="w-20 h-20 border-4 border-white/20">
+              <AvatarImage src={pharmacy.logo_url} />
+              <AvatarFallback className="bg-white/20 text-white text-xl font-bold">
+                <Pill className="w-8 h-8" />
+              </AvatarFallback>
+            </Avatar>
+            
+            <div className="flex-1">
+              <h1 className="text-2xl font-bold">{pharmacy.name}</h1>
+              <p className="text-white/80 text-sm mt-1">{pharmacy.description}</p>
+              
+              <div className="flex flex-wrap gap-2 mt-3">
+                {pharmacy.is_verified && (
+                  <Badge className="bg-white/20 text-white border-0">
+                    <CheckCircle2 className="w-3 h-3 mr-1" /> Imethibitishwa
+                  </Badge>
+                )}
+                {pharmacy.emergency_available && (
+                  <Badge className="bg-red-500/80 text-white border-0">
+                    <AlertCircle className="w-3 h-3 mr-1" /> Dharura 24/7
+                  </Badge>
+                )}
+              </div>
+              
+              {pharmacy.rating > 0 && (
+                <div className="flex items-center gap-1 mt-2 text-yellow-300">
+                  <Star className="w-4 h-4 fill-current" />
+                  <span className="font-semibold">{pharmacy.rating}</span>
+                  <span className="text-white/60 text-sm">({pharmacy.total_reviews || 0} mapitio)</span>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto p-4 space-y-6">
-        {/* Profile Header */}
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-start space-x-4">
-              <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-                <Pill className="w-10 h-10 text-white" />
-              </div>
-              <div className="flex-1">
-                <h1 className="text-2xl font-bold">{pharmacy.name}</h1>
-                <p className="text-muted-foreground mb-2">{pharmacy.description}</p>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {pharmacy.is_verified && <Badge className="bg-blue-500">Imethibitishwa</Badge>}
-                  {pharmacy.is_promoted && <Badge className="bg-yellow-500">Tangazwa</Badge>}
-                </div>
-                {pharmacy.rating && (
-                  <div className="flex items-center text-yellow-500 mb-2">
-                    <Star className="w-4 h-4 mr-1 fill-current" />
-                    <span className="text-sm">{pharmacy.rating} ({pharmacy.total_reviews || 0} mapitio)</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="max-w-4xl mx-auto p-4 space-y-4">
+        {/* Quick Stats */}
+        <div className="grid grid-cols-3 gap-3">
+          <div className="bg-card rounded-xl p-3 text-center border border-border shadow-sm">
+            <Package className="w-5 h-5 mx-auto text-primary mb-1" />
+            <p className="text-lg font-bold">{medicines.length}</p>
+            <p className="text-xs text-muted-foreground">Dawa</p>
+          </div>
+          <div className="bg-card rounded-xl p-3 text-center border border-border shadow-sm">
+            <CheckCircle2 className="w-5 h-5 mx-auto text-green-500 mb-1" />
+            <p className="text-lg font-bold">{inStockMedicines.length}</p>
+            <p className="text-xs text-muted-foreground">Zinapatikana</p>
+          </div>
+          <div className="bg-card rounded-xl p-3 text-center border border-border shadow-sm">
+            <Star className="w-5 h-5 mx-auto text-yellow-500 mb-1" />
+            <p className="text-lg font-bold">{pharmacy.rating?.toFixed(1) || '0.0'}</p>
+            <p className="text-xs text-muted-foreground">Rating</p>
+          </div>
+        </div>
 
         {/* Contact Info */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Maelezo ya Mawasiliano</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center space-x-3">
-              <MapPin className="w-5 h-5 text-muted-foreground" />
+        <div className="bg-card rounded-xl p-4 shadow-sm border border-border">
+          <h3 className="font-semibold mb-3 flex items-center gap-2">
+            <Phone className="w-4 h-4 text-primary" />
+            Mawasiliano
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <MapPin className="w-4 h-4" />
               <span>{pharmacy.address}</span>
             </div>
             {pharmacy.phone && (
-              <div className="flex items-center space-x-3">
-                <Phone className="w-5 h-5 text-muted-foreground" />
-                <a href={`tel:${pharmacy.phone}`} className="text-blue-600 hover:underline">
-                  {pharmacy.phone}
-                </a>
-              </div>
+              <a href={`tel:${pharmacy.phone}`} className="flex items-center gap-2 text-primary hover:underline">
+                <Phone className="w-4 h-4" />
+                <span>{pharmacy.phone}</span>
+              </a>
             )}
             {pharmacy.email && (
-              <div className="flex items-center space-x-3">
-                <Mail className="w-5 h-5 text-muted-foreground" />
-                <a href={`mailto:${pharmacy.email}`} className="text-blue-600 hover:underline">
-                  {pharmacy.email}
-                </a>
-              </div>
+              <a href={`mailto:${pharmacy.email}`} className="flex items-center gap-2 text-primary hover:underline">
+                <Mail className="w-4 h-4" />
+                <span>{pharmacy.email}</span>
+              </a>
             )}
-            {pharmacy.location_lat && pharmacy.location_lng && (
-              <div className="flex items-center space-x-3">
-                <MapPin className="w-5 h-5 text-muted-foreground" />
-                <span className="text-sm">Umbali kutoka kwako: ~{(Math.random() * 5 + 0.5).toFixed(1)} km</span>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+          </div>
+          
+          {pharmacy.quote_of_day && (
+            <div className="mt-3 p-3 bg-primary/5 rounded-lg border border-primary/10">
+              <p className="text-sm italic text-muted-foreground">"{pharmacy.quote_of_day}"</p>
+            </div>
+          )}
+        </div>
 
-        {/* Available Medicines */}
-        {pharmacy.pharmacy_medicines && pharmacy.pharmacy_medicines.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Dawa Zinazopatikana</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {pharmacy.pharmacy_medicines.map((medicine: any) => (
-                  <div key={medicine.id} className="p-4 border border-border rounded-lg">
-                    <div className="flex items-start justify-between mb-2">
-                      <h4 className="font-semibold">{medicine.name}</h4>
-                      {medicine.in_stock ? (
-                        <Badge className="bg-green-500">Inapatikana</Badge>
-                      ) : (
-                        <Badge variant="secondary">Haipo</Badge>
+        {/* Insurance Providers */}
+        {insuranceIds.length > 0 && (
+          <div className="bg-card rounded-xl p-4 shadow-sm border border-border">
+            <h3 className="font-semibold mb-3 flex items-center gap-2">
+              <Shield className="w-4 h-4 text-blue-500" />
+              Bima Zinazokubaliwa
+            </h3>
+            <InsuranceDisplay insuranceIds={insuranceIds} />
+          </div>
+        )}
+
+        {/* Medicines - Collapsible */}
+        {medicines.length > 0 && (
+          <CollapsibleSection
+            title="Dawa Zinazopatikana"
+            icon={<Pill className="w-5 h-5" />}
+            badge={`${inStockMedicines.length}/${medicines.length}`}
+            defaultOpen={true}
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {medicines.map((medicine: any) => (
+                <div 
+                  key={medicine.id} 
+                  className={`p-4 rounded-lg border ${
+                    medicine.in_stock 
+                      ? 'bg-muted/30 border-border/50' 
+                      : 'bg-muted/10 border-border/30 opacity-60'
+                  }`}
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-medium text-sm">{medicine.name}</h4>
+                        {medicine.requires_prescription && (
+                          <Badge variant="destructive" className="text-xs py-0">Rx</Badge>
+                        )}
+                      </div>
+                      {medicine.dosage && (
+                        <p className="text-xs text-muted-foreground">{medicine.dosage}</p>
                       )}
                     </div>
-                    {medicine.description && (
-                      <p className="text-sm text-muted-foreground mb-2">{medicine.description}</p>
+                    <Badge variant={medicine.in_stock ? "default" : "secondary"} className="text-xs shrink-0">
+                      {medicine.in_stock ? 'Inapatikana' : 'Haipo'}
+                    </Badge>
+                  </div>
+                  
+                  {medicine.description && (
+                    <p className="text-xs text-muted-foreground mb-2">{medicine.description}</p>
+                  )}
+                  
+                  <div className="flex items-center justify-between">
+                    {medicine.category && (
+                      <Badge variant="outline" className="text-xs">{medicine.category}</Badge>
                     )}
                     {medicine.price && (
-                      <p className="text-sm font-semibold text-green-600">
+                      <p className="text-sm font-bold text-primary">
                         TSh {medicine.price.toLocaleString()}
                       </p>
                     )}
-                    {medicine.category && (
-                      <Badge variant="outline" className="mt-2">{medicine.category}</Badge>
-                    )}
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                </div>
+              ))}
+            </div>
+          </CollapsibleSection>
         )}
 
-        {/* Services */}
-        {pharmacy.services && pharmacy.services.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Huduma Zinazopatikana</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-2">
-                {pharmacy.services.map((service: string, index: number) => (
-                  <Badge key={index} variant="secondary">{service}</Badge>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+        {/* Services - Collapsible */}
+        {services.length > 0 && (
+          <CollapsibleSection
+            title="Huduma Zinazopatikana"
+            icon={<Clock className="w-5 h-5" />}
+            badge={services.length}
+          >
+            <div className="flex flex-wrap gap-2">
+              {services.map((service: string, index: number) => (
+                <Badge key={index} variant="secondary" className="px-3 py-1">
+                  {service}
+                </Badge>
+              ))}
+            </div>
+          </CollapsibleSection>
         )}
       </div>
     </div>
