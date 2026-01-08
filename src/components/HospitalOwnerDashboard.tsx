@@ -15,11 +15,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Building2, Users, Calendar, Plus, Loader2, Stethoscope, 
   TrendingUp, MapPin, Phone, Mail, Clock, Trash2, Ambulance,
-  FileText, Edit, DollarSign
+  FileText, Edit, DollarSign, Settings, Video
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
 import { LogoUpload } from '@/components/LogoUpload';
+import { SettingsDrawer } from '@/components/SettingsDrawer';
+import { ContentUploadSection } from '@/components/ContentUploadSection';
 
 const DAYS = ['Jumapili', 'Jumatatu', 'Jumanne', 'Jumatano', 'Alhamisi', 'Ijumaa', 'Jumamosi'];
 
@@ -38,6 +40,8 @@ export default function HospitalOwnerDashboard() {
   const [timetable, setTimetable] = useState<any[]>([]);
   const [chartData, setChartData] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState('overview');
+  const [showSettings, setShowSettings] = useState(false);
+  const [contents, setContents] = useState<any[]>([]);
 
   // New doctor form
   const [newDoctor, setNewDoctor] = useState({
@@ -360,9 +364,14 @@ export default function HospitalOwnerDashboard() {
             </div>
           </div>
         </div>
-        <Badge variant={hospital.is_verified ? 'default' : 'secondary'} className="text-[10px]">
-          {hospital.is_verified ? 'Imethibitishwa' : 'Inasubiri'}
-        </Badge>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" onClick={() => setShowSettings(true)}>
+            <Settings className="h-5 w-5" />
+          </Button>
+          <Badge variant={hospital.is_verified ? 'default' : 'secondary'} className="text-[10px]">
+            {hospital.is_verified ? 'Imethibitishwa' : 'Inasubiri'}
+          </Badge>
+        </div>
       </div>
 
       {/* Stats */}
@@ -399,10 +408,11 @@ export default function HospitalOwnerDashboard() {
 
       {/* Tabs for different sections */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="overview" className="text-xs">Muhtasari</TabsTrigger>
           <TabsTrigger value="doctors" className="text-xs">Madaktari</TabsTrigger>
           <TabsTrigger value="services" className="text-xs">Huduma</TabsTrigger>
+          <TabsTrigger value="content" className="text-xs">Maudhui</TabsTrigger>
           <TabsTrigger value="ambulance" className="text-xs">Ambulance</TabsTrigger>
         </TabsList>
 
@@ -798,6 +808,13 @@ export default function HospitalOwnerDashboard() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Settings Drawer */}
+      <SettingsDrawer 
+        open={showSettings} 
+        onOpenChange={setShowSettings} 
+        userRole="hospital_owner" 
+      />
     </div>
   );
 }

@@ -12,11 +12,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Calendar, MessageCircle, Users, Clock, CheckCircle, XCircle, 
-  Video, Phone, Activity, Loader2, AlertCircle
+  Video, Phone, Activity, Loader2, AlertCircle, Settings
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { SettingsDrawer } from '@/components/SettingsDrawer';
+import { ContentUploadSection } from '@/components/ContentUploadSection';
 
 export function DoctorDashboard() {
   const { user } = useAuth();
@@ -28,6 +31,9 @@ export function DoctorDashboard() {
   const [stats, setStats] = useState({ today: 0, pending: 0, completed: 0, rating: 0 });
   const [pendingAppointments, setPendingAppointments] = useState<any[]>([]);
   const [todayAppointments, setTodayAppointments] = useState<any[]>([]);
+  const [contents, setContents] = useState<any[]>([]);
+  const [showSettings, setShowSettings] = useState(false);
+  const [activeTab, setActiveTab] = useState('overview');
   
   // Decline dialog state
   const [declineDialogOpen, setDeclineDialogOpen] = useState(false);
@@ -101,6 +107,15 @@ export function DoctorDashboard() {
         .eq('user_id', user?.id)
         .single();
 
+      // Fetch contents
+      const { data: contentsData } = await supabase
+        .from('institution_content')
+        .select('*')
+        .eq('institution_type', 'doctor')
+        .eq('owner_id', user?.id)
+        .order('created_at', { ascending: false });
+
+      setContents(contentsData || []);
       setPendingAppointments(pending || []);
       setTodayAppointments(todayAppts || []);
       setStats({
@@ -250,6 +265,9 @@ export function DoctorDashboard() {
           <Badge variant={isOnline ? 'default' : 'secondary'} className="text-[10px]">
             {isOnline ? 'Mtandaoni' : 'Nje'}
           </Badge>
+          <Button variant="ghost" size="icon" onClick={() => setShowSettings(true)}>
+            <Settings className="h-5 w-5" />
+          </Button>
         </div>
       </div>
 
@@ -382,6 +400,13 @@ export function DoctorDashboard() {
         </CardContent>
       </Card>
 
+      {/* Content Upload Section */}
+      <ContentUploadSection
+        institutionType="doctor"
+        contents={contents}
+        onRefresh={fetchData}
+      />
+
       {/* Quick Actions */}
       <div className="grid grid-cols-3 gap-2">
         <Button variant="outline" className="h-auto py-3 flex-col gap-1" onClick={() => navigate('/appointments')}>
@@ -473,6 +498,13 @@ export function DoctorDashboard() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Settings Drawer */}
+      <SettingsDrawer 
+        open={showSettings} 
+        onOpenChange={setShowSettings} 
+        userRole="doctor" 
+      />
     </div>
   );
 }
