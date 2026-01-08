@@ -1,11 +1,16 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Phone, MapPin, Mail, Star, Hospital, Globe, Clock } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { 
+  ArrowLeft, Phone, MapPin, Mail, Star, Hospital, Globe, 
+  Clock, Users, Stethoscope, Shield, CheckCircle2, Ambulance,
+  HeartPulse
+} from 'lucide-react';
+import { CollapsibleSection } from '@/components/CollapsibleSection';
+import { InsuranceDisplay } from '@/components/InsuranceSelector';
 
 export default function HospitalProfile() {
   const { hospitalId } = useParams();
@@ -24,9 +29,12 @@ export default function HospitalProfile() {
             experience_years,
             consultation_fee,
             doctor_type,
+            is_available,
             profiles!doctor_profiles_user_id_fkey (first_name, last_name, avatar_url),
             doctor_timetable (day_of_week, start_time, end_time, is_available, location)
-          )
+          ),
+          hospital_services (id, name, description, price, category, is_available),
+          hospital_insurance (insurance_id)
         `)
         .eq('id', hospitalId)
         .single();
@@ -60,172 +68,251 @@ export default function HospitalProfile() {
   }
 
   const days = ['Jumapili', 'Jumatatu', 'Jumanne', 'Jumatano', 'Alhamisi', 'Ijumaa', 'Jumamosi'];
+  const doctors = hospital.doctor_profiles || [];
+  const services = hospital.hospital_services || [];
+  const insuranceIds = hospital.hospital_insurance?.map((hi: any) => hi.insurance_id).filter(Boolean) || [];
+  const availableDoctors = doctors.filter((d: any) => d.is_available);
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      {/* Header */}
-      <div className="bg-card border-b border-border p-4">
-        <div className="max-w-4xl mx-auto">
-          <Button variant="ghost" onClick={() => navigate(-1)} className="mb-4">
+      {/* Professional Header */}
+      <div className="bg-gradient-to-br from-green-600 to-emerald-700 text-white">
+        <div className="max-w-4xl mx-auto p-4">
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate(-1)} 
+            className="mb-4 text-white hover:bg-white/10"
+          >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Rudi Nyuma
           </Button>
+          
+          <div className="flex items-start gap-4">
+            <Avatar className="w-20 h-20 border-4 border-white/20">
+              <AvatarImage src={hospital.logo_url} />
+              <AvatarFallback className="bg-white/20 text-white text-xl font-bold">
+                <Hospital className="w-8 h-8" />
+              </AvatarFallback>
+            </Avatar>
+            
+            <div className="flex-1">
+              <h1 className="text-2xl font-bold">{hospital.name}</h1>
+              <p className="text-white/80 text-sm mt-1">{hospital.description}</p>
+              
+              <div className="flex flex-wrap gap-2 mt-3">
+                {hospital.is_verified && (
+                  <Badge className="bg-white/20 text-white border-0">
+                    <CheckCircle2 className="w-3 h-3 mr-1" /> Imethibitishwa
+                  </Badge>
+                )}
+                {hospital.has_ambulance && (
+                  <Badge className="bg-red-500/80 text-white border-0">
+                    <Ambulance className="w-3 h-3 mr-1" /> Ambulance
+                  </Badge>
+                )}
+              </div>
+              
+              {hospital.rating > 0 && (
+                <div className="flex items-center gap-1 mt-2 text-yellow-300">
+                  <Star className="w-4 h-4 fill-current" />
+                  <span className="font-semibold">{hospital.rating}</span>
+                  <span className="text-white/60 text-sm">({hospital.total_reviews || 0} mapitio)</span>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto p-4 space-y-6">
-        {/* Profile Header */}
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-start space-x-4">
-              <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
-                <Hospital className="w-10 h-10 text-white" />
-              </div>
-              <div className="flex-1">
-                <h1 className="text-2xl font-bold">{hospital.name}</h1>
-                <p className="text-muted-foreground mb-2">{hospital.description}</p>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {hospital.is_verified && <Badge className="bg-blue-500">Imethibitishwa</Badge>}
-                  {hospital.is_promoted && <Badge className="bg-yellow-500">Tangazwa</Badge>}
-                </div>
-                {hospital.rating && (
-                  <div className="flex items-center text-yellow-500 mb-2">
-                    <Star className="w-4 h-4 mr-1 fill-current" />
-                    <span className="text-sm">{hospital.rating} ({hospital.total_reviews || 0} mapitio)</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="max-w-4xl mx-auto p-4 space-y-4">
+        {/* Quick Stats */}
+        <div className="grid grid-cols-3 gap-3">
+          <div className="bg-card rounded-xl p-3 text-center border border-border shadow-sm">
+            <Users className="w-5 h-5 mx-auto text-primary mb-1" />
+            <p className="text-lg font-bold">{doctors.length}</p>
+            <p className="text-xs text-muted-foreground">Madaktari</p>
+          </div>
+          <div className="bg-card rounded-xl p-3 text-center border border-border shadow-sm">
+            <HeartPulse className="w-5 h-5 mx-auto text-primary mb-1" />
+            <p className="text-lg font-bold">{services.length}</p>
+            <p className="text-xs text-muted-foreground">Huduma</p>
+          </div>
+          <div className="bg-card rounded-xl p-3 text-center border border-border shadow-sm">
+            <Star className="w-5 h-5 mx-auto text-yellow-500 mb-1" />
+            <p className="text-lg font-bold">{hospital.rating?.toFixed(1) || '0.0'}</p>
+            <p className="text-xs text-muted-foreground">Rating</p>
+          </div>
+        </div>
 
         {/* Contact Info */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Maelezo ya Mawasiliano</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center space-x-3">
-              <MapPin className="w-5 h-5 text-muted-foreground" />
+        <div className="bg-card rounded-xl p-4 shadow-sm border border-border">
+          <h3 className="font-semibold mb-3 flex items-center gap-2">
+            <Phone className="w-4 h-4 text-primary" />
+            Mawasiliano
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <MapPin className="w-4 h-4" />
               <span>{hospital.address}</span>
             </div>
             {hospital.phone && (
-              <div className="flex items-center space-x-3">
-                <Phone className="w-5 h-5 text-muted-foreground" />
-                <a href={`tel:${hospital.phone}`} className="text-blue-600 hover:underline">
-                  {hospital.phone}
-                </a>
-              </div>
+              <a href={`tel:${hospital.phone}`} className="flex items-center gap-2 text-primary hover:underline">
+                <Phone className="w-4 h-4" />
+                <span>{hospital.phone}</span>
+              </a>
             )}
             {hospital.email && (
-              <div className="flex items-center space-x-3">
-                <Mail className="w-5 h-5 text-muted-foreground" />
-                <a href={`mailto:${hospital.email}`} className="text-blue-600 hover:underline">
-                  {hospital.email}
-                </a>
-              </div>
+              <a href={`mailto:${hospital.email}`} className="flex items-center gap-2 text-primary hover:underline">
+                <Mail className="w-4 h-4" />
+                <span>{hospital.email}</span>
+              </a>
             )}
             {hospital.website && (
-              <div className="flex items-center space-x-3">
-                <Globe className="w-5 h-5 text-muted-foreground" />
-                <a href={hospital.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                  {hospital.website}
-                </a>
-              </div>
+              <a href={hospital.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-primary hover:underline">
+                <Globe className="w-4 h-4" />
+                <span>Website</span>
+              </a>
             )}
-          </CardContent>
-        </Card>
+            {hospital.ambulance_phone && (
+              <a href={`tel:${hospital.ambulance_phone}`} className="flex items-center gap-2 text-red-600 font-medium">
+                <Ambulance className="w-4 h-4" />
+                <span>Ambulance: {hospital.ambulance_phone}</span>
+              </a>
+            )}
+          </div>
+        </div>
 
-        {/* Doctors & Timetables */}
-        {hospital.doctor_profiles && hospital.doctor_profiles.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Madaktari na Ratiba Zao</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                {hospital.doctor_profiles.map((doctorProfile: any) => (
-                  <div key={doctorProfile.user_id} className="p-4 border border-border rounded-lg">
-                    <div className="flex items-center gap-3 mb-4">
-                      <Avatar className="w-12 h-12">
-                        <AvatarImage src={doctorProfile.profiles?.avatar_url} />
-                        <AvatarFallback>
-                          {doctorProfile.profiles?.first_name?.[0]}{doctorProfile.profiles?.last_name?.[0]}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1">
-                        <h4 className="font-semibold">
-                          Dkt. {doctorProfile.profiles?.first_name} {doctorProfile.profiles?.last_name}
-                        </h4>
-                        <p className="text-sm text-muted-foreground">{doctorProfile.bio || doctorProfile.doctor_type}</p>
-                        {doctorProfile.experience_years && (
-                          <p className="text-xs text-muted-foreground">{doctorProfile.experience_years} miaka ya uzoefu</p>
+        {/* Insurance Providers */}
+        {insuranceIds.length > 0 && (
+          <div className="bg-card rounded-xl p-4 shadow-sm border border-border">
+            <h3 className="font-semibold mb-3 flex items-center gap-2">
+              <Shield className="w-4 h-4 text-blue-500" />
+              Bima Zinazokubaliwa
+            </h3>
+            <InsuranceDisplay insuranceIds={insuranceIds} />
+          </div>
+        )}
+
+        {/* Doctors - Collapsible */}
+        {doctors.length > 0 && (
+          <CollapsibleSection
+            title="Madaktari Wetu"
+            icon={<Stethoscope className="w-5 h-5" />}
+            badge={`${availableDoctors.length}/${doctors.length}`}
+            defaultOpen={true}
+          >
+            <div className="space-y-3">
+              {doctors.map((doc: any) => (
+                <div 
+                  key={doc.user_id} 
+                  className="p-4 bg-muted/30 rounded-lg border border-border/50 hover:border-primary/30 transition-colors"
+                >
+                  <div className="flex items-start gap-3">
+                    <Avatar className="w-14 h-14 border-2 border-primary/20">
+                      <AvatarImage src={doc.profiles?.avatar_url} />
+                      <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                        {doc.profiles?.first_name?.[0]}{doc.profiles?.last_name?.[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-semibold">
+                            Dkt. {doc.profiles?.first_name} {doc.profiles?.last_name}
+                          </h4>
+                          <p className="text-sm text-muted-foreground">{doc.bio || doc.doctor_type || 'Daktari wa Jumla'}</p>
+                        </div>
+                        <Badge variant={doc.is_available ? "default" : "secondary"} className="shrink-0">
+                          {doc.is_available ? 'Anapatikana' : 'Hapatikani'}
+                        </Badge>
+                      </div>
+                      
+                      <div className="flex flex-wrap gap-3 mt-2 text-xs text-muted-foreground">
+                        {doc.experience_years && (
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {doc.experience_years} miaka
+                          </span>
+                        )}
+                        {doc.consultation_fee && (
+                          <span className="font-semibold text-primary">
+                            TSh {doc.consultation_fee.toLocaleString()}
+                          </span>
                         )}
                       </div>
-                      {doctorProfile.consultation_fee && (
-                        <div className="text-right">
-                          <p className="text-sm font-semibold text-green-600">
-                            TSh {doctorProfile.consultation_fee.toLocaleString()}
-                          </p>
+
+                      {/* Doctor's Timetable - Compact */}
+                      {doc.doctor_timetable?.length > 0 && (
+                        <div className="mt-3 pt-3 border-t border-border/50">
+                          <p className="text-xs font-medium text-muted-foreground mb-2">Ratiba:</p>
+                          <div className="flex flex-wrap gap-1">
+                            {doc.doctor_timetable
+                              .filter((t: any) => t.is_available)
+                              .map((t: any, idx: number) => (
+                                <Badge key={idx} variant="outline" className="text-xs py-0">
+                                  {days[t.day_of_week]?.slice(0, 3)} {t.start_time?.slice(0,5)}-{t.end_time?.slice(0,5)}
+                                </Badge>
+                              ))
+                            }
+                          </div>
                         </div>
                       )}
                     </div>
-
-                    {/* Doctor's Timetable */}
-                    {doctorProfile.doctor_timetable && doctorProfile.doctor_timetable.length > 0 && (
-                      <div className="mt-4 border-t border-border pt-4">
-                        <h5 className="text-sm font-semibold mb-2 flex items-center gap-2">
-                          <Clock className="w-4 h-4" />
-                          Ratiba ya Kazi
-                        </h5>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                          {doctorProfile.doctor_timetable.map((schedule: any, idx: number) => (
-                            <div key={idx} className="text-sm flex items-center justify-between p-2 bg-muted/50 rounded">
-                              <span className="font-medium">{days[schedule.day_of_week]}</span>
-                              <span className={schedule.is_available ? 'text-green-600' : 'text-red-600'}>
-                                {schedule.is_available 
-                                  ? `${schedule.start_time.slice(0,5)} - ${schedule.end_time.slice(0,5)}`
-                                  : 'Haipo'}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                        {doctorProfile.doctor_timetable[0]?.location && (
-                          <p className="text-xs text-muted-foreground mt-2">
-                            📍 Mahali: {doctorProfile.doctor_timetable[0].location}
-                          </p>
-                        )}
-                      </div>
-                    )}
-
-                    <Button 
-                      onClick={() => navigate(`/doctor-profile/${doctorProfile.user_id}`)}
-                      className="w-full mt-4"
-                      variant="outline"
-                    >
-                      Ona Wasifu Kamili
-                    </Button>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                  
+                  <Button 
+                    onClick={() => navigate(`/doctor-profile/${doc.user_id}`)}
+                    className="w-full mt-3"
+                    variant="outline"
+                    size="sm"
+                  >
+                    Ona Wasifu Kamili
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </CollapsibleSection>
         )}
 
-        {/* Services */}
-        {hospital.services && hospital.services.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Huduma Zinazopatikana</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-2">
-                {hospital.services.map((service: string, index: number) => (
-                  <Badge key={index} variant="secondary">{service}</Badge>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+        {/* Services - Collapsible */}
+        {services.length > 0 && (
+          <CollapsibleSection
+            title="Huduma Zinazopatikana"
+            icon={<HeartPulse className="w-5 h-5" />}
+            badge={services.filter((s: any) => s.is_available).length}
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {services.map((service: any) => (
+                <div 
+                  key={service.id} 
+                  className="p-3 bg-muted/30 rounded-lg border border-border/50"
+                >
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h4 className="font-medium text-sm">{service.name}</h4>
+                      {service.description && (
+                        <p className="text-xs text-muted-foreground mt-1">{service.description}</p>
+                      )}
+                      {service.category && (
+                        <Badge variant="outline" className="mt-2 text-xs">{service.category}</Badge>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <Badge variant={service.is_available ? "default" : "secondary"} className="text-xs">
+                        {service.is_available ? 'Inapatikana' : 'Haipo'}
+                      </Badge>
+                      {service.price && (
+                        <p className="text-sm font-semibold text-primary mt-1">
+                          TSh {service.price.toLocaleString()}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CollapsibleSection>
         )}
       </div>
     </div>
