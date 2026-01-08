@@ -58,6 +58,7 @@ export type Database = {
           duration_minutes: number | null
           fee: number | null
           id: string
+          insurance_id: string | null
           meeting_room_id: string | null
           notes: string | null
           patient_id: string | null
@@ -77,6 +78,7 @@ export type Database = {
           duration_minutes?: number | null
           fee?: number | null
           id?: string
+          insurance_id?: string | null
           meeting_room_id?: string | null
           notes?: string | null
           patient_id?: string | null
@@ -96,6 +98,7 @@ export type Database = {
           duration_minutes?: number | null
           fee?: number | null
           id?: string
+          insurance_id?: string | null
           meeting_room_id?: string | null
           notes?: string | null
           patient_id?: string | null
@@ -113,6 +116,13 @@ export type Database = {
             columns: ["doctor_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_insurance_id_fkey"
+            columns: ["insurance_id"]
+            isOneToOne: false
+            referencedRelation: "insurance_providers"
             referencedColumns: ["id"]
           },
           {
@@ -572,6 +582,42 @@ export type Database = {
         }
         Relationships: []
       }
+      hospital_insurance: {
+        Row: {
+          created_at: string | null
+          hospital_id: string | null
+          id: string
+          insurance_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          hospital_id?: string | null
+          id?: string
+          insurance_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          hospital_id?: string | null
+          id?: string
+          insurance_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hospital_insurance_hospital_id_fkey"
+            columns: ["hospital_id"]
+            isOneToOne: false
+            referencedRelation: "hospitals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hospital_insurance_insurance_id_fkey"
+            columns: ["insurance_id"]
+            isOneToOne: false
+            referencedRelation: "insurance_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hospital_services: {
         Row: {
           ambulance_available: boolean | null
@@ -764,6 +810,45 @@ export type Database = {
           },
         ]
       }
+      insurance_providers: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          logo_url: string | null
+          name: string
+          phone: string | null
+          short_code: string | null
+          updated_at: string | null
+          website: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string | null
+          name: string
+          phone?: string | null
+          short_code?: string | null
+          updated_at?: string | null
+          website?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string | null
+          name?: string
+          phone?: string | null
+          short_code?: string | null
+          updated_at?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
       laboratories: {
         Row: {
           address: string
@@ -840,6 +925,42 @@ export type Database = {
             columns: ["owner_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      laboratory_insurance: {
+        Row: {
+          created_at: string | null
+          id: string
+          insurance_id: string | null
+          laboratory_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          insurance_id?: string | null
+          laboratory_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          insurance_id?: string | null
+          laboratory_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "laboratory_insurance_insurance_id_fkey"
+            columns: ["insurance_id"]
+            isOneToOne: false
+            referencedRelation: "insurance_providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "laboratory_insurance_laboratory_id_fkey"
+            columns: ["laboratory_id"]
+            isOneToOne: false
+            referencedRelation: "laboratories"
             referencedColumns: ["id"]
           },
         ]
@@ -1298,6 +1419,42 @@ export type Database = {
             columns: ["owner_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pharmacy_insurance: {
+        Row: {
+          created_at: string | null
+          id: string
+          insurance_id: string | null
+          pharmacy_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          insurance_id?: string | null
+          pharmacy_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          insurance_id?: string | null
+          pharmacy_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pharmacy_insurance_insurance_id_fkey"
+            columns: ["insurance_id"]
+            isOneToOne: false
+            referencedRelation: "insurance_providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pharmacy_insurance_pharmacy_id_fkey"
+            columns: ["pharmacy_id"]
+            isOneToOne: false
+            referencedRelation: "pharmacies"
             referencedColumns: ["id"]
           },
         ]

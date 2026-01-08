@@ -10,18 +10,22 @@ import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Switch } from '@/components/ui/switch';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Send, Mic, MicOff, Bot, Stethoscope, Building, Pill, TestTube, MapPin, Star, 
   Calendar as CalendarIcon, Clock, Phone, MessageCircle, ArrowLeft,
   User, Mail, FileText, Globe, Video, PhoneCall, AlertTriangle, LogOut, Settings,
-  Sun, Moon, Heart, Bookmark, Play, ChevronRight,
-  Ambulance, MoreVertical, Users, HeartPulse
+  Sun, Moon, Heart, Bookmark, Play, ChevronRight, ChevronDown,
+  Ambulance, MoreVertical, Users, HeartPulse, Bell, Shield, Briefcase
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { useTheme } from '@/contexts/ThemeContext';
+import { NotificationsDrawer } from '@/components/NotificationsDrawer';
+import { ReviewDialog } from '@/components/ReviewDialog';
 
 interface Message {
   id: string;
@@ -87,6 +91,22 @@ export function UnifiedChatbot() {
   const [hospitalServices, setHospitalServices] = useState<any[]>([]);
   const [pharmacyMedicines, setPharmacyMedicines] = useState<any[]>([]);
   const [labServices, setLabServices] = useState<any[]>([]);
+  
+  // Notifications & Reviews
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [showReview, setShowReview] = useState(false);
+  const [reviewAppointment, setReviewAppointment] = useState<any>(null);
+  
+  // Insurance
+  const [insuranceProviders, setInsuranceProviders] = useState<any[]>([]);
+  const [selectedInsurance, setSelectedInsurance] = useState<string>('');
+  const [hospitalInsurance, setHospitalInsurance] = useState<any[]>([]);
+  const [pharmacyInsurance, setPharmacyInsurance] = useState<any[]>([]);
+  const [labInsurance, setLabInsurance] = useState<any[]>([]);
+  
+  // Timetable dropdown
+  const [timetableOpen, setTimetableOpen] = useState(false);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -101,6 +121,44 @@ export function UnifiedChatbot() {
     }
     fetchRole();
   }, [user]);
+
+  // Fetch unread notifications count
+  useEffect(() => {
+    async function fetchUnread() {
+      if (!user) return;
+      const { count } = await supabase
+        .from('notifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('is_read', false);
+      setUnreadNotifications(count || 0);
+    }
+    fetchUnread();
+    
+    // Subscribe to new notifications
+    const channel = supabase
+      .channel('notifications-count')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'notifications',
+        filter: `user_id=eq.${user?.id}`
+      }, () => {
+        setUnreadNotifications(prev => prev + 1);
+      })
+      .subscribe();
+    
+    return () => { supabase.removeChannel(channel); };
+  }, [user]);
+
+  // Fetch insurance providers
+  useEffect(() => {
+    async function fetchInsurance() {
+      const { data } = await supabase.from('insurance_providers').select('*').eq('is_active', true);
+      setInsuranceProviders(data || []);
+    }
+    fetchInsurance();
+  }, []);
 
   useEffect(() => {
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
@@ -1008,18 +1066,28 @@ export function UnifiedChatbot() {
   // Main chatbot UI
   return (
     <div className="h-screen flex flex-col bg-background">
-      {/* Header - Logo centered, Settings on right */}
+      {/* Header - Logo centered, Notifications and Settings on right */}
       <div className="flex items-center justify-between p-4 border-b bg-card/50">
-        <div className="w-10" />
+        <div className="w-20" />
         <div className="flex items-center gap-2">
           <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center">
             <HeartPulse className="h-5 w-5 text-primary-foreground" />
           </div>
           <span className="font-bold text-lg">TeleMed</span>
         </div>
-        <Button variant="ghost" size="icon" onClick={() => setShowProfile(true)}>
-          <Settings className="h-5 w-5" />
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="icon" className="relative" onClick={() => setShowNotifications(true)}>
+            <Bell className="h-5 w-5" />
+            {unreadNotifications > 0 && (
+              <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-destructive text-[10px] flex items-center justify-center text-white font-medium">
+                {unreadNotifications > 9 ? '9+' : unreadNotifications}
+              </span>
+            )}
+          </Button>
+          <Button variant="ghost" size="icon" onClick={() => setShowProfile(true)}>
+            <Settings className="h-5 w-5" />
+          </Button>
+        </div>
       </div>
 
       {/* Messages Area or Welcome Screen */}
@@ -1910,6 +1978,20 @@ export function UnifiedChatbot() {
           </ScrollArea>
         </DrawerContent>
       </Drawer>
+
+      {/* Notifications Drawer */}
+      <NotificationsDrawer open={showNotifications} onOpenChange={setShowNotifications} />
+
+      {/* Review Dialog */}
+      {reviewAppointment && (
+        <ReviewDialog 
+          open={showReview} 
+          onOpenChange={setShowReview}
+          appointmentId={reviewAppointment.id}
+          doctorId={reviewAppointment.doctor_id}
+          doctorName={reviewAppointment.doctorName || ''}
+        />
+      )}
     </div>
   );
 }

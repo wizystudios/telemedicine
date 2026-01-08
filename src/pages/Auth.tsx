@@ -21,7 +21,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 
 type Role = 'patient' | 'doctor' | 'hospital_owner' | 'pharmacy_owner' | 'lab_owner';
-type LoginMethod = 'email' | 'phone';
+type AuthMethod = 'email' | 'phone';
 
 const roles = [
   { id: 'patient', label: 'Mgonjwa', icon: User, color: 'bg-blue-500' },
@@ -33,10 +33,10 @@ const roles = [
 
 export default function Auth() {
   const [mode, setMode] = useState<'login' | 'register'>('login');
+  const [authMethod, setAuthMethod] = useState<AuthMethod>('email');
   const [step, setStep] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [loginMethod, setLoginMethod] = useState<LoginMethod>('email');
   
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -55,7 +55,7 @@ export default function Auth() {
 
     try {
       if (mode === 'login') {
-        const loginIdentifier = loginMethod === 'email' ? email : phone;
+        const loginIdentifier = authMethod === 'email' ? email : phone;
         const { error } = await signIn(loginIdentifier, password);
         if (error) throw error;
         navigate('/dashboard');
@@ -92,7 +92,7 @@ export default function Auth() {
 
   const canProceed = () => {
     if (mode === 'login') {
-      if (loginMethod === 'email') return email && password.length >= 6;
+      if (authMethod === 'email') return email && password.length >= 6;
       return phone && password.length >= 6;
     }
     if (step === 1) return email;
@@ -109,139 +109,153 @@ export default function Auth() {
     }
   };
 
-  const totalSteps = mode === 'register' ? 6 : 1;
+  const goBack = () => {
+    if (step > 1) {
+      setStep(step - 1);
+    } else {
+      navigate('/');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header with back button */}
-      <header className="flex items-center p-4 safe-area-top">
-        {step > 1 || mode === 'login' ? (
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => {
-              if (step > 1) setStep(step - 1);
-              else navigate('/');
-            }}
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </Button>
-        ) : (
-          <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
-            <ChevronLeft className="h-5 w-5" />
-          </Button>
-        )}
+      {/* Back button */}
+      <header className="p-4 safe-area-top">
+        <Button variant="ghost" size="icon" onClick={goBack}>
+          <ChevronLeft className="h-5 w-5" />
+        </Button>
       </header>
 
-      {/* Content - Centered */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 pb-8">
-        {/* Logo - Centered */}
-        <div className="flex items-center gap-2 mb-8">
-          <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center">
-            <HeartPulse className="h-5 w-5 text-primary-foreground" />
+      {/* Content */}
+      <div className="flex-1 flex flex-col items-center justify-center px-8 pb-12">
+        {/* Logo - centered */}
+        <div className="flex items-center gap-2 mb-12">
+          <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center">
+            <HeartPulse className="h-6 w-6 text-primary-foreground" />
           </div>
-          <span className="font-bold text-xl">TeleMed</span>
+          <span className="font-bold text-2xl">TeleMed</span>
         </div>
 
-        {/* Mode Tabs - Only show on first step of login or register */}
+        {/* Mode Tabs - clean underline style matching screenshot */}
         {((mode === 'login' && step === 1) || (mode === 'register' && step === 1)) && (
-          <div className="flex gap-4 mb-8">
+          <div className="flex gap-8 mb-6">
             <button
               onClick={() => { setMode('login'); setStep(1); }}
-              className={`text-sm font-medium pb-1 transition-all ${
-                mode === 'login' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground'
+              className={`text-base font-medium pb-2 transition-all ${
+                mode === 'login' 
+                  ? 'text-primary border-b-2 border-primary' 
+                  : 'text-muted-foreground'
               }`}
             >
-              Ingia
+              Sign In
             </button>
             <button
               onClick={() => { setMode('register'); setStep(1); }}
-              className={`text-sm font-medium pb-1 transition-all ${
-                mode === 'register' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground'
+              className={`text-base font-medium pb-2 transition-all ${
+                mode === 'register' 
+                  ? 'text-primary border-b-2 border-primary' 
+                  : 'text-muted-foreground'
               }`}
             >
-              Jisajili
+              Sign Up
             </button>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="w-full max-w-xs space-y-6">
+        <form onSubmit={handleSubmit} className="w-full max-w-sm">
           {/* LOGIN MODE */}
           {mode === 'login' && step === 1 && (
-            <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4">
-              {/* Login method selector */}
-              <div className="flex gap-3 justify-center">
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
+              {/* Auth method selector - matching screenshot */}
+              <div className="flex gap-4 justify-center mb-4">
                 <button
                   type="button"
-                  onClick={() => setLoginMethod('email')}
-                  className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full transition-all ${
-                    loginMethod === 'email' 
-                      ? 'bg-primary text-primary-foreground' 
+                  onClick={() => setAuthMethod('email')}
+                  className={`flex items-center gap-2 text-sm transition-all ${
+                    authMethod === 'email' 
+                      ? 'text-foreground font-medium' 
                       : 'text-muted-foreground'
                   }`}
                 >
-                  <Mail className="h-3.5 w-3.5" />
+                  <Mail className="h-4 w-4" />
                   Email
                 </button>
                 <button
                   type="button"
-                  onClick={() => setLoginMethod('phone')}
-                  className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full transition-all ${
-                    loginMethod === 'phone' 
-                      ? 'bg-primary text-primary-foreground' 
+                  onClick={() => setAuthMethod('phone')}
+                  className={`flex items-center gap-2 text-sm transition-all ${
+                    authMethod === 'phone' 
+                      ? 'text-foreground font-medium' 
                       : 'text-muted-foreground'
                   }`}
                 >
-                  <Phone className="h-3.5 w-3.5" />
-                  Simu
+                  <Phone className="h-4 w-4" />
+                  Phone
                 </button>
               </div>
               
-              {loginMethod === 'email' ? (
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="h-12 rounded-xl text-sm"
-                  placeholder="Email yako"
-                  required
-                />
+              {/* Input - clean underline style */}
+              {authMethod === 'email' ? (
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Mail className="h-4 w-4" />
+                    <span className="text-sm">Email</span>
+                  </div>
+                  <Input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="border-0 border-b border-border rounded-none px-0 focus-visible:ring-0 focus-visible:border-primary"
+                    placeholder=""
+                    required
+                  />
+                </div>
               ) : (
-                <Input
-                  id="phone"
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="h-12 rounded-xl text-sm"
-                  placeholder="+255 7XX XXX XXX"
-                  required
-                />
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Phone className="h-4 w-4" />
+                    <span className="text-sm">Phone</span>
+                  </div>
+                  <Input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="border-0 border-b border-border rounded-none px-0 focus-visible:ring-0 focus-visible:border-primary"
+                    placeholder="+255 7XX XXX XXX"
+                    required
+                  />
+                </div>
               )}
               
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="h-12 rounded-xl text-sm pr-10"
-                  placeholder="Password"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
+              <div className="space-y-1">
+                <span className="text-sm text-muted-foreground">Password</span>
+                <div className="relative">
+                  <Input
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="border-0 border-b border-border rounded-none px-0 pr-8 focus-visible:ring-0 focus-visible:border-primary"
+                    placeholder=""
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-0 top-1/2 -translate-y-1/2 text-muted-foreground"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
+
+              <p className="text-xs text-muted-foreground text-center pt-4">
+                By continuing, you agree to our Terms and Privacy Policy
+              </p>
 
               <Button
                 type="submit"
                 disabled={isLoading || !canProceed()}
-                className="w-full h-12 rounded-xl text-sm font-medium"
+                className="w-full h-11 rounded-xl text-sm font-medium mt-6"
               >
                 {isLoading ? 'Subiri...' : 'Ingia'}
                 <ArrowRight className="h-4 w-4 ml-2" />
@@ -251,24 +265,28 @@ export default function Auth() {
 
           {/* REGISTER MODE - Step 1: Email */}
           {mode === 'register' && step === 1 && (
-            <div className="space-y-5 animate-in fade-in slide-in-from-right-4">
-              <p className="text-center text-sm text-muted-foreground">Email yako</p>
-              
-              <Input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="h-12 rounded-xl text-sm"
-                placeholder="mfano@email.com"
-                required
-                autoFocus
-              />
+            <div className="space-y-6 animate-in fade-in slide-in-from-right-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Mail className="h-4 w-4" />
+                  <span className="text-sm">Email yako</span>
+                </div>
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="border-0 border-b border-border rounded-none px-0 focus-visible:ring-0 focus-visible:border-primary"
+                  placeholder="mfano@email.com"
+                  required
+                  autoFocus
+                />
+              </div>
 
               <Button
                 type="button"
                 onClick={nextStep}
                 disabled={!canProceed()}
-                className="w-full h-12 rounded-xl text-sm font-medium"
+                className="w-full h-11 rounded-xl text-sm font-medium"
               >
                 Endelea
                 <ArrowRight className="h-4 w-4 ml-2" />
@@ -278,33 +296,34 @@ export default function Auth() {
 
           {/* REGISTER MODE - Step 2: Password */}
           {mode === 'register' && step === 2 && (
-            <div className="space-y-5 animate-in fade-in slide-in-from-right-4">
-              <p className="text-center text-sm text-muted-foreground">Password yako</p>
-              
-              <div className="relative">
-                <Input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="h-12 rounded-xl text-sm pr-10"
-                  placeholder="Angalau herufi 6"
-                  required
-                  autoFocus
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
+            <div className="space-y-6 animate-in fade-in slide-in-from-right-4">
+              <div className="space-y-1">
+                <span className="text-sm text-muted-foreground">Password yako</span>
+                <div className="relative">
+                  <Input
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="border-0 border-b border-border rounded-none px-0 pr-8 focus-visible:ring-0 focus-visible:border-primary"
+                    placeholder="Angalau herufi 6"
+                    required
+                    autoFocus
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-0 top-1/2 -translate-y-1/2 text-muted-foreground"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
 
               <Button
                 type="button"
                 onClick={nextStep}
                 disabled={!canProceed()}
-                className="w-full h-12 rounded-xl text-sm font-medium"
+                className="w-full h-11 rounded-xl text-sm font-medium"
               >
                 Endelea
                 <ArrowRight className="h-4 w-4 ml-2" />
@@ -314,23 +333,24 @@ export default function Auth() {
 
           {/* REGISTER MODE - Step 3: First Name */}
           {mode === 'register' && step === 3 && (
-            <div className="space-y-5 animate-in fade-in slide-in-from-right-4">
-              <p className="text-center text-sm text-muted-foreground">Jina la kwanza</p>
-              
-              <Input
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                className="h-12 rounded-xl text-sm"
-                placeholder="Jina lako"
-                required
-                autoFocus
-              />
+            <div className="space-y-6 animate-in fade-in slide-in-from-right-4">
+              <div className="space-y-1">
+                <span className="text-sm text-muted-foreground">Jina la kwanza</span>
+                <Input
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  className="border-0 border-b border-border rounded-none px-0 focus-visible:ring-0 focus-visible:border-primary"
+                  placeholder="Jina lako"
+                  required
+                  autoFocus
+                />
+              </div>
 
               <Button
                 type="button"
                 onClick={nextStep}
                 disabled={!canProceed()}
-                className="w-full h-12 rounded-xl text-sm font-medium"
+                className="w-full h-11 rounded-xl text-sm font-medium"
               >
                 Endelea
                 <ArrowRight className="h-4 w-4 ml-2" />
@@ -340,23 +360,24 @@ export default function Auth() {
 
           {/* REGISTER MODE - Step 4: Last Name */}
           {mode === 'register' && step === 4 && (
-            <div className="space-y-5 animate-in fade-in slide-in-from-right-4">
-              <p className="text-center text-sm text-muted-foreground">Jina la familia</p>
-              
-              <Input
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                className="h-12 rounded-xl text-sm"
-                placeholder="Jina la ukoo"
-                required
-                autoFocus
-              />
+            <div className="space-y-6 animate-in fade-in slide-in-from-right-4">
+              <div className="space-y-1">
+                <span className="text-sm text-muted-foreground">Jina la familia</span>
+                <Input
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  className="border-0 border-b border-border rounded-none px-0 focus-visible:ring-0 focus-visible:border-primary"
+                  placeholder="Jina la ukoo"
+                  required
+                  autoFocus
+                />
+              </div>
 
               <Button
                 type="button"
                 onClick={nextStep}
                 disabled={!canProceed()}
-                className="w-full h-12 rounded-xl text-sm font-medium"
+                className="w-full h-11 rounded-xl text-sm font-medium"
               >
                 Endelea
                 <ArrowRight className="h-4 w-4 ml-2" />
@@ -366,22 +387,26 @@ export default function Auth() {
 
           {/* REGISTER MODE - Step 5: Phone (Optional) */}
           {mode === 'register' && step === 5 && (
-            <div className="space-y-5 animate-in fade-in slide-in-from-right-4">
-              <p className="text-center text-sm text-muted-foreground">Nambari ya simu (hiari)</p>
-              
-              <Input
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className="h-12 rounded-xl text-sm"
-                placeholder="+255 7XX XXX XXX"
-                autoFocus
-              />
+            <div className="space-y-6 animate-in fade-in slide-in-from-right-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Phone className="h-4 w-4" />
+                  <span className="text-sm">Nambari ya simu (hiari)</span>
+                </div>
+                <Input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="border-0 border-b border-border rounded-none px-0 focus-visible:ring-0 focus-visible:border-primary"
+                  placeholder="+255 7XX XXX XXX"
+                  autoFocus
+                />
+              </div>
 
               <Button
                 type="button"
                 onClick={nextStep}
-                className="w-full h-12 rounded-xl text-sm font-medium"
+                className="w-full h-11 rounded-xl text-sm font-medium"
               >
                 Endelea
                 <ArrowRight className="h-4 w-4 ml-2" />
@@ -391,10 +416,10 @@ export default function Auth() {
 
           {/* REGISTER MODE - Step 6: Role Selection */}
           {mode === 'register' && step === 6 && (
-            <div className="space-y-5 animate-in fade-in slide-in-from-right-4">
-              <p className="text-center text-sm text-muted-foreground">Unatumia kama nani?</p>
+            <div className="space-y-6 animate-in fade-in slide-in-from-right-4">
+              <p className="text-sm text-muted-foreground text-center">Unatumia kama nani?</p>
               
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-3">
                 {roles.map((r) => {
                   const Icon = r.icon;
                   const isSelected = role === r.id;
@@ -403,13 +428,13 @@ export default function Auth() {
                       key={r.id}
                       type="button"
                       onClick={() => setRole(r.id as Role)}
-                      className={`p-3 rounded-xl transition-all text-center ${
+                      className={`p-4 rounded-xl transition-all text-center ${
                         isSelected 
                           ? 'bg-primary/10 ring-2 ring-primary' 
                           : 'bg-muted/30 hover:bg-muted/50'
                       }`}
                     >
-                      <div className={`h-10 w-10 rounded-full ${r.color} mx-auto mb-1.5 flex items-center justify-center`}>
+                      <div className={`h-10 w-10 rounded-full ${r.color} mx-auto mb-2 flex items-center justify-center`}>
                         <Icon className="h-5 w-5 text-white" />
                       </div>
                       <p className="text-xs font-medium">{r.label}</p>
@@ -421,7 +446,7 @@ export default function Auth() {
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-12 rounded-xl text-sm font-medium"
+                className="w-full h-11 rounded-xl text-sm font-medium"
               >
                 {isLoading ? 'Subiri...' : 'Maliza'}
                 <ArrowRight className="h-4 w-4 ml-2" />
@@ -432,12 +457,12 @@ export default function Auth() {
 
         {/* Progress Dots */}
         {mode === 'register' && (
-          <div className="flex justify-center gap-1.5 mt-8">
+          <div className="flex justify-center gap-2 mt-10">
             {[1, 2, 3, 4, 5, 6].map((s) => (
               <div
                 key={s}
-                className={`h-1.5 rounded-full transition-all ${
-                  s === step ? 'w-4 bg-primary' : s < step ? 'w-1.5 bg-primary/50' : 'w-1.5 bg-muted'
+                className={`h-2 rounded-full transition-all ${
+                  s === step ? 'w-6 bg-primary' : s < step ? 'w-2 bg-primary/50' : 'w-2 bg-muted'
                 }`}
               />
             ))}
