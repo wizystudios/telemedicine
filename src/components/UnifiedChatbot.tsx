@@ -1100,13 +1100,14 @@ export function UnifiedChatbot() {
                       </Avatar>
                     )}
                     <div>
-                      <div className={`rounded-2xl px-4 py-2.5 ${
-                        msg.type === 'user' 
-                          ? 'bg-primary text-primary-foreground' 
-                          : 'bg-muted'
-                      }`}>
-                        <p className="text-sm whitespace-pre-line">{msg.content}</p>
-                      </div>
+                      {/* Bot text - plain without box, User text - with bubble */}
+                      {msg.type === 'user' ? (
+                        <div className="rounded-2xl px-4 py-2.5 bg-primary text-primary-foreground">
+                          <p className="text-sm whitespace-pre-line">{msg.content}</p>
+                        </div>
+                      ) : (
+                        <p className="text-sm whitespace-pre-line py-1">{msg.content}</p>
+                      )}
                       
                       {renderData(msg.data)}
                       
