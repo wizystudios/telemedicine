@@ -8,7 +8,7 @@ import { toast } from '@/hooks/use-toast';
 interface LogoUploadProps {
   currentLogoUrl?: string | null;
   entityId: string;
-  entityType: 'hospital' | 'pharmacy' | 'laboratory';
+  entityType: 'hospital' | 'pharmacy' | 'laboratory' | 'polyclinic';
   onLogoUpdated: (url: string) => void;
 }
 
@@ -21,14 +21,16 @@ export function LogoUpload({ currentLogoUrl, entityId, entityType, onLogoUpdated
       case 'hospital': return <Building className="h-8 w-8" />;
       case 'pharmacy': return <Pill className="h-8 w-8" />;
       case 'laboratory': return <TestTube className="h-8 w-8" />;
+      case 'polyclinic': return <Building className="h-8 w-8" />;
     }
   };
 
-  const getTableName = () => {
+  const getTableName = (): 'hospitals' | 'pharmacies' | 'laboratories' | 'polyclinics' => {
     switch (entityType) {
       case 'hospital': return 'hospitals';
       case 'pharmacy': return 'pharmacies';
       case 'laboratory': return 'laboratories';
+      case 'polyclinic': return 'polyclinics';
     }
   };
 
