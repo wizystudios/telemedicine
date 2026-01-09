@@ -8,6 +8,7 @@ import HospitalOwnerDashboard from '@/components/HospitalOwnerDashboard';
 import SuperAdminDashboard from '@/components/SuperAdminDashboard';
 import PharmacyOwnerDashboard from '@/components/PharmacyOwnerDashboard';
 import LabOwnerDashboard from '@/components/LabOwnerDashboard';
+import PolyclinicOwnerDashboard from '@/components/PolyclinicOwnerDashboard';
 import { Loader2 } from 'lucide-react';
 
 export default function RoleBasedDashboard() {
@@ -53,7 +54,7 @@ export default function RoleBasedDashboard() {
     case 'lab_owner':
       return <LabOwnerDashboard />;
     case 'polyclinic_owner':
-      return <HospitalOwnerDashboard />;
+      return <PolyclinicOwnerDashboard />;
     default:
       // Patients see the unified chatbot as their main interface - NO navigation pages
       return <UnifiedChatbot />;

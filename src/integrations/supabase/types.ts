@@ -474,6 +474,8 @@ export type Database = {
           is_verified: boolean | null
           languages: string[] | null
           license_number: string
+          polyclinic_id: string | null
+          polyclinic_name: string | null
           rating: number | null
           specialty_id: string | null
           total_reviews: number | null
@@ -495,6 +497,8 @@ export type Database = {
           is_verified?: boolean | null
           languages?: string[] | null
           license_number: string
+          polyclinic_id?: string | null
+          polyclinic_name?: string | null
           rating?: number | null
           specialty_id?: string | null
           total_reviews?: number | null
@@ -516,6 +520,8 @@ export type Database = {
           is_verified?: boolean | null
           languages?: string[] | null
           license_number?: string
+          polyclinic_id?: string | null
+          polyclinic_name?: string | null
           rating?: number | null
           specialty_id?: string | null
           total_reviews?: number | null
@@ -528,6 +534,13 @@ export type Database = {
             columns: ["hospital_id"]
             isOneToOne: false
             referencedRelation: "hospitals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "doctor_profiles_polyclinic_id_fkey"
+            columns: ["polyclinic_id"]
+            isOneToOne: false
+            referencedRelation: "polyclinics"
             referencedColumns: ["id"]
           },
           {
@@ -1515,6 +1528,151 @@ export type Database = {
           },
         ]
       }
+      polyclinic_insurance: {
+        Row: {
+          created_at: string | null
+          id: string
+          insurance_id: string | null
+          polyclinic_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          insurance_id?: string | null
+          polyclinic_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          insurance_id?: string | null
+          polyclinic_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "polyclinic_insurance_insurance_id_fkey"
+            columns: ["insurance_id"]
+            isOneToOne: false
+            referencedRelation: "insurance_providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "polyclinic_insurance_polyclinic_id_fkey"
+            columns: ["polyclinic_id"]
+            isOneToOne: false
+            referencedRelation: "polyclinics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      polyclinic_services: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_available: boolean | null
+          name: string
+          polyclinic_id: string
+          price: number | null
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_available?: boolean | null
+          name: string
+          polyclinic_id: string
+          price?: number | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_available?: boolean | null
+          name?: string
+          polyclinic_id?: string
+          price?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "polyclinic_services_polyclinic_id_fkey"
+            columns: ["polyclinic_id"]
+            isOneToOne: false
+            referencedRelation: "polyclinics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      polyclinics: {
+        Row: {
+          address: string
+          created_at: string
+          description: string | null
+          email: string | null
+          id: string
+          is_promoted: boolean | null
+          is_verified: boolean | null
+          logo_url: string | null
+          name: string
+          owner_id: string
+          phone: string | null
+          promotion_expires_at: string | null
+          rating: number | null
+          services: string[] | null
+          total_reviews: number | null
+          updated_at: string
+        }
+        Insert: {
+          address: string
+          created_at?: string
+          description?: string | null
+          email?: string | null
+          id?: string
+          is_promoted?: boolean | null
+          is_verified?: boolean | null
+          logo_url?: string | null
+          name: string
+          owner_id: string
+          phone?: string | null
+          promotion_expires_at?: string | null
+          rating?: number | null
+          services?: string[] | null
+          total_reviews?: number | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          created_at?: string
+          description?: string | null
+          email?: string | null
+          id?: string
+          is_promoted?: boolean | null
+          is_verified?: boolean | null
+          logo_url?: string | null
+          name?: string
+          owner_id?: string
+          phone?: string | null
+          promotion_expires_at?: string | null
+          rating?: number | null
+          services?: string[] | null
+          total_reviews?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "polyclinics_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       post_likes: {
         Row: {
           created_at: string
@@ -1851,6 +2009,10 @@ export type Database = {
         Returns: undefined
       }
       is_hospital_owner_of_doctor: {
+        Args: { _doctor_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_polyclinic_owner_of_doctor: {
         Args: { _doctor_id: string; _user_id: string }
         Returns: boolean
       }

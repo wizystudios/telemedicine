@@ -12,17 +12,17 @@ import { Video, FileText, Plus, Trash2, Eye, Heart } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface ContentUploadSectionProps {
-  institutionType: 'hospital' | 'pharmacy' | 'laboratory' | 'doctor';
+  institutionType: 'hospital' | 'pharmacy' | 'laboratory' | 'doctor' | 'polyclinic';
   institutionId?: string;
-  contents: any[];
-  onRefresh: () => void;
+  contents?: any[];
+  onRefresh?: () => void;
 }
 
 export function ContentUploadSection({ 
   institutionType, 
   institutionId, 
-  contents, 
-  onRefresh 
+  contents = [], 
+  onRefresh = () => {} 
 }: ContentUploadSectionProps) {
   const { user } = useAuth();
   const [isAddingContent, setIsAddingContent] = useState(false);
