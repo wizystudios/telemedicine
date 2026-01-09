@@ -8,9 +8,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, Calendar, Clock, User } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, User, Stethoscope } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { InsuranceSelector } from '@/components/InsuranceSelector';
 
 export default function BookAppointment() {
   const navigate = useNavigate();
@@ -24,12 +25,13 @@ export default function BookAppointment() {
     time: '',
     symptoms: '',
     consultation_type: 'video',
-    notes: ''
+    notes: '',
+    insurance_id: ''
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Fetch doctor info
+  // Fetch doctor info with specialization
   const { data: doctor } = useQuery({
     queryKey: ['doctor', doctorId],
     queryFn: async () => {
@@ -38,7 +40,13 @@ export default function BookAppointment() {
         .from('profiles')
         .select(`
           *,
-          doctor_profiles (consultation_fee)
+          doctor_profiles (
+            consultation_fee,
+            doctor_type,
+            bio,
+            specialty_id,
+            specialties (name)
+          )
         `)
         .eq('id', doctorId)
         .single();
@@ -95,7 +103,8 @@ export default function BookAppointment() {
           symptoms: appointmentData.symptoms || 'General consultation',
           notes: appointmentData.notes,
           status: 'scheduled',
-          fee: doctor?.doctor_profiles?.[0]?.consultation_fee || 0
+          fee: doctor?.doctor_profiles?.[0]?.consultation_fee || 0,
+          insurance_id: appointmentData.insurance_id && appointmentData.insurance_id !== 'none' ? appointmentData.insurance_id : null
         });
 
       if (error) {
@@ -158,19 +167,28 @@ export default function BookAppointment() {
       <div className="max-w-2xl mx-auto p-4 space-y-6">
         {/* Doctor Info */}
         {doctor && (
-          <Card>
+          <Card className="border-primary/20 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30">
             <CardContent className="p-4">
               <div className="flex items-center space-x-4">
-                <User className="w-12 h-12 text-emerald-600" />
-                <div>
-                  <h3 className="font-semibold text-gray-900 dark:text-white">
+                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white">
+                  <Stethoscope className="w-7 h-7" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-foreground">
                     {displayName}
                   </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">
-                    {doctor.email}
+                  <p className="text-sm text-primary font-medium">
+                    {doctor.doctor_profiles?.[0]?.doctor_type || 
+                     doctor.doctor_profiles?.[0]?.specialties?.name || 
+                     'Daktari wa Jumla'}
                   </p>
+                  {doctor.doctor_profiles?.[0]?.bio && (
+                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                      {doctor.doctor_profiles[0].bio}
+                    </p>
+                  )}
                   {doctor.doctor_profiles?.[0]?.consultation_fee && (
-                    <p className="text-sm text-emerald-600">
+                    <p className="text-sm font-semibold text-emerald-600 mt-1">
                       Ada: TSh {doctor.doctor_profiles[0].consultation_fee.toLocaleString()}
                     </p>
                   )}
@@ -251,7 +269,13 @@ export default function BookAppointment() {
                 />
               </div>
 
-              <Button 
+              {/* Insurance Selection */}
+              <InsuranceSelector
+                value={appointmentData.insurance_id}
+                onChange={(value) => setAppointmentData({...appointmentData, insurance_id: value})}
+              />
+
+              <Button
                 type="submit" 
                 className="w-full h-12"
                 disabled={isSubmitting}

@@ -12,6 +12,7 @@ import { usePushNotifications } from "@/hooks/usePushNotifications";
 import Auth from "./pages/Auth";
 import RoleBasedDashboard from "./components/RoleBasedDashboard";
 import NotFound from "./pages/NotFound";
+import LaboratoryProfile from "./pages/LaboratoryProfile";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +42,9 @@ function AppContent() {
         
         {/* Main dashboard - chatbot is the home for patients, role-based for others */}
         <Route path="/dashboard" element={<ProtectedRoute><RoleBasedDashboard /></ProtectedRoute>} />
+        
+        {/* Laboratory Profile */}
+        <Route path="/laboratory-profile/:labId" element={<ProtectedRoute><LaboratoryProfile /></ProtectedRoute>} />
         
         <Route path="*" element={<NotFound />} />
       </Routes>
