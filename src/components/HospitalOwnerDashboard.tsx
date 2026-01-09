@@ -22,6 +22,8 @@ import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recha
 import { LogoUpload } from '@/components/LogoUpload';
 import { SettingsDrawer } from '@/components/SettingsDrawer';
 import { ContentUploadSection } from '@/components/ContentUploadSection';
+import { DoctorImageUpload } from '@/components/DoctorImageUpload';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const DAYS = ['Jumapili', 'Jumatatu', 'Jumanne', 'Jumatano', 'Alhamisi', 'Ijumaa', 'Jumamosi'];
 
@@ -516,41 +518,51 @@ export default function HospitalOwnerDashboard() {
             </CardHeader>
             <CardContent>
               {doctors.length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="text-xs">Jina</TableHead>
-                      <TableHead className="text-xs">Email</TableHead>
-                      <TableHead className="text-xs">Hali</TableHead>
-                      <TableHead className="text-xs">Vitendo</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {doctors.map((doc) => (
-                      <TableRow key={doc.id}>
-                        <TableCell className="text-xs font-medium">
+                <div className="space-y-3">
+                  {doctors.map((doc) => (
+                    <div key={doc.id} className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg border border-border/50">
+                      <DoctorImageUpload
+                        currentImageUrl={doc.profiles?.avatar_url}
+                        doctorId={doc.user_id}
+                        doctorName={`${doc.profiles?.first_name || ''} ${doc.profiles?.last_name || ''}`}
+                        onImageUpdate={(url) => {
+                          setDoctors(prev => prev.map(d => 
+                            d.id === doc.id 
+                              ? { ...d, profiles: { ...d.profiles, avatar_url: url } }
+                              : d
+                          ));
+                        }}
+                        size="md"
+                      />
+                      
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">
                           Dr. {doc.profiles?.first_name} {doc.profiles?.last_name}
-                        </TableCell>
-                        <TableCell className="text-xs text-muted-foreground">{doc.profiles?.email}</TableCell>
-                        <TableCell>
+                        </p>
+                        <p className="text-xs text-muted-foreground truncate">{doc.profiles?.email}</p>
+                        <div className="flex items-center gap-2 mt-1">
                           <Badge variant={doc.is_available ? 'default' : 'secondary'} className="text-[10px]">
                             {doc.is_available ? 'Anapatikana' : 'Hapatikani'}
                           </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-1">
-                            <Button size="sm" variant="outline" className="h-6 text-[10px] px-2" onClick={() => openTimetable(doc)}>
-                              <Clock className="h-3 w-3 mr-1" /> Ratiba
-                            </Button>
-                            <Button size="sm" variant="ghost" className="h-6 text-[10px] px-2 text-destructive" onClick={() => removeDoctor(doc.id)}>
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                          {doc.consultation_fee && (
+                            <span className="text-[10px] text-primary font-medium">
+                              TSh {doc.consultation_fee.toLocaleString()}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="flex flex-col gap-1">
+                        <Button size="sm" variant="outline" className="h-7 text-[10px] px-2" onClick={() => openTimetable(doc)}>
+                          <Clock className="h-3 w-3 mr-1" /> Ratiba
+                        </Button>
+                        <Button size="sm" variant="ghost" className="h-7 text-[10px] px-2 text-destructive" onClick={() => removeDoctor(doc.id)}>
+                          <Trash2 className="h-3 w-3 mr-1" /> Ondoa
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               ) : (
                 <p className="text-xs text-center text-muted-foreground py-4">Hakuna madaktari - bofya "Ongeza Daktari" kuongeza</p>
               )}
