@@ -50,6 +50,7 @@ export function SmartChatbot({ onBookAppointment, onViewHospital, onViewPharmacy
         type: 'quick-replies',
         items: [
           { id: 'find-doctor', label: 'Tafuta Daktari', icon: 'stethoscope' },
+          { id: 'find-specialty', label: 'Tafuta kwa Utaalamu', icon: 'star' },
           { id: 'book-appointment', label: 'Weka Miadi', icon: 'calendar' },
           { id: 'find-pharmacy', label: 'Maduka ya Dawa', icon: 'pill' },
           { id: 'emergency', label: 'Dharura', icon: 'alert' }
@@ -108,6 +109,7 @@ export function SmartChatbot({ onBookAppointment, onViewHospital, onViewPharmacy
   const handleQuickReply = async (action: string) => {
     const actionMessages: Record<string, string> = {
       'find-doctor': 'Nataka kutafuta daktari',
+      'find-specialty': 'Nionyeshe utaalamu wa madaktari',
       'book-appointment': 'Nataka kuweka miadi',
       'find-pharmacy': 'Nionyeshe maduka ya dawa',
       'emergency': 'Nina dharura ya afya'
@@ -139,17 +141,54 @@ export function SmartChatbot({ onBookAppointment, onViewHospital, onViewPharmacy
     }
   };
 
-  const searchDoctors = async (query: string) => {
-    const { data } = await supabase
+  const searchDoctors = async (query: string, specialtyId?: string) => {
+    let queryBuilder = supabase
       .from('doctor_profiles')
       .select(`
         *,
         profiles!doctor_profiles_user_id_fkey(id, first_name, last_name, avatar_url, phone, email),
-        specialties(name)
+        specialties(id, name)
       `)
-      .eq('is_available', true)
-      .limit(5);
+      .eq('is_available', true);
+    
+    if (specialtyId) {
+      queryBuilder = queryBuilder.eq('specialty_id', specialtyId);
+    }
+    
+    const { data } = await queryBuilder.limit(10);
     return data || [];
+  };
+
+  const searchSpecialties = async () => {
+    const { data } = await supabase
+      .from('specialties')
+      .select('*')
+      .order('name');
+    return data || [];
+  };
+
+  const searchDoctorsBySpecialtyName = async (specialtyName: string) => {
+    // First find matching specialties
+    const { data: specialties } = await supabase
+      .from('specialties')
+      .select('id, name')
+      .ilike('name', `%${specialtyName}%`);
+    
+    if (specialties && specialties.length > 0) {
+      const specialtyIds = specialties.map(s => s.id);
+      const { data } = await supabase
+        .from('doctor_profiles')
+        .select(`
+          *,
+          profiles!doctor_profiles_user_id_fkey(id, first_name, last_name, avatar_url, phone, email),
+          specialties(id, name)
+        `)
+        .in('specialty_id', specialtyIds)
+        .eq('is_available', true)
+        .limit(10);
+      return { doctors: data || [], specialtyName: specialties[0]?.name };
+    }
+    return { doctors: [], specialtyName: null };
   };
 
   const searchHospitals = async () => {
@@ -181,6 +220,79 @@ export function SmartChatbot({ onBookAppointment, onViewHospital, onViewPharmacy
 
   const processMessage = async (message: string): Promise<Message> => {
     const lower = message.toLowerCase();
+
+    // Specialty search - check for specialty keywords
+    const specialtyKeywords = [
+      'moyo', 'heart', 'cardio', // Cardiology
+      'watoto', 'mtoto', 'pediatric', 'child', // Pediatrics
+      'ngozi', 'skin', 'derma', // Dermatology
+      'mifupa', 'bone', 'ortho', // Orthopedics
+      'macho', 'eye', 'ophthal', // Ophthalmology
+      'masikio', 'ear', 'ent', // ENT
+      'akili', 'mental', 'psych', // Psychiatry
+      'ujauzito', 'mimba', 'gynec', 'obstet', // OB/GYN
+      'meno', 'teeth', 'dental', // Dentistry
+      'utaalamu', 'specialty', 'specializ' // General specialty query
+    ];
+    
+    const hasSpecialtyQuery = specialtyKeywords.some(kw => lower.includes(kw));
+    
+    // If user asks about specialties
+    if (lower.includes('utaalamu') || lower.includes('specialty') || lower.includes('nionyeshe utaalamu')) {
+      const specialties = await searchSpecialties();
+      if (specialties.length > 0) {
+        return {
+          id: Date.now().toString(),
+          content: `Tunawao madaktari wa utaalamu mbalimbali. Chagua utaalamu unaouhitaji:`,
+          type: 'bot',
+          timestamp: new Date(),
+          data: { 
+            type: 'quick-replies', 
+            items: specialties.slice(0, 8).map(s => ({
+              id: `specialty-${s.id}`,
+              label: s.name,
+              icon: 'stethoscope'
+            }))
+          }
+        };
+      }
+    }
+
+    // Check if user selected a specialty from quick replies
+    if (lower.startsWith('specialty-')) {
+      const specialtyId = lower.replace('specialty-', '');
+      const doctors = await searchDoctors('', specialtyId);
+      if (doctors.length > 0) {
+        const specialtyName = doctors[0]?.specialties?.name || 'Utaalamu';
+        return {
+          id: Date.now().toString(),
+          content: `Madaktari wa ${specialtyName} wanaopatikana (${doctors.length}):`,
+          type: 'bot',
+          timestamp: new Date(),
+          data: { type: 'doctors', items: doctors }
+        };
+      }
+      return { id: Date.now().toString(), content: 'Hakuna madaktari wa utaalamu huu wanaopatikana sasa.', type: 'bot', timestamp: new Date() };
+    }
+
+    // Search by specialty name in message
+    if (hasSpecialtyQuery && !lower.includes('daktari wa jumla')) {
+      // Try to find doctors by specialty keywords
+      for (const keyword of specialtyKeywords.slice(0, -3)) { // exclude generic keywords
+        if (lower.includes(keyword)) {
+          const result = await searchDoctorsBySpecialtyName(keyword);
+          if (result.doctors.length > 0) {
+            return {
+              id: Date.now().toString(),
+              content: `Madaktari wa ${result.specialtyName || 'utaalamu huu'} (${result.doctors.length}):`,
+              type: 'bot',
+              timestamp: new Date(),
+              data: { type: 'doctors', items: result.doctors }
+            };
+          }
+        }
+      }
+    }
 
     // Doctor search
     if (lower.includes('daktari') || lower.includes('doctor') || lower.includes('tafuta')) {
