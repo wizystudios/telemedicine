@@ -12,6 +12,7 @@ import {
 import { useCallSession } from '@/hooks/useCallSession';
 import { useToast } from '@/hooks/use-toast';
 import { CollapsibleSection } from '@/components/CollapsibleSection';
+import { ReviewsSection } from '@/components/ReviewsSection';
 
 export default function DoctorProfile() {
   const { doctorId } = useParams();
@@ -322,6 +323,13 @@ export default function DoctorProfile() {
             </p>
           </div>
         )}
+
+        {/* Reviews Section */}
+        <ReviewsSection 
+          entityType="doctor"
+          entityId={doctorId || ''}
+          entityName={displayName}
+        />
       </div>
     </div>
   );

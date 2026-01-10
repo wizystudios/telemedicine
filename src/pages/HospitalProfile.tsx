@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { CollapsibleSection } from '@/components/CollapsibleSection';
 import { InsuranceDisplay } from '@/components/InsuranceSelector';
+import { ReviewsSection } from '@/components/ReviewsSection';
 
 export default function HospitalProfile() {
   const { hospitalId } = useParams();
@@ -314,6 +315,14 @@ export default function HospitalProfile() {
             </div>
           </CollapsibleSection>
         )}
+
+        {/* Reviews Section */}
+        <ReviewsSection 
+          entityType="hospital"
+          entityId={hospitalId || ''}
+          entityName={hospital.name}
+          showForm={false}
+        />
       </div>
     </div>
   );

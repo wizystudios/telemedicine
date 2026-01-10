@@ -14,6 +14,7 @@ import RoleBasedDashboard from "./components/RoleBasedDashboard";
 import NotFound from "./pages/NotFound";
 import LaboratoryProfile from "./pages/LaboratoryProfile";
 import PolyclinicProfile from "./pages/PolyclinicProfile";
+import NearbyPlaces from "./pages/NearbyPlaces";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +50,9 @@ function AppContent() {
         
         {/* Polyclinic Profile */}
         <Route path="/polyclinic-profile/:polyclinicId" element={<ProtectedRoute><PolyclinicProfile /></ProtectedRoute>} />
+        
+        {/* Nearby Places Map */}
+        <Route path="/nearby" element={<ProtectedRoute><NearbyPlaces /></ProtectedRoute>} />
         
         <Route path="*" element={<NotFound />} />
       </Routes>
