@@ -21,6 +21,7 @@ const TABLES = [
   { name: 'profiles', label: 'Watumiaji', icon: Users },
   { name: 'doctor_profiles', label: 'Madaktari', icon: Activity },
   { name: 'hospitals', label: 'Hospitali', icon: Building },
+  { name: 'polyclinics', label: 'Polyclinic', icon: Building },
   { name: 'pharmacies', label: 'Famasi', icon: Pill },
   { name: 'laboratories', label: 'Maabara', icon: TestTube },
   { name: 'appointments', label: 'Miadi', icon: Activity },
@@ -30,7 +31,7 @@ const TABLES = [
 export default function SuperAdminDashboard() {
   const { toast } = useToast();
   const [stats, setStats] = useState({
-    totalUsers: 0, totalDoctors: 0, totalHospitals: 0,
+    totalUsers: 0, totalDoctors: 0, totalHospitals: 0, totalPolyclinics: 0,
     totalPharmacies: 0, totalLabs: 0, totalAppointments: 0,
   });
   const [loading, setLoading] = useState(true);
@@ -55,6 +56,7 @@ export default function SuperAdminDashboard() {
         { count: usersCount },
         { count: doctorsCount },
         { count: hospitalsCount },
+        { count: polyclinicsCount },
         { count: pharmaciesCount },
         { count: labsCount },
         { count: appointmentsCount },
@@ -62,6 +64,7 @@ export default function SuperAdminDashboard() {
         supabase.from('profiles').select('*', { count: 'exact', head: true }),
         supabase.from('doctor_profiles').select('*', { count: 'exact', head: true }),
         supabase.from('hospitals').select('*', { count: 'exact', head: true }),
+        supabase.from('polyclinics').select('*', { count: 'exact', head: true }),
         supabase.from('pharmacies').select('*', { count: 'exact', head: true }),
         supabase.from('laboratories').select('*', { count: 'exact', head: true }),
         supabase.from('appointments').select('*', { count: 'exact', head: true }),
@@ -71,6 +74,7 @@ export default function SuperAdminDashboard() {
         totalUsers: usersCount || 0,
         totalDoctors: doctorsCount || 0,
         totalHospitals: hospitalsCount || 0,
+        totalPolyclinics: polyclinicsCount || 0,
         totalPharmacies: pharmaciesCount || 0,
         totalLabs: labsCount || 0,
         totalAppointments: appointmentsCount || 0,
@@ -99,6 +103,10 @@ export default function SuperAdminDashboard() {
         case 'hospitals':
           const { data: hospitals } = await supabase.from('hospitals').select('*').order('created_at', { ascending: false }).limit(100);
           data = hospitals || [];
+          break;
+        case 'polyclinics':
+          const { data: polyclinics } = await supabase.from('polyclinics').select('*').order('created_at', { ascending: false }).limit(100);
+          data = polyclinics || [];
           break;
         case 'pharmacies':
           const { data: pharmacies } = await supabase.from('pharmacies').select('*').order('created_at', { ascending: false }).limit(100);
@@ -140,6 +148,9 @@ export default function SuperAdminDashboard() {
         case 'hospitals':
           ({ error } = await supabase.from('hospitals').delete().eq('id', id));
           break;
+        case 'polyclinics':
+          ({ error } = await supabase.from('polyclinics').delete().eq('id', id));
+          break;
         case 'pharmacies':
           ({ error } = await supabase.from('pharmacies').delete().eq('id', id));
           break;
@@ -164,6 +175,9 @@ export default function SuperAdminDashboard() {
       switch (tableName) {
         case 'hospitals':
           ({ error } = await supabase.from('hospitals').update({ is_verified: true }).eq('id', id));
+          break;
+        case 'polyclinics':
+          ({ error } = await supabase.from('polyclinics').update({ is_verified: true }).eq('id', id));
           break;
         case 'pharmacies':
           ({ error } = await supabase.from('pharmacies').update({ is_verified: true }).eq('id', id));
@@ -213,6 +227,7 @@ export default function SuperAdminDashboard() {
       profiles: ['first_name', 'last_name', 'email', 'phone', 'role', 'country'],
       doctor_profiles: ['user_id', 'license_number', 'hospital_name', 'experience_years', 'consultation_fee', 'is_verified', 'is_available', 'rating'],
       hospitals: ['name', 'address', 'phone', 'email', 'is_verified', 'rating'],
+      polyclinics: ['name', 'address', 'phone', 'email', 'is_verified', 'rating'],
       pharmacies: ['name', 'address', 'phone', 'is_verified', 'rating'],
       laboratories: ['name', 'address', 'phone', 'is_verified', 'rating'],
       appointments: ['patient_id', 'doctor_id', 'appointment_date', 'status', 'consultation_type'],
@@ -246,11 +261,12 @@ export default function SuperAdminDashboard() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+      <div className="grid grid-cols-4 md:grid-cols-8 gap-2">
         {[
           { label: 'Watumiaji', value: stats.totalUsers, icon: Users },
           { label: 'Madaktari', value: stats.totalDoctors, icon: Activity },
           { label: 'Hospitali', value: stats.totalHospitals, icon: Building },
+          { label: 'Polyclinic', value: stats.totalPolyclinics, icon: Building },
           { label: 'Famasi', value: stats.totalPharmacies, icon: Pill },
           { label: 'Maabara', value: stats.totalLabs, icon: TestTube },
           { label: 'Miadi', value: stats.totalAppointments, icon: Activity },
@@ -343,7 +359,7 @@ export default function SuperAdminDashboard() {
                             )}
                             
                             {/* Verify button */}
-                            {['hospitals', 'pharmacies', 'laboratories', 'doctor_profiles'].includes(activeTable) && !row.is_verified && (
+                            {['hospitals', 'polyclinics', 'pharmacies', 'laboratories', 'doctor_profiles'].includes(activeTable) && !row.is_verified && (
                               <Button size="sm" className="h-7 text-[10px]" onClick={() => verifyEntity(row.id, activeTable)}>
                                 <Check className="h-3 w-3 mr-1" />Idhinisha
                               </Button>

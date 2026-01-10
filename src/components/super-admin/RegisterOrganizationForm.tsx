@@ -174,10 +174,15 @@ export default function RegisterOrganizationForm() {
         is_verified: false,
       };
 
-      if (orgType === 'hospital' || orgType === 'polyclinic') {
+      if (orgType === 'hospital') {
         const { error: orgError } = await supabase
           .from('hospitals')
-          .insert([{ ...baseOrgData, website: website || null }]);
+          .insert([{ ...baseOrgData, website: website || null, logo_url: logoUrl }]);
+        if (orgError) throw orgError;
+      } else if (orgType === 'polyclinic') {
+        const { error: orgError } = await supabase
+          .from('polyclinics')
+          .insert([{ ...baseOrgData, logo_url: logoUrl }]);
         if (orgError) throw orgError;
       } else if (orgType === 'pharmacy') {
         const { error: orgError } = await supabase
@@ -185,13 +190,14 @@ export default function RegisterOrganizationForm() {
           .insert([{ 
             ...baseOrgData, 
             location_lat: latitude ? parseFloat(latitude) : null,
-            location_lng: longitude ? parseFloat(longitude) : null
+            location_lng: longitude ? parseFloat(longitude) : null,
+            logo_url: logoUrl
           }]);
         if (orgError) throw orgError;
       } else if (orgType === 'lab') {
         const { error: orgError } = await supabase
           .from('laboratories')
-          .insert([baseOrgData]);
+          .insert([{ ...baseOrgData, logo_url: logoUrl }]);
         if (orgError) throw orgError;
       }
 
@@ -256,7 +262,8 @@ export default function RegisterOrganizationForm() {
         };
 
         const table = row.type?.toLowerCase() === 'pharmacy' ? 'pharmacies' : 
-                     row.type?.toLowerCase() === 'lab' ? 'laboratories' : 'hospitals';
+                     row.type?.toLowerCase() === 'lab' ? 'laboratories' : 
+                     row.type?.toLowerCase() === 'polyclinic' ? 'polyclinics' : 'hospitals';
         
         await supabase.from(table).insert([orgData]);
         successCount++;

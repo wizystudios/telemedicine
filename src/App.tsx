@@ -13,6 +13,7 @@ import Auth from "./pages/Auth";
 import RoleBasedDashboard from "./components/RoleBasedDashboard";
 import NotFound from "./pages/NotFound";
 import LaboratoryProfile from "./pages/LaboratoryProfile";
+import PolyclinicProfile from "./pages/PolyclinicProfile";
 
 const queryClient = new QueryClient();
 
@@ -45,6 +46,9 @@ function AppContent() {
         
         {/* Laboratory Profile */}
         <Route path="/laboratory-profile/:labId" element={<ProtectedRoute><LaboratoryProfile /></ProtectedRoute>} />
+        
+        {/* Polyclinic Profile */}
+        <Route path="/polyclinic-profile/:polyclinicId" element={<ProtectedRoute><PolyclinicProfile /></ProtectedRoute>} />
         
         <Route path="*" element={<NotFound />} />
       </Routes>
