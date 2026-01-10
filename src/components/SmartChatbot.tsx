@@ -10,7 +10,8 @@ import { Calendar } from '@/components/ui/calendar';
 import { 
   Bot, Send, Mic, MapPin, Phone, Clock, Stethoscope, Calendar as CalendarIcon,
   Pill, AlertCircle, Check, CheckCheck, X, Star, Building2, TestTube,
-  MessageCircle, ArrowLeft
+  MessageCircle, ArrowLeft, Heart, Brain, Eye, Bone, Baby, Activity,
+  Ear, Smile, Syringe, Thermometer, Scissors, Microscope
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -24,12 +25,49 @@ interface Message {
   timestamp: Date;
   status?: 'sent' | 'delivered' | 'read';
   data?: {
-    type: 'doctors' | 'hospitals' | 'pharmacies' | 'labs' | 'quick-replies' | 'booking-form' | 'doctor-chat';
+    type: 'doctors' | 'hospitals' | 'pharmacies' | 'labs' | 'quick-replies' | 'booking-form' | 'doctor-chat' | 'specialties';
     items?: any[];
     doctor?: any;
     appointmentId?: string;
   };
 }
+
+// Specialty icon and description mapping
+const specialtyMeta: Record<string, { icon: string; description: string; color: string }> = {
+  'cardiology': { icon: 'heart', description: 'Magonjwa ya moyo na mishipa', color: 'bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400' },
+  'moyo': { icon: 'heart', description: 'Magonjwa ya moyo na mishipa', color: 'bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400' },
+  'pediatrics': { icon: 'baby', description: 'Afya ya watoto na vijana', color: 'bg-pink-100 text-pink-600 dark:bg-pink-950 dark:text-pink-400' },
+  'watoto': { icon: 'baby', description: 'Afya ya watoto na vijana', color: 'bg-pink-100 text-pink-600 dark:bg-pink-950 dark:text-pink-400' },
+  'dermatology': { icon: 'thermometer', description: 'Magonjwa ya ngozi', color: 'bg-amber-100 text-amber-600 dark:bg-amber-950 dark:text-amber-400' },
+  'ngozi': { icon: 'thermometer', description: 'Magonjwa ya ngozi', color: 'bg-amber-100 text-amber-600 dark:bg-amber-950 dark:text-amber-400' },
+  'orthopedics': { icon: 'bone', description: 'Mifupa na viungo', color: 'bg-slate-100 text-slate-600 dark:bg-slate-950 dark:text-slate-400' },
+  'mifupa': { icon: 'bone', description: 'Mifupa na viungo', color: 'bg-slate-100 text-slate-600 dark:bg-slate-950 dark:text-slate-400' },
+  'ophthalmology': { icon: 'eye', description: 'Magonjwa ya macho', color: 'bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400' },
+  'macho': { icon: 'eye', description: 'Magonjwa ya macho', color: 'bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400' },
+  'ent': { icon: 'ear', description: 'Masikio, pua na koo', color: 'bg-purple-100 text-purple-600 dark:bg-purple-950 dark:text-purple-400' },
+  'masikio': { icon: 'ear', description: 'Masikio, pua na koo', color: 'bg-purple-100 text-purple-600 dark:bg-purple-950 dark:text-purple-400' },
+  'neurology': { icon: 'brain', description: 'Ubongo na mishipa ya fahamu', color: 'bg-violet-100 text-violet-600 dark:bg-violet-950 dark:text-violet-400' },
+  'ubongo': { icon: 'brain', description: 'Ubongo na mishipa ya fahamu', color: 'bg-violet-100 text-violet-600 dark:bg-violet-950 dark:text-violet-400' },
+  'psychiatry': { icon: 'brain', description: 'Afya ya akili', color: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400' },
+  'akili': { icon: 'brain', description: 'Afya ya akili', color: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400' },
+  'gynecology': { icon: 'activity', description: 'Afya ya wanawake na uzazi', color: 'bg-rose-100 text-rose-600 dark:bg-rose-950 dark:text-rose-400' },
+  'ujauzito': { icon: 'activity', description: 'Afya ya wanawake na uzazi', color: 'bg-rose-100 text-rose-600 dark:bg-rose-950 dark:text-rose-400' },
+  'dentistry': { icon: 'smile', description: 'Afya ya meno na mdomo', color: 'bg-cyan-100 text-cyan-600 dark:bg-cyan-950 dark:text-cyan-400' },
+  'meno': { icon: 'smile', description: 'Afya ya meno na mdomo', color: 'bg-cyan-100 text-cyan-600 dark:bg-cyan-950 dark:text-cyan-400' },
+  'surgery': { icon: 'scissors', description: 'Upasuaji wa jumla', color: 'bg-green-100 text-green-600 dark:bg-green-950 dark:text-green-400' },
+  'upasuaji': { icon: 'scissors', description: 'Upasuaji wa jumla', color: 'bg-green-100 text-green-600 dark:bg-green-950 dark:text-green-400' },
+  'general': { icon: 'stethoscope', description: 'Daktari wa jumla', color: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400' },
+  'internal': { icon: 'activity', description: 'Magonjwa ya ndani', color: 'bg-teal-100 text-teal-600 dark:bg-teal-950 dark:text-teal-400' },
+  'radiology': { icon: 'microscope', description: 'X-ray na vipimo vya picha', color: 'bg-gray-100 text-gray-600 dark:bg-gray-950 dark:text-gray-400' }
+};
+
+const getSpecialtyMeta = (name: string) => {
+  const lower = name.toLowerCase();
+  for (const [key, value] of Object.entries(specialtyMeta)) {
+    if (lower.includes(key)) return value;
+  }
+  return { icon: 'stethoscope', description: 'Huduma za afya', color: 'bg-primary/10 text-primary' };
+};
 
 interface SmartChatbotProps {
   onBookAppointment?: (doctorId: string) => void;
@@ -247,12 +285,17 @@ export function SmartChatbot({ onBookAppointment, onViewHospital, onViewPharmacy
           type: 'bot',
           timestamp: new Date(),
           data: { 
-            type: 'quick-replies', 
-            items: specialties.slice(0, 8).map(s => ({
-              id: `specialty-${s.id}`,
-              label: s.name,
-              icon: 'stethoscope'
-            }))
+            type: 'specialties', 
+            items: specialties.slice(0, 10).map(s => {
+              const meta = getSpecialtyMeta(s.name);
+              return {
+                id: s.id,
+                name: s.name,
+                description: s.description || meta.description,
+                icon: meta.icon,
+                color: meta.color
+              };
+            })
           }
         };
       }
@@ -685,6 +728,53 @@ export function SmartChatbot({ onBookAppointment, onViewHospital, onViewPharmacy
 
     if (data.type === 'labs' && data.items) {
       return <div className="space-y-2 mt-2">{data.items.map(l => renderLabCard(l))}</div>;
+    }
+
+    if (data.type === 'specialties' && data.items) {
+      const renderIcon = (iconName: string) => {
+        const iconClass = "h-6 w-6";
+        switch(iconName) {
+          case 'heart': return <Heart className={iconClass} />;
+          case 'baby': return <Baby className={iconClass} />;
+          case 'brain': return <Brain className={iconClass} />;
+          case 'eye': return <Eye className={iconClass} />;
+          case 'bone': return <Bone className={iconClass} />;
+          case 'ear': return <Ear className={iconClass} />;
+          case 'smile': return <Smile className={iconClass} />;
+          case 'scissors': return <Scissors className={iconClass} />;
+          case 'activity': return <Activity className={iconClass} />;
+          case 'thermometer': return <Thermometer className={iconClass} />;
+          case 'microscope': return <Microscope className={iconClass} />;
+          default: return <Stethoscope className={iconClass} />;
+        }
+      };
+      
+      return (
+        <div className="grid grid-cols-2 gap-2 mt-3">
+          {data.items.map((spec: any) => (
+            <Card 
+              key={spec.id}
+              className="cursor-pointer hover:shadow-md transition-all hover:scale-[1.02]"
+              onClick={() => {
+                setInput(`specialty-${spec.id}`);
+                setTimeout(() => handleSendMessage(), 100);
+              }}
+            >
+              <CardContent className="p-3">
+                <div className="flex items-start gap-3">
+                  <div className={`p-2 rounded-xl ${spec.color}`}>
+                    {renderIcon(spec.icon)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-semibold text-sm">{spec.name}</h4>
+                    <p className="text-[10px] text-muted-foreground line-clamp-2">{spec.description}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      );
     }
 
     return null;
