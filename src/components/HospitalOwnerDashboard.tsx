@@ -167,6 +167,7 @@ export default function HospitalOwnerDashboard() {
             first_name: newDoctor.firstName,
             last_name: newDoctor.lastName,
             phone: newDoctor.phone,
+            role: 'doctor', // Set role in auth metadata
           },
         },
       });
@@ -174,10 +175,18 @@ export default function HospitalOwnerDashboard() {
       if (authError) throw authError;
       if (!authData.user) throw new Error('Imeshindwa kuunda akaunti');
 
-      // 2. Assign doctor role
+      // 2. Assign doctor role in user_roles table
       await supabase.from('user_roles').insert([{ user_id: authData.user.id, role: 'doctor' as any }]);
 
-      // 3. Create doctor profile linked to this hospital
+      // 3. Update profiles table to set role as doctor
+      const { error: profileUpdateError } = await supabase
+        .from('profiles')
+        .update({ role: 'doctor' })
+        .eq('id', authData.user.id);
+
+      if (profileUpdateError) console.error('Profile role update error:', profileUpdateError);
+
+      // 4. Create doctor profile linked to this hospital
       const { error: profileError } = await supabase.from('doctor_profiles').insert([{
         user_id: authData.user.id,
         hospital_id: hospital.id,
@@ -189,7 +198,7 @@ export default function HospitalOwnerDashboard() {
         specialty_id: newDoctor.specialtyId || null,
         doctor_type: newDoctor.doctorType || null,
         is_private: false,
-        is_verified: true, // Auto-verified since hospital owner adding
+        is_verified: true,
       }]);
 
       if (profileError) throw profileError;
