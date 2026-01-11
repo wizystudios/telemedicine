@@ -4,11 +4,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { 
   ArrowLeft, Phone, MapPin, Mail, Star, Clock, 
-  FlaskConical, Globe, Shield, CheckCircle2, AlertCircle
+  FlaskConical, Globe, Shield, CheckCircle2, AlertCircle, ChevronDown
 } from 'lucide-react';
-import { CollapsibleSection } from '@/components/CollapsibleSection';
 import { InsuranceDisplay } from '@/components/InsuranceSelector';
 
 export default function LaboratoryProfile() {
@@ -59,6 +59,46 @@ export default function LaboratoryProfile() {
   const insuranceIds = laboratory.laboratory_insurance?.map((li: any) => li.insurance_id).filter(Boolean) || [];
   const services = laboratory.laboratory_services || [];
   const availableServices = services.filter((s: any) => s.is_available);
+
+  // Render service card
+  const renderServiceCard = (service: any) => (
+    <div 
+      key={service.id} 
+      className="p-4 bg-muted/30 rounded-lg border border-border/50 hover:border-primary/30 transition-colors"
+    >
+      <div className="flex items-start justify-between">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <h4 className="font-medium truncate">{service.name}</h4>
+            <Badge variant={service.is_available ? "default" : "secondary"} className="text-xs shrink-0">
+              {service.is_available ? 'Inapatikana' : 'Haipo'}
+            </Badge>
+          </div>
+          {service.description && (
+            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{service.description}</p>
+          )}
+          <div className="flex flex-wrap gap-3 mt-2 text-xs text-muted-foreground">
+            {service.waiting_hours && (
+              <span className="flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                Matokeo: {service.waiting_hours} saa
+              </span>
+            )}
+            {service.preparation_required && (
+              <span className="text-amber-600">⚠️ {service.preparation_required}</span>
+            )}
+          </div>
+        </div>
+        {service.price && (
+          <div className="text-right shrink-0 ml-2">
+            <p className="font-bold text-primary">
+              TSh {service.price.toLocaleString()}
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -112,6 +152,25 @@ export default function LaboratoryProfile() {
       </div>
 
       <div className="max-w-4xl mx-auto p-4 space-y-4">
+        {/* Quick Stats */}
+        <div className="grid grid-cols-3 gap-3">
+          <div className="bg-card rounded-xl p-3 text-center border border-border shadow-sm">
+            <FlaskConical className="w-5 h-5 mx-auto text-primary mb-1" />
+            <p className="text-lg font-bold">{services.length}</p>
+            <p className="text-xs text-muted-foreground">Vipimo</p>
+          </div>
+          <div className="bg-card rounded-xl p-3 text-center border border-border shadow-sm">
+            <CheckCircle2 className="w-5 h-5 mx-auto text-green-500 mb-1" />
+            <p className="text-lg font-bold">{availableServices.length}</p>
+            <p className="text-xs text-muted-foreground">Vinapatikana</p>
+          </div>
+          <div className="bg-card rounded-xl p-3 text-center border border-border shadow-sm">
+            <Star className="w-5 h-5 mx-auto text-yellow-500 mb-1" />
+            <p className="text-lg font-bold">{laboratory.rating?.toFixed(1) || '0.0'}</p>
+            <p className="text-xs text-muted-foreground">Rating</p>
+          </div>
+        </div>
+
         {/* Contact Info */}
         <div className="bg-card rounded-xl p-4 shadow-sm border border-border">
           <h3 className="font-semibold mb-3 flex items-center gap-2">
@@ -144,83 +203,117 @@ export default function LaboratoryProfile() {
           </div>
         </div>
 
-        {/* Insurance Providers */}
+        {/* Insurance Providers - Show 3 with View All */}
         {insuranceIds.length > 0 && (
           <div className="bg-card rounded-xl p-4 shadow-sm border border-border">
             <h3 className="font-semibold mb-3 flex items-center gap-2">
               <Shield className="w-4 h-4 text-blue-500" />
-              Bima Zinazokubaliwa
+              Bima Zinazokubaliwa ({insuranceIds.length})
             </h3>
-            <InsuranceDisplay insuranceIds={insuranceIds} />
+            <InsuranceDisplay insuranceIds={insuranceIds.slice(0, 3)} />
+            {insuranceIds.length > 3 && (
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="outline" className="w-full mt-3 text-sm">
+                    <Shield className="w-4 h-4 mr-2" />
+                    Ona Bima Zote ({insuranceIds.length})
+                    <ChevronDown className="w-4 h-4 ml-2" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="bottom" className="h-[70vh] rounded-t-3xl">
+                  <SheetHeader className="pb-4">
+                    <SheetTitle className="flex items-center gap-2">
+                      <Shield className="w-5 h-5 text-blue-500" />
+                      Bima Zinazokubaliwa ({insuranceIds.length})
+                    </SheetTitle>
+                  </SheetHeader>
+                  <div className="overflow-y-auto h-[calc(100%-60px)]">
+                    <InsuranceDisplay insuranceIds={insuranceIds} />
+                  </div>
+                </SheetContent>
+              </Sheet>
+            )}
           </div>
         )}
 
-        {/* Test Services */}
+        {/* Test Services - Show 3 with View All Bottom Sheet */}
         {services.length > 0 && (
-          <CollapsibleSection
-            title="Vipimo Vinavyopatikana"
-            icon={<FlaskConical className="w-5 h-5" />}
-            badge={availableServices.length}
-            defaultOpen={true}
-          >
+          <div className="bg-card rounded-xl p-4 shadow-sm border border-border">
+            <h3 className="font-semibold mb-3 flex items-center gap-2">
+              <FlaskConical className="w-4 h-4 text-primary" />
+              Vipimo Vinavyopatikana ({availableServices.length})
+            </h3>
             <div className="space-y-3">
-              {services.map((service: any) => (
-                <div 
-                  key={service.id} 
-                  className="p-4 bg-muted/30 rounded-lg border border-border/50 hover:border-primary/30 transition-colors"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-medium">{service.name}</h4>
-                        <Badge variant={service.is_available ? "default" : "secondary"} className="text-xs">
-                          {service.is_available ? 'Inapatikana' : 'Haipo'}
-                        </Badge>
-                      </div>
-                      {service.description && (
-                        <p className="text-sm text-muted-foreground mt-1">{service.description}</p>
-                      )}
-                      <div className="flex flex-wrap gap-3 mt-2 text-xs text-muted-foreground">
-                        {service.waiting_hours && (
-                          <span className="flex items-center gap-1">
-                            <Clock className="w-3 h-3" />
-                            Matokeo: {service.waiting_hours} saa
-                          </span>
-                        )}
-                        {service.preparation_required && (
-                          <span className="text-amber-600">⚠️ {service.preparation_required}</span>
-                        )}
-                      </div>
-                    </div>
-                    {service.price && (
-                      <div className="text-right">
-                        <p className="font-bold text-primary">
-                          TSh {service.price.toLocaleString()}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
+              {services.slice(0, 3).map(renderServiceCard)}
             </div>
-          </CollapsibleSection>
+            {services.length > 3 && (
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="outline" className="w-full mt-3 text-sm">
+                    <FlaskConical className="w-4 h-4 mr-2" />
+                    Ona Vipimo Vyote ({services.length})
+                    <ChevronDown className="w-4 h-4 ml-2" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="bottom" className="h-[85vh] rounded-t-3xl">
+                  <SheetHeader className="pb-4">
+                    <SheetTitle className="flex items-center gap-2">
+                      <FlaskConical className="w-5 h-5 text-primary" />
+                      Vipimo Vyote ({services.length})
+                    </SheetTitle>
+                  </SheetHeader>
+                  <div className="overflow-y-auto h-[calc(100%-60px)] space-y-3 pr-2">
+                    {services.map(renderServiceCard)}
+                  </div>
+                </SheetContent>
+              </Sheet>
+            )}
+          </div>
         )}
 
-        {/* Test Types */}
+        {/* Test Types - Show 3 with View All */}
         {laboratory.test_types?.length > 0 && (
-          <CollapsibleSection
-            title="Aina za Vipimo"
-            icon={<FlaskConical className="w-5 h-5" />}
-            badge={laboratory.test_types.length}
-          >
+          <div className="bg-card rounded-xl p-4 shadow-sm border border-border">
+            <h3 className="font-semibold mb-3 flex items-center gap-2">
+              <FlaskConical className="w-4 h-4 text-primary" />
+              Aina za Vipimo ({laboratory.test_types.length})
+            </h3>
             <div className="flex flex-wrap gap-2">
-              {laboratory.test_types.map((type: string, index: number) => (
+              {laboratory.test_types.slice(0, 5).map((type: string, index: number) => (
                 <Badge key={index} variant="outline" className="px-3 py-1">
                   {type}
                 </Badge>
               ))}
             </div>
-          </CollapsibleSection>
+            {laboratory.test_types.length > 5 && (
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="outline" className="w-full mt-3 text-sm">
+                    <FlaskConical className="w-4 h-4 mr-2" />
+                    Ona Aina Zote ({laboratory.test_types.length})
+                    <ChevronDown className="w-4 h-4 ml-2" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="bottom" className="h-[70vh] rounded-t-3xl">
+                  <SheetHeader className="pb-4">
+                    <SheetTitle className="flex items-center gap-2">
+                      <FlaskConical className="w-5 h-5 text-primary" />
+                      Aina za Vipimo Vyote ({laboratory.test_types.length})
+                    </SheetTitle>
+                  </SheetHeader>
+                  <div className="overflow-y-auto h-[calc(100%-60px)]">
+                    <div className="flex flex-wrap gap-2">
+                      {laboratory.test_types.map((type: string, index: number) => (
+                        <Badge key={index} variant="outline" className="px-3 py-1">
+                          {type}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            )}
+          </div>
         )}
       </div>
     </div>

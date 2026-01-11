@@ -26,11 +26,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     localStorage.setItem('theme', theme);
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
+    // Remove both classes first, then add the correct one
+    document.documentElement.classList.remove('dark', 'light');
+    document.documentElement.classList.add(theme);
   }, [theme]);
 
   useEffect(() => {

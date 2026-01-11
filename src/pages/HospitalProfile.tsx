@@ -4,12 +4,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { 
   ArrowLeft, Phone, MapPin, Mail, Star, Hospital, Globe, 
   Clock, Users, Stethoscope, Shield, CheckCircle2, Ambulance,
-  HeartPulse
+  HeartPulse, ChevronDown
 } from 'lucide-react';
-import { CollapsibleSection } from '@/components/CollapsibleSection';
 import { InsuranceDisplay } from '@/components/InsuranceSelector';
 import { ReviewsSection } from '@/components/ReviewsSection';
 
@@ -73,6 +73,90 @@ export default function HospitalProfile() {
   const services = hospital.hospital_services || [];
   const insuranceIds = hospital.hospital_insurance?.map((hi: any) => hi.insurance_id).filter(Boolean) || [];
   const availableDoctors = doctors.filter((d: any) => d.is_available);
+
+  // Render doctor card
+  const renderDoctorCard = (doc: any) => (
+    <div 
+      key={doc.user_id} 
+      className="p-4 bg-muted/30 rounded-lg border border-border/50 hover:border-primary/30 transition-colors"
+    >
+      <div className="flex items-start gap-3">
+        <Avatar className="w-12 h-12 border-2 border-primary/20">
+          <AvatarImage src={doc.profiles?.avatar_url} />
+          <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm">
+            {doc.profiles?.first_name?.[0]}{doc.profiles?.last_name?.[0]}
+          </AvatarFallback>
+        </Avatar>
+        
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <h4 className="font-semibold text-sm truncate">
+                Dkt. {doc.profiles?.first_name} {doc.profiles?.last_name}
+              </h4>
+              <p className="text-xs text-muted-foreground truncate">{doc.bio || doc.doctor_type || 'Daktari wa Jumla'}</p>
+            </div>
+            <Badge variant={doc.is_available ? "default" : "secondary"} className="shrink-0 text-xs">
+              {doc.is_available ? 'Anapatikana' : 'Hapatikani'}
+            </Badge>
+          </div>
+          
+          <div className="flex flex-wrap gap-2 mt-2 text-xs text-muted-foreground">
+            {doc.experience_years && (
+              <span className="flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                {doc.experience_years} miaka
+              </span>
+            )}
+            {doc.consultation_fee && (
+              <span className="font-semibold text-primary">
+                TSh {doc.consultation_fee.toLocaleString()}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+      
+      <Button 
+        onClick={() => navigate(`/doctor-profile/${doc.user_id}`)}
+        className="w-full mt-3"
+        variant="outline"
+        size="sm"
+      >
+        Ona Wasifu Kamili
+      </Button>
+    </div>
+  );
+
+  // Render service card
+  const renderServiceCard = (service: any) => (
+    <div 
+      key={service.id} 
+      className="p-3 bg-muted/30 rounded-lg border border-border/50"
+    >
+      <div className="flex items-start justify-between">
+        <div className="min-w-0 flex-1">
+          <h4 className="font-medium text-sm truncate">{service.name}</h4>
+          {service.description && (
+            <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{service.description}</p>
+          )}
+          {service.category && (
+            <Badge variant="outline" className="mt-2 text-xs">{service.category}</Badge>
+          )}
+        </div>
+        <div className="text-right shrink-0 ml-2">
+          <Badge variant={service.is_available ? "default" : "secondary"} className="text-xs">
+            {service.is_available ? 'Inapatikana' : 'Haipo'}
+          </Badge>
+          {service.price && (
+            <p className="text-sm font-semibold text-primary mt-1">
+              TSh {service.price.toLocaleString()}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -183,137 +267,109 @@ export default function HospitalProfile() {
           </div>
         </div>
 
-        {/* Insurance Providers */}
+        {/* Insurance Providers - Show 3 with View All */}
         {insuranceIds.length > 0 && (
           <div className="bg-card rounded-xl p-4 shadow-sm border border-border">
             <h3 className="font-semibold mb-3 flex items-center gap-2">
               <Shield className="w-4 h-4 text-blue-500" />
-              Bima Zinazokubaliwa
+              Bima Zinazokubaliwa ({insuranceIds.length})
             </h3>
-            <InsuranceDisplay insuranceIds={insuranceIds} />
+            <InsuranceDisplay insuranceIds={insuranceIds.slice(0, 3)} />
+            {insuranceIds.length > 3 && (
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="outline" className="w-full mt-3 text-sm">
+                    <Shield className="w-4 h-4 mr-2" />
+                    Ona Bima Zote ({insuranceIds.length})
+                    <ChevronDown className="w-4 h-4 ml-2" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="bottom" className="h-[70vh] rounded-t-3xl">
+                  <SheetHeader className="pb-4">
+                    <SheetTitle className="flex items-center gap-2">
+                      <Shield className="w-5 h-5 text-blue-500" />
+                      Bima Zinazokubaliwa ({insuranceIds.length})
+                    </SheetTitle>
+                  </SheetHeader>
+                  <div className="overflow-y-auto h-[calc(100%-60px)]">
+                    <InsuranceDisplay insuranceIds={insuranceIds} />
+                  </div>
+                </SheetContent>
+              </Sheet>
+            )}
           </div>
         )}
 
-        {/* Doctors - Collapsible */}
+        {/* Doctors - Show 3 with View All Bottom Sheet */}
         {doctors.length > 0 && (
-          <CollapsibleSection
-            title="Madaktari Wetu"
-            icon={<Stethoscope className="w-5 h-5" />}
-            badge={`${availableDoctors.length}/${doctors.length}`}
-            defaultOpen={true}
-          >
+          <div className="bg-card rounded-xl p-4 shadow-sm border border-border">
+            <h3 className="font-semibold mb-3 flex items-center gap-2">
+              <Stethoscope className="w-4 h-4 text-primary" />
+              Madaktari Wetu ({availableDoctors.length}/{doctors.length})
+            </h3>
             <div className="space-y-3">
-              {doctors.map((doc: any) => (
-                <div 
-                  key={doc.user_id} 
-                  className="p-4 bg-muted/30 rounded-lg border border-border/50 hover:border-primary/30 transition-colors"
-                >
-                  <div className="flex items-start gap-3">
-                    <Avatar className="w-14 h-14 border-2 border-primary/20">
-                      <AvatarImage src={doc.profiles?.avatar_url} />
-                      <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                        {doc.profiles?.first_name?.[0]}{doc.profiles?.last_name?.[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                    
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h4 className="font-semibold">
-                            Dkt. {doc.profiles?.first_name} {doc.profiles?.last_name}
-                          </h4>
-                          <p className="text-sm text-muted-foreground">{doc.bio || doc.doctor_type || 'Daktari wa Jumla'}</p>
-                        </div>
-                        <Badge variant={doc.is_available ? "default" : "secondary"} className="shrink-0">
-                          {doc.is_available ? 'Anapatikana' : 'Hapatikani'}
-                        </Badge>
-                      </div>
-                      
-                      <div className="flex flex-wrap gap-3 mt-2 text-xs text-muted-foreground">
-                        {doc.experience_years && (
-                          <span className="flex items-center gap-1">
-                            <Clock className="w-3 h-3" />
-                            {doc.experience_years} miaka
-                          </span>
-                        )}
-                        {doc.consultation_fee && (
-                          <span className="font-semibold text-primary">
-                            TSh {doc.consultation_fee.toLocaleString()}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Doctor's Timetable - Compact */}
-                      {doc.doctor_timetable?.length > 0 && (
-                        <div className="mt-3 pt-3 border-t border-border/50">
-                          <p className="text-xs font-medium text-muted-foreground mb-2">Ratiba:</p>
-                          <div className="flex flex-wrap gap-1">
-                            {doc.doctor_timetable
-                              .filter((t: any) => t.is_available)
-                              .map((t: any, idx: number) => (
-                                <Badge key={idx} variant="outline" className="text-xs py-0">
-                                  {days[t.day_of_week]?.slice(0, 3)} {t.start_time?.slice(0,5)}-{t.end_time?.slice(0,5)}
-                                </Badge>
-                              ))
-                            }
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <Button 
-                    onClick={() => navigate(`/doctor-profile/${doc.user_id}`)}
-                    className="w-full mt-3"
-                    variant="outline"
-                    size="sm"
-                  >
-                    Ona Wasifu Kamili
-                  </Button>
-                </div>
-              ))}
+              {doctors.slice(0, 3).map(renderDoctorCard)}
             </div>
-          </CollapsibleSection>
+            {doctors.length > 3 && (
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="outline" className="w-full mt-3 text-sm">
+                    <Stethoscope className="w-4 h-4 mr-2" />
+                    Ona Madaktari Wote ({doctors.length})
+                    <ChevronDown className="w-4 h-4 ml-2" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="bottom" className="h-[85vh] rounded-t-3xl">
+                  <SheetHeader className="pb-4">
+                    <SheetTitle className="flex items-center gap-2">
+                      <Stethoscope className="w-5 h-5 text-primary" />
+                      Madaktari Wote ({doctors.length})
+                    </SheetTitle>
+                  </SheetHeader>
+                  <div className="overflow-y-auto h-[calc(100%-60px)] space-y-3 pr-2">
+                    {doctors.map(renderDoctorCard)}
+                  </div>
+                </SheetContent>
+              </Sheet>
+            )}
+          </div>
         )}
 
-        {/* Services - Collapsible */}
+        {/* Services - Show 3 with View All Bottom Sheet */}
         {services.length > 0 && (
-          <CollapsibleSection
-            title="Huduma Zinazopatikana"
-            icon={<HeartPulse className="w-5 h-5" />}
-            badge={services.filter((s: any) => s.is_available).length}
-          >
+          <div className="bg-card rounded-xl p-4 shadow-sm border border-border">
+            <h3 className="font-semibold mb-3 flex items-center gap-2">
+              <HeartPulse className="w-4 h-4 text-primary" />
+              Huduma Zinazopatikana ({services.filter((s: any) => s.is_available).length})
+            </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {services.map((service: any) => (
-                <div 
-                  key={service.id} 
-                  className="p-3 bg-muted/30 rounded-lg border border-border/50"
-                >
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h4 className="font-medium text-sm">{service.name}</h4>
-                      {service.description && (
-                        <p className="text-xs text-muted-foreground mt-1">{service.description}</p>
-                      )}
-                      {service.category && (
-                        <Badge variant="outline" className="mt-2 text-xs">{service.category}</Badge>
-                      )}
-                    </div>
-                    <div className="text-right">
-                      <Badge variant={service.is_available ? "default" : "secondary"} className="text-xs">
-                        {service.is_available ? 'Inapatikana' : 'Haipo'}
-                      </Badge>
-                      {service.price && (
-                        <p className="text-sm font-semibold text-primary mt-1">
-                          TSh {service.price.toLocaleString()}
-                        </p>
-                      )}
+              {services.slice(0, 3).map(renderServiceCard)}
+            </div>
+            {services.length > 3 && (
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="outline" className="w-full mt-3 text-sm">
+                    <HeartPulse className="w-4 h-4 mr-2" />
+                    Ona Huduma Zote ({services.length})
+                    <ChevronDown className="w-4 h-4 ml-2" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="bottom" className="h-[85vh] rounded-t-3xl">
+                  <SheetHeader className="pb-4">
+                    <SheetTitle className="flex items-center gap-2">
+                      <HeartPulse className="w-5 h-5 text-primary" />
+                      Huduma Zote ({services.length})
+                    </SheetTitle>
+                  </SheetHeader>
+                  <div className="overflow-y-auto h-[calc(100%-60px)] pr-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {services.map(renderServiceCard)}
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          </CollapsibleSection>
+                </SheetContent>
+              </Sheet>
+            )}
+          </div>
         )}
 
         {/* Reviews Section */}
