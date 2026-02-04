@@ -136,6 +136,7 @@ export default function PolyclinicOwnerDashboard() {
     }
 
     try {
+      // 1. Create auth account for doctor
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: newDoctor.email,
         password: newDoctor.password,
@@ -144,6 +145,7 @@ export default function PolyclinicOwnerDashboard() {
             first_name: newDoctor.firstName,
             last_name: newDoctor.lastName,
             phone: newDoctor.phone,
+            role: 'doctor', // Set role in auth metadata
           },
         },
       });
@@ -151,8 +153,18 @@ export default function PolyclinicOwnerDashboard() {
       if (authError) throw authError;
       if (!authData.user) throw new Error('Imeshindwa kuunda akaunti');
 
+      // 2. Assign doctor role in user_roles table
       await supabase.from('user_roles').insert([{ user_id: authData.user.id, role: 'doctor' as any }]);
 
+      // 3. Update profiles table to set role as doctor
+      const { error: profileUpdateError } = await supabase
+        .from('profiles')
+        .update({ role: 'doctor' })
+        .eq('id', authData.user.id);
+
+      if (profileUpdateError) console.error('Profile role update error:', profileUpdateError);
+
+      // 4. Create doctor profile linked to this polyclinic
       const { error: profileError } = await supabase.from('doctor_profiles').insert([{
         user_id: authData.user.id,
         polyclinic_id: polyclinic.id,
@@ -174,6 +186,7 @@ export default function PolyclinicOwnerDashboard() {
       setNewDoctor({ email: '', password: '', firstName: '', lastName: '', phone: '', licenseNumber: '', bio: '', experienceYears: '', consultationFee: '', specialtyId: '', doctorType: '' });
       fetchData();
     } catch (error: any) {
+      console.error(error);
       toast({ title: 'Hitilafu', description: error.message, variant: 'destructive' });
     }
   };

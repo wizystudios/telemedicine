@@ -20,6 +20,7 @@ import {
 import { toast } from '@/hooks/use-toast';
 import { SettingsDrawer } from '@/components/SettingsDrawer';
 import { ContentUploadSection } from '@/components/ContentUploadSection';
+import { HealthTipsSection } from '@/components/HealthTipsSection';
 
 export function DoctorDashboard() {
   const { user } = useAuth();
@@ -400,7 +401,10 @@ export function DoctorDashboard() {
         </CardContent>
       </Card>
 
-      {/* Content Upload Section */}
+      {/* Health Tips Section - For publishing educational content */}
+      <HealthTipsSection onRefresh={fetchData} />
+
+      {/* Content Upload Section - For videos/media */}
       <ContentUploadSection
         institutionType="doctor"
         contents={contents}
