@@ -532,11 +532,65 @@ export function UnifiedChatbot() {
       };
     }
 
+    // Health advice for common topics
+    const healthTopics: Record<string, string> = {
+      'tumbo': '🏥 **Maumivu ya Tumbo**\n\nUshauri wa kwanza:\n• Kunywa maji mengi ya uvuguvugu\n• Epuka vyakula vyenye mafuta mengi na viungo\n• Kula ndizi, wali, na mkate wa kawaida\n• Pumzika kwa kulala upande wa kushoto\n\n⚠️ Kama maumivu yanaendelea zaidi ya saa 24 au una homa, tafadhali muone daktari haraka.',
+      'kichwa': '🧠 **Maumivu ya Kichwa**\n\nUshauri:\n• Kunywa maji ya kutosha (angalau glasi 8 kwa siku)\n• Pumzika mahali penye giza na utulivu\n• Weka kitambaa baridi kwenye paji la uso\n• Epuka mwanga mkali wa simu au kompyuta\n\n💊 Dawa za kawaida kama Paracetamol zinaweza kusaidia. Kama maumivu ni ya mara kwa mara, tafuta daktari.',
+      'homa': '🌡️ **Homa na Mafua**\n\nUshauri:\n• Pumzika vizuri na lala saa 8+ kwa siku\n• Kunywa maji mengi, chai ya tangawizi na limau\n• Kula matunda yenye Vitamini C (machungwa, mapera)\n• Funika mdomo wakati wa kukohoa\n\n⚠️ Kama homa ni zaidi ya siku 3 au joto ni zaidi ya 38.5°C, muone daktari.',
+      'lishe': '🥗 **Ushauri wa Lishe Bora**\n\n• Kula mboga za kijani kila siku (mchicha, sukumawiki)\n• Matunda angalau 2-3 kwa siku\n• Protini: maharagwe, samaki, mayai, nyama konda\n• Wanga: wali wa kahawia, viazi vitamu, ndizi za kupika\n• Epuka sukari nyingi na vyakula vilivyosindikwa\n• Kunywa maji glasi 8 kwa siku',
+      'mazoezi': '💪 **Mazoezi na Fitness**\n\n• Tembea kwa kasi dakika 30 kila siku\n• Fanya mazoezi ya kunyoosha asubuhi\n• Mazoezi ya kupumua kwa kina hupunguza msongo\n• Ruka kamba au kimbia polepole mara 3 kwa wiki\n• Epuka kukaa saa nyingi - simama kila saa 1\n\n🎯 Anza polepole na ongeza taratibu. Afya ni safari, si mbio!',
+      'usingizi': '😴 **Ushauri wa Usingizi Bora**\n\n• Lala na amka wakati uleule kila siku\n• Epuka kahawa baada ya saa 6 mchana\n• Zima simu dakika 30 kabla ya kulala\n• Chumba kiwe na baridi na giza\n• Kunywa chai ya chamomile kabla ya kulala\n\n💡 Usingizi wa saa 7-9 ni muhimu kwa afya ya mwili na akili.',
+      'msongo': '🧘 **Kupunguza Msongo wa Mawazo**\n\n• Pumua kwa kina: inhale sekunde 4, shikilia 7, exhale 8\n• Tembea nje na uone maumbile\n• Ongea na mtu unayemwamini kuhusu hisia zako\n• Fanya kitu unachokipenda kila siku\n• Epuka habari za kusumbua kupita kiasi\n\n❤️ Afya ya akili ni sawa na afya ya mwili. Usisite kutafuta msaada.',
+      'ngozi': '✨ **Utunzaji wa Ngozi**\n\n• Tumia mafuta ya kuzuia jua kila siku\n• Kunywa maji mengi kwa ngozi laini\n• Osha uso mara 2 kwa siku kwa sabuni laini\n• Kula vyakula vyenye Vitamini A na E\n• Lala vizuri - ngozi hujisanidi wakati wa usingizi',
+      'jicho': '👁️ **Utunzaji wa Macho**\n\n• Pumzisha macho kila dakika 20 ukitumia simu/kompyuta\n• Kula karoti, mboga za kijani na samaki\n• Usisugue macho\n• Tumia taa ya kutosha wakati wa kusoma\n\n⚠️ Kama unaona ukungu au maumivu, muone daktari wa macho.',
+      'mimba': '🤰 **Afya ya Uzazi**\n\n• Nenda kliniki ya wajawazito mapema\n• Kula vyakula vyenye folic acid na chuma\n• Pumzika vizuri na epuka kazi nzito\n• Kunywa maji mengi\n• Fuata ushauri wa daktari wako\n\n💝 Kila hatua ya ujauzito ni muhimu. Usikose miadi yako ya kliniki.',
+    };
+
+    // Check if user is asking about a health topic
+    for (const [keyword, advice] of Object.entries(healthTopics)) {
+      if (lower.includes(keyword)) {
+        return {
+          id: Date.now().toString(),
+          type: 'bot',
+          content: advice + '\n\n---\n*Je, ungependa kutafuta daktari wa eneo hili? Andika "daktari" au "hospitali".*',
+          timestamp: new Date(),
+          suggestions: ['Tafuta daktari', 'Tafuta hospitali', 'Tafuta dawa']
+        };
+      }
+    }
+
+    // General health keywords
+    const healthKeywords = ['maumivu', 'kuumwa', 'afya', 'diet', 'fitness', 'vitamini', 'dawa', 'ugonjwa', 
+      'kupumua', 'moyo', 'shinikizo', 'kisukari', 'malaria', 'kikohozi', 'kuharisha', 'kutapika',
+      'stomach', 'headache', 'pain', 'health', 'exercise', 'sleep', 'stress', 'skin', 'eye'];
+    
+    if (healthKeywords.some(k => lower.includes(k))) {
+      return {
+        id: Date.now().toString(),
+        type: 'bot',
+        content: `🩺 **Ushauri wa Afya**\n\nAsante kwa swali lako kuhusu "${message}". Hapa kuna ushauri wa jumla:\n\n• Kunywa maji mengi ya kutosha kila siku\n• Pata usingizi wa kutosha (saa 7-9)\n• Kula mboga na matunda ya kutosha\n• Fanya mazoezi mepesi angalau dakika 30 kwa siku\n\n⚕️ Kwa ushauri wa kitaalamu zaidi, napendekeza umuone daktari. Andika "daktari" ili nitafute daktari anayepatikana karibu nawe.\n\n---\n*Kumbuka: Ushauri huu si mbadala wa kumuona daktari. Kama una dharura, piga simu ya dharura mara moja.*`,
+        timestamp: new Date(),
+        suggestions: ['Tafuta daktari', 'Tafuta hospitali', 'Ushauri zaidi']
+      };
+    }
+
+    // Greetings
+    if (['habari', 'mambo', 'hello', 'hi', 'hujambo', 'salama'].some(g => lower.includes(g))) {
+      return {
+        id: Date.now().toString(),
+        type: 'bot',
+        content: `👋 **Habari! Karibu TeleMed**\n\nNinaweza kukusaidia na:\n\n🔍 **Kutafuta** - Daktari, Hospitali, Dawa, Maabara\n📅 **Miadi** - Weka na simamia miadi zako\n💬 **Mazungumzo** - Ongea na daktari moja kwa moja\n🏥 **Ushauri** - Maswali ya afya na lishe\n\nAndika unachohitaji au tumia vitufe hapo chini! 👇`,
+        timestamp: new Date(),
+        suggestions: ['Tafuta daktari', 'Tafuta hospitali', 'Miadi zangu', 'Ushauri wa afya']
+      };
+    }
+
     return {
       id: Date.now().toString(),
       type: 'bot',
-      content: 'Nisaidie kupata daktari, hospitali, dawa, au maabara. Andika kile unachotaka.',
-      timestamp: new Date()
+      content: `🤖 **Ninakusaidia!**\n\nNaweza kukusaidia na mambo mengi:\n\n• 🏥 Tafuta **hospitali** au **daktari**\n• 💊 Tafuta **dawa** au **famasi**\n• 🔬 Tafuta **maabara** ya vipimo\n• 📅 Angalia **miadi** zako\n• 🩺 Pata **ushauri wa afya** (lishe, mazoezi, usingizi)\n• 💬 **Ongea** na daktari\n\nAndika tu unachohitaji! 😊`,
+      timestamp: new Date(),
+      suggestions: ['Tafuta daktari', 'Hospitali', 'Ushauri wa lishe', 'Mazoezi']
     };
   };
 
