@@ -543,7 +543,18 @@ export function UnifiedChatbot() {
       'msongo': '🧘 **Kupunguza Msongo wa Mawazo**\n\n• Pumua kwa kina: inhale sekunde 4, shikilia 7, exhale 8\n• Tembea nje na uone maumbile\n• Ongea na mtu unayemwamini kuhusu hisia zako\n• Fanya kitu unachokipenda kila siku\n• Epuka habari za kusumbua kupita kiasi\n\n❤️ Afya ya akili ni sawa na afya ya mwili. Usisite kutafuta msaada.',
       'ngozi': '✨ **Utunzaji wa Ngozi**\n\n• Tumia mafuta ya kuzuia jua kila siku\n• Kunywa maji mengi kwa ngozi laini\n• Osha uso mara 2 kwa siku kwa sabuni laini\n• Kula vyakula vyenye Vitamini A na E\n• Lala vizuri - ngozi hujisanidi wakati wa usingizi',
       'jicho': '👁️ **Utunzaji wa Macho**\n\n• Pumzisha macho kila dakika 20 ukitumia simu/kompyuta\n• Kula karoti, mboga za kijani na samaki\n• Usisugue macho\n• Tumia taa ya kutosha wakati wa kusoma\n\n⚠️ Kama unaona ukungu au maumivu, muone daktari wa macho.',
-      'mimba': '🤰 **Afya ya Uzazi**\n\n• Nenda kliniki ya wajawazito mapema\n• Kula vyakula vyenye folic acid na chuma\n• Pumzika vizuri na epuka kazi nzito\n• Kunywa maji mengi\n• Fuata ushauri wa daktari wako\n\n💝 Kila hatua ya ujauzito ni muhimu. Usikose miadi yako ya kliniki.',
+      'mimba': '🤰 **Afya ya Uzazi na Ujauzito**\n\n• Nenda kliniki ya wajawazito mapema\n• Kula vyakula vyenye folic acid na chuma\n• Pumzika vizuri na epuka kazi nzito\n• Kunywa maji mengi\n• Fuata ushauri wa daktari wako\n\n💝 Kila hatua ya ujauzito ni muhimu. Usikose miadi yako ya kliniki.',
+      'kisukari': '🩸 **Ugonjwa wa Kisukari (Diabetes)**\n\n• Punguza sukari na wanga katika chakula\n• Kula mboga nyingi na matunda yenye nyuzinyuzi\n• Fanya mazoezi mepesi kila siku (kutembea dakika 30)\n• Pima sukari yako mara kwa mara\n• Tumia dawa kama unavyoshauriwa na daktari\n\n⚠️ Kisukari kinaweza kudhibitiwa! Tembelea daktari mara kwa mara.',
+      'malaria': '🦟 **Malaria - Kinga na Tiba**\n\n• Tumia chandarua chenye dawa kila usiku\n• Ondoa maji yaliyotuama karibu na nyumba\n• Dalili: homa kali, kutetemeka, jasho, maumivu ya kichwa\n• Pima damu ndani ya saa 24 ukiona dalili\n• Meza dawa ZOTE ulizoandikiwa na daktari\n\n🚨 Malaria ni hatari! Tembelea hospitali haraka ukiona dalili.',
+      'shinikizo': '❤️ **Shinikizo la Damu (Blood Pressure)**\n\n• Punguza chumvi katika chakula chako\n• Epuka pombe na sigara\n• Fanya mazoezi ya kawaida\n• Lala vizuri na punguza msongo\n• Pima shinikizo angalau mara 1 kwa mwezi\n\n💊 Kama umepewa dawa, usizache hata ukijisikia vizuri!',
+      'kikohozi': '🤧 **Kikohozi na Mafua**\n\n• Kunywa maji ya moto na asali na limau\n• Pumzika na ulale vizuri\n• Tumia mvuke wa maji ya moto (steam)\n• Epuka baridi na vumbi\n• Funika mdomo wakati wa kukohoa\n\n⚠️ Kikohozi cha zaidi ya wiki 2 kinaweza kuwa dalili ya TB. Muone daktari.',
+      'kuharisha': '💧 **Kuharisha (Diarrhea)**\n\n• Kunywa ORS (chumvi na sukari) mara kwa mara\n• Kula vyakula vya laini: wali, ndizi, tosti\n• Epuka maziwa na vyakula vyenye mafuta\n• Osha mikono kwa sabuni\n\n🚨 Kama damu inaonekana au kuharisha kunazidi siku 3, tembelea hospitali.',
+      'kutapika': '🤢 **Kutapika (Vomiting)**\n\n• Pumzika na usile kwa muda mfupi\n• Kunywa maji kidogo kidogo (sip sip)\n• Kula vyakula baridi na kavu (crackers, toast)\n• Epuka harufu kali za chakula\n\n⚠️ Kama unatapika damu au kutapika hakukomi kwa saa 12+, tembelea hospitali.',
+      'moyo': '🫀 **Afya ya Moyo**\n\n• Kula samaki mara 2+ kwa wiki (omega-3)\n• Punguza mafuta ya wanyama na vyakula vya kukaanga\n• Fanya mazoezi dakika 30 kwa siku, siku 5 kwa wiki\n• Epuka sigara na pombe kupita kiasi\n• Pima shinikizo na cholesterol mara kwa mara\n\n❤️ Moyo wako unafanya kazi saa 24! Utunze vizuri.',
+      'meno': '🦷 **Utunzaji wa Meno**\n\n• Piga mswaki mara 2 kwa siku (asubuhi na jioni)\n• Tumia uzi wa meno (floss) kila siku\n• Epuka sukari nyingi na vinywaji vya rangi\n• Tembelea daktari wa meno kila miezi 6\n\n⚠️ Maumivu ya meno yanaweza kuonyesha tatizo kubwa. Usipuuze!',
+      'vitamini': '💊 **Vitamini Muhimu kwa Mwili**\n\n• **Vitamini A**: Karoti, viazi vitamu, mchicha → macho na ngozi\n• **Vitamini B**: Nafaka, mayai, nyama → nishati na ubongo\n• **Vitamini C**: Machungwa, mapera, pilipili → kinga ya mwili\n• **Vitamini D**: Jua la asubuhi dakika 15 → mifupa\n• **Chuma**: Mchicha, nyama, maharagwe → damu\n\n🍎 Lishe bora ni bora kuliko vidonge!',
+      'stress': '🧘 **Kupunguza Msongo (Stress Management)**\n\n• Pumua kwa kina: inhale 4s, hold 7s, exhale 8s\n• Tembea nje angalau dakika 20\n• Andika mawazo yako kwenye daftari\n• Sikiliza muziki wa kutuliza\n• Ongea na rafiki au familia\n\n❤️ Kujitunza si ubinafsi - ni muhimu kwa afya yako!',
+      'watoto': '👶 **Afya ya Watoto**\n\n• Chanjo zote kwa wakati (BCG, OPV, DPT, Measles)\n• Lishe: Maziwa ya mama pekee miezi 6 ya kwanza\n• Pima uzito na urefu kila mwezi\n• Kunywesha maji safi ya kuchemsha\n• Osha mikono ya mtoto mara kwa mara\n\n🏥 Tembelea kliniki ya watoto mara kwa mara.',
     };
 
     // Check if user is asking about a health topic
@@ -560,9 +571,12 @@ export function UnifiedChatbot() {
     }
 
     // General health keywords
-    const healthKeywords = ['maumivu', 'kuumwa', 'afya', 'diet', 'fitness', 'vitamini', 'dawa', 'ugonjwa', 
+    const healthKeywords = ['maumivu', 'kuumwa', 'afya', 'diet', 'fitness', 'vitamini', 'ugonjwa', 
       'kupumua', 'moyo', 'shinikizo', 'kisukari', 'malaria', 'kikohozi', 'kuharisha', 'kutapika',
-      'stomach', 'headache', 'pain', 'health', 'exercise', 'sleep', 'stress', 'skin', 'eye'];
+      'stomach', 'headache', 'pain', 'health', 'exercise', 'sleep', 'stress', 'skin', 'eye',
+      'chanjo', 'pregnancy', 'uzazi', 'mwili', 'akili', 'depression', 'anxiety', 'corona', 'covid',
+      'tb', 'kifua', 'ini', 'figo', 'cholesterol', 'anemia', 'upungufu', 'mkojo', 'kinyesi',
+      'mzio', 'allergy', 'asthma', 'pumu', 'diabetes', 'cancer', 'saratani', 'hiv', 'ukimwi'];
     
     if (healthKeywords.some(k => lower.includes(k))) {
       return {
