@@ -11,7 +11,7 @@ export function ThemeToggle() {
       variant="ghost" 
       size="sm" 
       onClick={toggleTheme}
-      className="text-gray-600 dark:text-gray-300"
+      className="text-muted-foreground hover:text-foreground"
     >
       {theme === 'light' ? (
         <Moon className="w-4 h-4" />

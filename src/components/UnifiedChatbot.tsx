@@ -1133,30 +1133,7 @@ export function UnifiedChatbot() {
 
   // Main chatbot UI
   return (
-    <div className="h-screen flex flex-col bg-background">
-      {/* Header - Logo centered, Notifications and Settings on right */}
-      <div className="flex items-center justify-between p-4 border-b bg-card/50">
-        <div className="w-20" />
-        <div className="flex items-center gap-2">
-          <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center">
-            <HeartPulse className="h-5 w-5 text-primary-foreground" />
-          </div>
-          <span className="font-bold text-lg">TeleMed</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" className="relative" onClick={() => setShowNotifications(true)}>
-            <Bell className="h-5 w-5" />
-            {unreadNotifications > 0 && (
-              <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-destructive text-[10px] flex items-center justify-center text-white font-medium">
-                {unreadNotifications > 9 ? '9+' : unreadNotifications}
-              </span>
-            )}
-          </Button>
-          <Button variant="ghost" size="icon" onClick={() => setShowProfile(true)}>
-            <Settings className="h-5 w-5" />
-          </Button>
-        </div>
-      </div>
+    <div className="h-[calc(100vh-2.5rem)] flex flex-col bg-background">
 
       {/* Messages Area or Welcome Screen */}
       {!hasStartedChat ? (
