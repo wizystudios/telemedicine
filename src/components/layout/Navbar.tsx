@@ -16,6 +16,7 @@ import { Switch } from '@/components/ui/switch';
 import { HeartPulse, LogOut, Settings, User, Activity, Bell } from 'lucide-react';
 import { ThemeToggle } from '@/components/auth/ThemeToggle';
 import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 export function Navbar() {
   const { user, signOut } = useAuth();
@@ -23,8 +24,21 @@ export function Navbar() {
   const { hideNav } = useNav();
   const navigate = useNavigate();
   const [isOnline, setIsOnline] = useState(false);
+  const [userRole, setUserRole] = useState<string>('patient');
 
-  const userRole = user?.user_metadata?.role || 'patient';
+  // Fetch real role from user_roles table
+  useEffect(() => {
+    if (!user) return;
+    const fetchRole = async () => {
+      const { data } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      setUserRole(data?.role || user.user_metadata?.role || 'patient');
+    };
+    fetchRole();
+  }, [user]);
 
   useEffect(() => {
     if (userRole === 'doctor') {
@@ -82,7 +96,7 @@ export function Navbar() {
                   </AvatarFallback>
                 </Avatar>
                 {userRole === 'doctor' && isOnline && (
-                  <div className="absolute bottom-0 right-0 w-2 h-2 bg-green-500 border border-background rounded-full" />
+                  <div className="absolute bottom-0 right-0 w-2 h-2 bg-primary border border-background rounded-full" />
                 )}
               </Button>
             </DropdownMenuTrigger>
@@ -144,7 +158,7 @@ export function Navbar() {
               
               <DropdownMenuItem onClick={handleSignOut} className="text-destructive text-xs py-1.5">
                 <LogOut className="mr-2 h-3 w-3" />
-                Toka
+                Ondoka
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

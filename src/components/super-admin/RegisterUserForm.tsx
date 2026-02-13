@@ -41,6 +41,7 @@ export default function RegisterUserForm() {
             first_name: firstName,
             last_name: lastName,
             phone,
+            role: role,
           },
         },
       });

@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { Shield, Users, Building, Pill, TestTube, Activity, Plus, Trash2, Check, X, Eye, RefreshCw, Database } from 'lucide-react';
@@ -204,7 +204,7 @@ export default function SuperAdminDashboard() {
         .from('user_roles')
         .select('id')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
 
       if (existingRole) {
         await supabase.from('user_roles').update({ role: newRole as AppRole }).eq('user_id', userId);
@@ -239,7 +239,7 @@ export default function SuperAdminDashboard() {
   const renderCellValue = (row: any, col: string) => {
     const value = row[col];
     if (value === null || value === undefined) return '-';
-    if (typeof value === 'boolean') return value ? <Check className="h-4 w-4 text-green-500" /> : <X className="h-4 w-4 text-red-500" />;
+    if (typeof value === 'boolean') return value ? <Check className="h-4 w-4 text-primary" /> : <X className="h-4 w-4 text-destructive" />;
     if (col === 'created_at' || col === 'appointment_date') return new Date(value).toLocaleDateString('sw-TZ');
     if (col === 'role') return <Badge variant="outline">{row.user_roles?.[0]?.role || value || 'patient'}</Badge>;
     if (typeof value === 'object') return JSON.stringify(value).slice(0, 30);
@@ -365,7 +365,7 @@ export default function SuperAdminDashboard() {
                               </Button>
                             )}
                             
-                            <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-red-500" onClick={() => deleteRow(row.id)}>
+                            <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive" onClick={() => deleteRow(row.id)}>
                               <Trash2 className="h-3 w-3" />
                             </Button>
                           </div>
@@ -392,24 +392,24 @@ export default function SuperAdminDashboard() {
         </TabsContent>
       </Tabs>
 
-      {/* View Row Dialog */}
-      <Dialog open={!!viewingRow} onOpenChange={() => setViewingRow(null)}>
-        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Maelezo</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-2">
+      {/* View Row Sheet */}
+      <Sheet open={!!viewingRow} onOpenChange={() => setViewingRow(null)}>
+        <SheetContent side="bottom" className="max-h-[80vh] rounded-t-2xl">
+          <SheetHeader>
+            <SheetTitle>Maelezo</SheetTitle>
+          </SheetHeader>
+          <div className="space-y-2 mt-4 overflow-y-auto max-h-[60vh]">
             {viewingRow && Object.entries(viewingRow).map(([key, value]) => (
               <div key={key} className="flex gap-2 text-sm">
-                <span className="font-medium min-w-[100px]">{key}:</span>
+                <span className="font-medium min-w-[100px] text-foreground">{key}:</span>
                 <span className="text-muted-foreground break-all">
                   {value === null ? 'null' : typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)}
                 </span>
               </div>
             ))}
           </div>
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
