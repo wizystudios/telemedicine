@@ -131,6 +131,15 @@ export default function RegisterOrganizationForm() {
 
     try {
       // 1. Create owner account
+      // Determine role from org type
+      let role = '';
+      switch (orgType) {
+        case 'hospital': role = 'hospital_owner'; break;
+        case 'pharmacy': role = 'pharmacy_owner'; break;
+        case 'lab': role = 'lab_owner'; break;
+        case 'polyclinic': role = 'polyclinic_owner'; break;
+      }
+
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: ownerEmail,
         password: ownerPassword,
@@ -138,6 +147,7 @@ export default function RegisterOrganizationForm() {
           data: {
             first_name: ownerFirstName,
             last_name: ownerLastName,
+            role: role,
           },
         },
       });
@@ -148,14 +158,7 @@ export default function RegisterOrganizationForm() {
       // Upload logo
       const logoUrl = await uploadLogo(authData.user.id);
 
-      // 2. Assign role based on organization type
-      let role = '';
-      switch (orgType) {
-        case 'hospital': role = 'hospital_owner'; break;
-        case 'pharmacy': role = 'pharmacy_owner'; break;
-        case 'lab': role = 'lab_owner'; break;
-        case 'polyclinic': role = 'polyclinic_owner'; break;
-      }
+      // 2. Assign role in user_roles table
 
       const { error: roleError } = await supabase
         .from('user_roles')

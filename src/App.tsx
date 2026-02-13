@@ -11,6 +11,7 @@ import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 import Auth from "./pages/Auth";
 import RoleBasedDashboard from "./components/RoleBasedDashboard";
+import { Navbar } from "./components/layout/Navbar";
 import NotFound from "./pages/NotFound";
 import LaboratoryProfile from "./pages/LaboratoryProfile";
 import PolyclinicProfile from "./pages/PolyclinicProfile";
@@ -52,6 +53,7 @@ function AppContent() {
   
   return (
     <div className="min-h-screen bg-background">
+      <Navbar />
       <Routes>
         {/* Unauthenticated users go to auth, authenticated go to dashboard (chatbot) */}
         <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Navigate to="/auth" replace />} />

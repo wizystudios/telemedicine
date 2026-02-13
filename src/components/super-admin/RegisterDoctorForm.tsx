@@ -39,6 +39,7 @@ export default function RegisterDoctorForm() {
             first_name: firstName,
             last_name: lastName,
             phone,
+            role: 'doctor',
           },
         },
       });
