@@ -95,7 +95,7 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
+    <div className="min-h-screen bg-background pb-20">
       <div className="max-w-4xl mx-auto p-4 space-y-6">
         
         {/* Patient Problem Posting - Only for Patients */}
@@ -104,35 +104,35 @@ export default function Dashboard() {
         )}
 
         {/* Quick Stats - Compact Design */}
-        <Card className="dark:bg-gray-800 dark:border-gray-700">
+        <Card>
           <CardContent className="p-4">
             <div className="grid grid-cols-4 gap-2">
               <div className="text-center p-2">
-                <Calendar className="w-5 h-5 text-emerald-600 dark:text-emerald-400 mx-auto mb-1" />
-                <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{stats.appointments}</p>
-                <p className="text-xs text-gray-600 dark:text-gray-300">Miadi</p>
+                <Calendar className="w-5 h-5 text-primary mx-auto mb-1" />
+                <p className="text-lg font-bold">{stats.appointments}</p>
+                <p className="text-xs text-muted-foreground">Miadi</p>
               </div>
               
               <div className="text-center p-2">
-                <Users className="w-5 h-5 text-blue-600 dark:text-blue-400 mx-auto mb-1" />
-                <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                <Users className="w-5 h-5 text-primary mx-auto mb-1" />
+                <p className="text-lg font-bold">
                   {userRole === 'doctor' ? stats.patients : stats.doctors}
                 </p>
-                <p className="text-xs text-gray-600 dark:text-gray-300">
+                <p className="text-xs text-muted-foreground">
                   {userRole === 'doctor' ? 'Wagonjwa' : 'Madaktari'}
                 </p>
               </div>
               
               <div className="text-center p-2">
-                <MessageCircle className="w-5 h-5 text-purple-600 dark:text-purple-400 mx-auto mb-1" />
-                <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{stats.messages}</p>
-                <p className="text-xs text-gray-600 dark:text-gray-300">Ujumbe</p>
+                <MessageCircle className="w-5 h-5 text-primary mx-auto mb-1" />
+                <p className="text-lg font-bold">{stats.messages}</p>
+                <p className="text-xs text-muted-foreground">Ujumbe</p>
               </div>
               
               <div className="text-center p-2 opacity-50">
-                <Video className="w-5 h-5 text-gray-400 mx-auto mb-1" />
-                <p className="text-lg font-bold text-gray-400">-</p>
-                <p className="text-xs text-gray-400">Video</p>
+                <Video className="w-5 h-5 text-muted-foreground mx-auto mb-1" />
+                <p className="text-lg font-bold text-muted-foreground">-</p>
+                <p className="text-xs text-muted-foreground">Video</p>
               </div>
             </div>
           </CardContent>
@@ -140,7 +140,7 @@ export default function Dashboard() {
 
         {/* Doctor-specific: Patient Problems Alert - Compact */}
         {userRole === 'doctor' && (
-          <Card className="dark:bg-gray-800 dark:border-gray-700">
+          <Card>
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
