@@ -9,9 +9,10 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import {
-  Shield, Users, Building, Pill, TestTube, Activity, Plus, Trash2,
+  Shield, Users, Building, Pill, TestTube, Activity, Trash2,
   Eye, RefreshCw, Star, Phone, MapPin, Clock, CheckCircle2,
-  Stethoscope, CalendarCheck, TrendingUp, UserPlus, Building2,
+  Stethoscope, CalendarCheck, UserPlus, Building2, Mail, Globe,
+  Award, TrendingUp, Hash,
 } from 'lucide-react';
 import RegisterOrganizationForm from '@/components/super-admin/RegisterOrganizationForm';
 import RegisterDoctorForm from '@/components/super-admin/RegisterDoctorForm';
@@ -152,67 +153,70 @@ export default function SuperAdminDashboard() {
 
   // ─── Stat cards config ───
   const statCards = [
-    { label: 'Watumiaji', value: stats.totalUsers, icon: Users, gradient: 'from-blue-500 to-blue-600' },
-    { label: 'Madaktari', value: stats.totalDoctors, icon: Stethoscope, gradient: 'from-emerald-500 to-teal-600' },
-    { label: 'Hospitali', value: stats.totalHospitals, icon: Building, gradient: 'from-violet-500 to-purple-600' },
-    { label: 'Famasi', value: stats.totalPharmacies, icon: Pill, gradient: 'from-amber-500 to-orange-600' },
-    { label: 'Maabara', value: stats.totalLabs, icon: TestTube, gradient: 'from-rose-500 to-pink-600' },
-    { label: 'Miadi', value: stats.totalAppointments, icon: CalendarCheck, gradient: 'from-cyan-500 to-sky-600' },
+    { label: 'Watumiaji', value: stats.totalUsers, icon: Users, color: 'bg-primary/10 text-primary' },
+    { label: 'Madaktari', value: stats.totalDoctors, icon: Stethoscope, color: 'bg-emerald-500/10 text-emerald-500' },
+    { label: 'Hospitali', value: stats.totalHospitals, icon: Building, color: 'bg-violet-500/10 text-violet-500' },
+    { label: 'Famasi', value: stats.totalPharmacies, icon: Pill, color: 'bg-amber-500/10 text-amber-500' },
+    { label: 'Maabara', value: stats.totalLabs, icon: TestTube, color: 'bg-rose-500/10 text-rose-500' },
+    { label: 'Miadi', value: stats.totalAppointments, icon: CalendarCheck, color: 'bg-cyan-500/10 text-cyan-500' },
   ];
 
   // ─── Card renderers ───
   const renderProfileCard = (row: any) => {
     const role = row.role || 'patient';
     const roleColors: Record<string, string> = {
-      super_admin: 'bg-rose-500/10 text-rose-600 border-rose-200',
-      admin: 'bg-violet-500/10 text-violet-600 border-violet-200',
-      doctor: 'bg-emerald-500/10 text-emerald-600 border-emerald-200',
-      hospital_owner: 'bg-blue-500/10 text-blue-600 border-blue-200',
-      pharmacy_owner: 'bg-amber-500/10 text-amber-600 border-amber-200',
-      lab_owner: 'bg-pink-500/10 text-pink-600 border-pink-200',
-      patient: 'bg-sky-500/10 text-sky-600 border-sky-200',
+      super_admin: 'bg-rose-500/15 text-rose-400 border-rose-500/20',
+      admin: 'bg-violet-500/15 text-violet-400 border-violet-500/20',
+      doctor: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20',
+      hospital_owner: 'bg-blue-500/15 text-blue-400 border-blue-500/20',
+      pharmacy_owner: 'bg-amber-500/15 text-amber-400 border-amber-500/20',
+      lab_owner: 'bg-pink-500/15 text-pink-400 border-pink-500/20',
+      patient: 'bg-sky-500/15 text-sky-400 border-sky-500/20',
+      polyclinic_owner: 'bg-indigo-500/15 text-indigo-400 border-indigo-500/20',
     };
 
     return (
-      <Card key={row.id} className="group hover:shadow-md transition-all duration-200 border-border/50">
+      <Card key={row.id} className="group hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 border-border/40 overflow-hidden">
         <CardContent className="p-0">
-          <div className="flex items-center gap-4 p-4">
-            <Avatar className="h-12 w-12 ring-2 ring-primary/10">
+          <div className="flex items-center gap-4 p-5">
+            <Avatar className="h-14 w-14 ring-2 ring-border/50 shadow-sm">
               <AvatarImage src={row.avatar_url} />
-              <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/5 text-primary font-semibold">
+              <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/5 text-primary font-bold text-lg">
                 {row.first_name?.[0] || row.email?.[0]?.toUpperCase() || '?'}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-sm text-foreground truncate">
+              <h3 className="font-semibold text-foreground truncate">
                 {row.first_name || ''} {row.last_name || ''}
               </h3>
-              <p className="text-xs text-muted-foreground truncate">{row.email}</p>
-              <div className="flex items-center gap-2 mt-1.5">
-                <Badge variant="outline" className={`text-[10px] capitalize font-medium ${roleColors[role] || ''}`}>
+              <p className="text-xs text-muted-foreground truncate mt-0.5">{row.email}</p>
+              <div className="flex items-center gap-2 mt-2">
+                <Badge variant="outline" className={`text-[11px] capitalize font-medium px-2.5 py-0.5 ${roleColors[role] || ''}`}>
                   {role.replace(/_/g, ' ')}
                 </Badge>
                 {row.country && (
-                  <span className="text-[10px] text-muted-foreground">{row.country}</span>
+                  <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                    <Globe className="h-3 w-3" />{row.country}
+                  </span>
                 )}
               </div>
             </div>
           </div>
-          <div className="flex items-center border-t border-border/50 divide-x divide-border/50">
+          <div className="flex items-center border-t border-border/30 bg-muted/20">
             <Select onValueChange={(value) => changeUserRole(row.id, value)}>
-              <SelectTrigger className="flex-1 h-9 border-0 rounded-none text-xs bg-transparent hover:bg-muted/50 focus:ring-0">
+              <SelectTrigger className="flex-1 h-10 border-0 border-r border-border/30 rounded-none text-xs bg-transparent hover:bg-muted/50 focus:ring-0">
                 <SelectValue placeholder="Badili Role" />
               </SelectTrigger>
               <SelectContent>
-                {['patient', 'doctor', 'hospital_owner', 'pharmacy_owner', 'lab_owner', 'admin', 'super_admin'].map((r) => (
+                {['patient', 'doctor', 'hospital_owner', 'pharmacy_owner', 'lab_owner', 'polyclinic_owner', 'admin', 'super_admin'].map((r) => (
                   <SelectItem key={r} value={r} className="text-xs capitalize">{r.replace(/_/g, ' ')}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            <Button variant="ghost" size="sm" className="h-9 px-4 rounded-none text-xs text-muted-foreground hover:text-primary" onClick={() => setViewingRow(row)}>
-              <Eye className="h-3.5 w-3.5 mr-1" /> Angalia
+            <Button variant="ghost" size="sm" className="h-10 px-4 rounded-none text-xs text-muted-foreground hover:text-primary border-r border-border/30" onClick={() => setViewingRow(row)}>
+              <Eye className="h-3.5 w-3.5 mr-1.5" /> Angalia
             </Button>
-            <Button variant="ghost" size="sm" className="h-9 px-4 rounded-none text-xs text-muted-foreground hover:text-destructive" onClick={() => deleteRow(row.id)}>
+            <Button variant="ghost" size="sm" className="h-10 px-4 rounded-none text-xs text-muted-foreground hover:text-destructive" onClick={() => deleteRow(row.id)}>
               <Trash2 className="h-3.5 w-3.5" />
             </Button>
           </div>
@@ -224,56 +228,55 @@ export default function SuperAdminDashboard() {
   const renderDoctorCard = (row: any) => {
     const profile = row.profiles;
     return (
-      <Card key={row.id} className="group hover:shadow-md transition-all duration-200 border-border/50">
+      <Card key={row.id} className="group hover:shadow-lg hover:shadow-emerald-500/5 transition-all duration-300 border-border/40 overflow-hidden">
         <CardContent className="p-0">
-          <div className="flex items-center gap-4 p-4">
+          <div className="flex items-center gap-4 p-5">
             <div className="relative">
-              <Avatar className="h-12 w-12 ring-2 ring-emerald-500/20">
+              <Avatar className="h-14 w-14 ring-2 ring-emerald-500/20 shadow-sm">
                 <AvatarImage src={profile?.avatar_url} />
-                <AvatarFallback className="bg-gradient-to-br from-emerald-500/20 to-teal-500/10 text-emerald-600 font-semibold">
+                <AvatarFallback className="bg-gradient-to-br from-emerald-500/20 to-teal-500/10 text-emerald-500 font-bold text-lg">
                   {profile?.first_name?.[0] || 'D'}
                 </AvatarFallback>
               </Avatar>
               {row.is_verified && (
-                <div className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full bg-emerald-500 flex items-center justify-center ring-2 ring-card">
-                  <CheckCircle2 className="h-2.5 w-2.5 text-white" />
+                <div className="absolute -bottom-0.5 -right-0.5 h-5 w-5 rounded-full bg-emerald-500 flex items-center justify-center ring-2 ring-card shadow-sm">
+                  <CheckCircle2 className="h-3 w-3 text-white" />
                 </div>
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-sm text-foreground">
+              <h3 className="font-semibold text-foreground">
                 Dr. {profile?.first_name || ''} {profile?.last_name || ''}
               </h3>
-              <p className="text-xs text-muted-foreground">{row.hospital_name || row.polyclinic_name || 'Daktari Binafsi'}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{row.hospital_name || row.polyclinic_name || 'Daktari Binafsi'}</p>
               <div className="flex flex-wrap items-center gap-3 mt-2">
-                <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <Clock className="h-3 w-3" />
-                  <span>{row.experience_years || 0} miaka</span>
-                </div>
-                <div className="flex items-center gap-1 text-xs font-medium text-foreground">
-                  <span>TZS {row.consultation_fee?.toLocaleString() || 0}</span>
-                </div>
-                <div className="flex items-center gap-0.5">
+                <span className="inline-flex items-center gap-1 text-xs text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-full">
+                  <Clock className="h-3 w-3" /> {row.experience_years || 0} miaka
+                </span>
+                <span className="inline-flex items-center gap-1 text-xs font-medium text-foreground bg-muted/50 px-2 py-0.5 rounded-full">
+                  TZS {row.consultation_fee?.toLocaleString() || 0}
+                </span>
+                <span className="inline-flex items-center gap-0.5 text-xs">
                   <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-                  <span className="text-xs font-medium">{row.rating || 0}</span>
-                </div>
+                  <span className="font-medium">{row.rating || 0}</span>
+                </span>
               </div>
             </div>
           </div>
-          <div className="flex items-center border-t border-border/50 divide-x divide-border/50">
+          <div className="flex items-center border-t border-border/30 bg-muted/20">
             {!row.is_verified ? (
-              <Button variant="ghost" size="sm" className="flex-1 h-9 rounded-none text-xs text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700" onClick={() => verifyEntity(row.id, 'doctor_profiles')}>
-                <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Idhinisha
+              <Button variant="ghost" size="sm" className="flex-1 h-10 rounded-none text-xs text-emerald-500 hover:bg-emerald-500/10 font-medium" onClick={() => verifyEntity(row.id, 'doctor_profiles')}>
+                <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" /> Idhinisha
               </Button>
             ) : (
-              <div className="flex-1 h-9 flex items-center justify-center text-xs text-emerald-600">
-                <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Amethibitishwa
+              <div className="flex-1 h-10 flex items-center justify-center text-xs text-emerald-500 font-medium">
+                <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" /> Amethibitishwa
               </div>
             )}
-            <Button variant="ghost" size="sm" className="h-9 px-4 rounded-none text-xs text-muted-foreground hover:text-primary" onClick={() => setViewingRow(row)}>
-              <Eye className="h-3.5 w-3.5 mr-1" /> Angalia
+            <Button variant="ghost" size="sm" className="h-10 px-4 rounded-none text-xs text-muted-foreground hover:text-primary border-l border-border/30" onClick={() => setViewingRow(row)}>
+              <Eye className="h-3.5 w-3.5 mr-1.5" /> Angalia
             </Button>
-            <Button variant="ghost" size="sm" className="h-9 px-4 rounded-none text-xs text-muted-foreground hover:text-destructive" onClick={() => deleteRow(row.id)}>
+            <Button variant="ghost" size="sm" className="h-10 px-4 rounded-none text-xs text-muted-foreground hover:text-destructive border-l border-border/30" onClick={() => deleteRow(row.id)}>
               <Trash2 className="h-3.5 w-3.5" />
             </Button>
           </div>
@@ -283,68 +286,68 @@ export default function SuperAdminDashboard() {
   };
 
   const renderInstitutionCard = (row: any, type: string) => {
-    const typeConfig: Record<string, { gradient: string; iconColor: string }> = {
-      hospitals: { gradient: 'from-blue-500/20 to-indigo-500/10', iconColor: 'text-blue-600' },
-      polyclinics: { gradient: 'from-violet-500/20 to-purple-500/10', iconColor: 'text-violet-600' },
-      pharmacies: { gradient: 'from-amber-500/20 to-orange-500/10', iconColor: 'text-amber-600' },
-      laboratories: { gradient: 'from-rose-500/20 to-pink-500/10', iconColor: 'text-rose-600' },
+    const typeConfig: Record<string, { iconBg: string; iconColor: string }> = {
+      hospitals: { iconBg: 'bg-blue-500/10', iconColor: 'text-blue-500' },
+      polyclinics: { iconBg: 'bg-violet-500/10', iconColor: 'text-violet-500' },
+      pharmacies: { iconBg: 'bg-amber-500/10', iconColor: 'text-amber-500' },
+      laboratories: { iconBg: 'bg-rose-500/10', iconColor: 'text-rose-500' },
     };
     const config = typeConfig[type] || typeConfig.hospitals;
     const TypeIcon = TABLES.find(t => t.name === type)?.icon || Building;
 
     return (
-      <Card key={row.id} className="group hover:shadow-md transition-all duration-200 border-border/50">
+      <Card key={row.id} className="group hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 border-border/40 overflow-hidden">
         <CardContent className="p-0">
-          <div className="flex items-center gap-4 p-4">
+          <div className="flex items-center gap-4 p-5">
             <div className="relative">
-              <Avatar className="h-12 w-12 rounded-xl">
+              <Avatar className="h-14 w-14 rounded-2xl shadow-sm">
                 {row.logo_url ? (
-                  <AvatarImage src={row.logo_url} className="rounded-xl object-cover" />
+                  <AvatarImage src={row.logo_url} className="rounded-2xl object-cover" />
                 ) : null}
-                <AvatarFallback className={`rounded-xl bg-gradient-to-br ${config.gradient} ${config.iconColor}`}>
-                  <TypeIcon className="h-5 w-5" />
+                <AvatarFallback className={`rounded-2xl ${config.iconBg} ${config.iconColor}`}>
+                  <TypeIcon className="h-6 w-6" />
                 </AvatarFallback>
               </Avatar>
               {row.is_verified && (
-                <div className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full bg-emerald-500 flex items-center justify-center ring-2 ring-card">
-                  <CheckCircle2 className="h-2.5 w-2.5 text-white" />
+                <div className="absolute -bottom-0.5 -right-0.5 h-5 w-5 rounded-full bg-emerald-500 flex items-center justify-center ring-2 ring-card shadow-sm">
+                  <CheckCircle2 className="h-3 w-3 text-white" />
                 </div>
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-sm text-foreground truncate">{row.name}</h3>
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
+              <h3 className="font-semibold text-foreground truncate">{row.name}</h3>
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
                 <MapPin className="h-3 w-3 shrink-0" />
                 <span className="truncate">{row.address}</span>
               </div>
               <div className="flex flex-wrap items-center gap-3 mt-2">
                 {row.phone && (
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <span className="inline-flex items-center gap-1 text-xs text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-full">
                     <Phone className="h-3 w-3" /> {row.phone}
-                  </div>
+                  </span>
                 )}
-                <div className="flex items-center gap-0.5">
+                <span className="inline-flex items-center gap-0.5 text-xs">
                   <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-                  <span className="text-xs font-medium">{row.rating || 0}</span>
-                  <span className="text-[10px] text-muted-foreground">({row.total_reviews || 0})</span>
-                </div>
+                  <span className="font-medium">{row.rating || 0}</span>
+                  <span className="text-muted-foreground">({row.total_reviews || 0})</span>
+                </span>
               </div>
             </div>
           </div>
-          <div className="flex items-center border-t border-border/50 divide-x divide-border/50">
+          <div className="flex items-center border-t border-border/30 bg-muted/20">
             {!row.is_verified ? (
-              <Button variant="ghost" size="sm" className="flex-1 h-9 rounded-none text-xs text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700" onClick={() => verifyEntity(row.id, type)}>
-                <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Idhinisha
+              <Button variant="ghost" size="sm" className="flex-1 h-10 rounded-none text-xs text-emerald-500 hover:bg-emerald-500/10 font-medium" onClick={() => verifyEntity(row.id, type)}>
+                <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" /> Idhinisha
               </Button>
             ) : (
-              <div className="flex-1 h-9 flex items-center justify-center text-xs text-emerald-600">
-                <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Imethibitishwa
+              <div className="flex-1 h-10 flex items-center justify-center text-xs text-emerald-500 font-medium">
+                <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" /> Imethibitishwa
               </div>
             )}
-            <Button variant="ghost" size="sm" className="h-9 px-4 rounded-none text-xs text-muted-foreground hover:text-primary" onClick={() => setViewingRow(row)}>
-              <Eye className="h-3.5 w-3.5 mr-1" /> Angalia
+            <Button variant="ghost" size="sm" className="h-10 px-4 rounded-none text-xs text-muted-foreground hover:text-primary border-l border-border/30" onClick={() => setViewingRow(row)}>
+              <Eye className="h-3.5 w-3.5 mr-1.5" /> Angalia
             </Button>
-            <Button variant="ghost" size="sm" className="h-9 px-4 rounded-none text-xs text-muted-foreground hover:text-destructive" onClick={() => deleteRow(row.id)}>
+            <Button variant="ghost" size="sm" className="h-10 px-4 rounded-none text-xs text-muted-foreground hover:text-destructive border-l border-border/30" onClick={() => deleteRow(row.id)}>
               <Trash2 className="h-3.5 w-3.5" />
             </Button>
           </div>
@@ -357,46 +360,47 @@ export default function SuperAdminDashboard() {
     const patientName = row.patient ? `${row.patient.first_name || ''} ${row.patient.last_name || ''}`.trim() : 'Mgonjwa';
     const doctorName = row.doctor ? `Dr. ${row.doctor.first_name || ''} ${row.doctor.last_name || ''}`.trim() : 'Daktari';
     const statusConfig: Record<string, { bg: string; text: string; dot: string }> = {
-      scheduled: { bg: 'bg-blue-500/10', text: 'text-blue-600', dot: 'bg-blue-500' },
-      completed: { bg: 'bg-emerald-500/10', text: 'text-emerald-600', dot: 'bg-emerald-500' },
-      cancelled: { bg: 'bg-rose-500/10', text: 'text-rose-600', dot: 'bg-rose-500' },
-      pending: { bg: 'bg-amber-500/10', text: 'text-amber-600', dot: 'bg-amber-500' },
+      scheduled: { bg: 'bg-blue-500/15', text: 'text-blue-400', dot: 'bg-blue-500' },
+      approved: { bg: 'bg-emerald-500/15', text: 'text-emerald-400', dot: 'bg-emerald-500' },
+      completed: { bg: 'bg-emerald-500/15', text: 'text-emerald-400', dot: 'bg-emerald-500' },
+      cancelled: { bg: 'bg-rose-500/15', text: 'text-rose-400', dot: 'bg-rose-500' },
+      pending: { bg: 'bg-amber-500/15', text: 'text-amber-400', dot: 'bg-amber-500' },
     };
     const sc = statusConfig[row.status] || statusConfig.pending;
 
     return (
-      <Card key={row.id} className="group hover:shadow-md transition-all duration-200 border-border/50">
+      <Card key={row.id} className="group hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 border-border/40 overflow-hidden">
         <CardContent className="p-0">
-          <div className="p-4">
+          <div className="p-5">
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-cyan-500/20 to-sky-500/10 flex items-center justify-center">
-                  <CalendarCheck className="h-5 w-5 text-cyan-600" />
+                <div className={`h-12 w-12 rounded-2xl bg-cyan-500/10 flex items-center justify-center`}>
+                  <CalendarCheck className="h-5 w-5 text-cyan-500" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-sm text-foreground">{patientName}</h3>
-                  <p className="text-xs text-muted-foreground">{doctorName}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{doctorName}</p>
                 </div>
               </div>
-              <Badge className={`${sc.bg} ${sc.text} border-0 text-[10px] font-medium`}>
-                <span className={`h-1.5 w-1.5 rounded-full ${sc.dot} mr-1 inline-block`} />
+              <Badge className={`${sc.bg} ${sc.text} border-0 text-[11px] font-medium px-2.5`}>
+                <span className={`h-1.5 w-1.5 rounded-full ${sc.dot} mr-1.5 inline-block`} />
                 {row.status}
               </Badge>
             </div>
-            <div className="flex items-center gap-4 text-xs text-muted-foreground">
-              <div className="flex items-center gap-1">
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              <span className="inline-flex items-center gap-1 bg-muted/50 px-2.5 py-1 rounded-full">
                 <Clock className="h-3 w-3" />
                 {new Date(row.appointment_date).toLocaleDateString('sw-TZ', { day: 'numeric', month: 'short', year: 'numeric' })}
-              </div>
-              <Badge variant="outline" className="text-[10px] font-normal">{row.consultation_type || 'video'}</Badge>
+              </span>
+              <Badge variant="outline" className="text-[11px] font-normal">{row.consultation_type || 'video'}</Badge>
               {row.fee && <span className="font-medium text-foreground">TZS {Number(row.fee).toLocaleString()}</span>}
             </div>
           </div>
-          <div className="flex items-center border-t border-border/50 divide-x divide-border/50">
-            <Button variant="ghost" size="sm" className="flex-1 h-9 rounded-none text-xs text-muted-foreground hover:text-primary" onClick={() => setViewingRow(row)}>
-              <Eye className="h-3.5 w-3.5 mr-1" /> Angalia
+          <div className="flex items-center border-t border-border/30 bg-muted/20">
+            <Button variant="ghost" size="sm" className="flex-1 h-10 rounded-none text-xs text-muted-foreground hover:text-primary" onClick={() => setViewingRow(row)}>
+              <Eye className="h-3.5 w-3.5 mr-1.5" /> Angalia
             </Button>
-            <Button variant="ghost" size="sm" className="h-9 px-4 rounded-none text-xs text-muted-foreground hover:text-destructive" onClick={() => deleteRow(row.id)}>
+            <Button variant="ghost" size="sm" className="h-10 px-4 rounded-none text-xs text-muted-foreground hover:text-destructive border-l border-border/30" onClick={() => deleteRow(row.id)}>
               <Trash2 className="h-3.5 w-3.5" />
             </Button>
           </div>
@@ -406,22 +410,22 @@ export default function SuperAdminDashboard() {
   };
 
   const renderGenericCard = (row: any) => (
-    <Card key={row.id} className="group hover:shadow-md transition-all duration-200 border-border/50">
+    <Card key={row.id} className="group hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 border-border/40 overflow-hidden">
       <CardContent className="p-0">
-        <div className="flex items-center gap-3 p-4">
-          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+        <div className="flex items-center gap-4 p-5">
+          <div className={`h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center`}>
             <Activity className="h-5 w-5 text-primary" />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-sm truncate">{row.name || row.title || row.id?.slice(0, 8)}</h3>
-            {row.description && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{row.description}</p>}
+            <h3 className="font-semibold truncate">{row.name || row.title || row.id?.slice(0, 8)}</h3>
+            {row.description && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{row.description}</p>}
           </div>
         </div>
-        <div className="flex items-center border-t border-border/50 divide-x divide-border/50">
-          <Button variant="ghost" size="sm" className="flex-1 h-9 rounded-none text-xs text-muted-foreground hover:text-primary" onClick={() => setViewingRow(row)}>
-            <Eye className="h-3.5 w-3.5 mr-1" /> Angalia
+        <div className="flex items-center border-t border-border/30 bg-muted/20">
+          <Button variant="ghost" size="sm" className="flex-1 h-10 rounded-none text-xs text-muted-foreground hover:text-primary" onClick={() => setViewingRow(row)}>
+            <Eye className="h-3.5 w-3.5 mr-1.5" /> Angalia
           </Button>
-          <Button variant="ghost" size="sm" className="h-9 px-4 rounded-none text-xs text-muted-foreground hover:text-destructive" onClick={() => deleteRow(row.id)}>
+          <Button variant="ghost" size="sm" className="h-10 px-4 rounded-none text-xs text-muted-foreground hover:text-destructive border-l border-border/30" onClick={() => deleteRow(row.id)}>
             <Trash2 className="h-3.5 w-3.5" />
           </Button>
         </div>
@@ -432,7 +436,7 @@ export default function SuperAdminDashboard() {
   const renderCards = () => {
     if (tableLoading) {
       return (
-        <div className="flex flex-col items-center justify-center py-16 gap-3">
+        <div className="flex flex-col items-center justify-center py-20 gap-3">
           <RefreshCw className="h-6 w-6 animate-spin text-primary" />
           <p className="text-sm text-muted-foreground">Inapakia...</p>
         </div>
@@ -440,16 +444,19 @@ export default function SuperAdminDashboard() {
     }
     if (tableData.length === 0) {
       return (
-        <div className="flex flex-col items-center justify-center py-16 gap-3">
-          <div className="h-16 w-16 rounded-2xl bg-muted/50 flex items-center justify-center">
-            <Activity className="h-8 w-8 text-muted-foreground/50" />
+        <div className="flex flex-col items-center justify-center py-20 gap-4">
+          <div className="h-20 w-20 rounded-3xl bg-muted/30 flex items-center justify-center">
+            <Activity className="h-10 w-10 text-muted-foreground/30" />
           </div>
-          <p className="text-sm text-muted-foreground">Hakuna data bado</p>
+          <div className="text-center">
+            <p className="text-sm font-medium text-muted-foreground">Hakuna data bado</p>
+            <p className="text-xs text-muted-foreground/70 mt-1">Data itaonekana hapa baada ya kuongeza</p>
+          </div>
         </div>
       );
     }
     return (
-      <div className="grid gap-3">
+      <div className="grid gap-3 sm:grid-cols-2">
         {tableData.map((row) => {
           switch (activeTable) {
             case 'profiles': return renderProfileCard(row);
@@ -466,19 +473,37 @@ export default function SuperAdminDashboard() {
     );
   };
 
-  // ─── Detail sheet ───
+  // ─── Beautiful Detail sheet ───
   const renderDetailSheet = () => {
     if (!viewingRow) return null;
     const excludeKeys = ['user_roles', 'profiles', 'patient', 'doctor'];
+
     const formatValue = (key: string, value: any): string => {
       if (value === null || value === undefined) return '—';
-      if (typeof value === 'boolean') return value ? '✓ Ndio' : '✗ Hapana';
+      if (typeof value === 'boolean') return value ? 'Ndio' : 'Hapana';
       if (key.includes('date') || key === 'created_at' || key === 'updated_at') {
         try { return new Date(value).toLocaleString('sw-TZ'); } catch { return String(value); }
+      }
+      if (key.includes('fee') || key === 'price' || key === 'payment_amount') {
+        return `TZS ${Number(value).toLocaleString()}`;
       }
       if (typeof value === 'object') return JSON.stringify(value, null, 2);
       return String(value);
     };
+
+    const getIcon = (key: string) => {
+      if (key.includes('email')) return <Mail className="h-4 w-4" />;
+      if (key.includes('phone')) return <Phone className="h-4 w-4" />;
+      if (key.includes('address')) return <MapPin className="h-4 w-4" />;
+      if (key.includes('website')) return <Globe className="h-4 w-4" />;
+      if (key.includes('rating')) return <Star className="h-4 w-4" />;
+      if (key.includes('verified')) return <CheckCircle2 className="h-4 w-4" />;
+      if (key.includes('date') || key.includes('created') || key.includes('updated')) return <Clock className="h-4 w-4" />;
+      if (key.includes('fee') || key.includes('price')) return <TrendingUp className="h-4 w-4" />;
+      if (key.includes('license') || key.includes('experience')) return <Award className="h-4 w-4" />;
+      return <Hash className="h-4 w-4" />;
+    };
+
     const labelMap: Record<string, string> = {
       id: 'ID', name: 'Jina', first_name: 'Jina la kwanza', last_name: 'Jina la mwisho',
       email: 'Barua pepe', phone: 'Simu', address: 'Anuani', description: 'Maelezo',
@@ -491,31 +516,62 @@ export default function SuperAdminDashboard() {
       doctor_id: 'Daktari ID', role: 'Jukumu', country: 'Nchi',
       is_promoted: 'Inatangazwa', website: 'Tovuti', services: 'Huduma',
       logo_url: 'Picha', avatar_url: 'Picha', bio: 'Wasifu',
-      total_reviews: 'Maoni', polyclinic_name: 'Polyclinic',
+      total_reviews: 'Maoni jumla', polyclinic_name: 'Polyclinic',
+      username: 'Jina la mtumiaji', country_code: 'Msimbo wa nchi',
+      specialty_id: 'Utaalamu ID', insurance_id: 'Bima ID',
+      duration_minutes: 'Muda (dakika)', symptoms: 'Dalili',
+      notes: 'Maelezo', prescription: 'Dawa iliyoandikwa',
+      payment_status: 'Hali ya malipo', meeting_room_id: 'Chumba cha mkutano',
     };
+
+    const displayName = viewingRow.name || `${viewingRow.first_name || ''} ${viewingRow.last_name || ''}`.trim() || 'Maelezo';
 
     return (
       <Sheet open={!!viewingRow} onOpenChange={() => setViewingRow(null)}>
-        <SheetContent side="bottom" className="max-h-[85vh] rounded-t-3xl">
-          <SheetHeader className="pb-3">
-            <SheetTitle className="text-base">
-              {viewingRow.name || `${viewingRow.first_name || ''} ${viewingRow.last_name || ''}`.trim() || 'Maelezo'}
-            </SheetTitle>
+        <SheetContent side="bottom" className="max-h-[85vh] rounded-t-3xl border-t-2 border-primary/20">
+          <SheetHeader className="pb-4">
+            <div className="flex items-center gap-3">
+              <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+                {activeTable === 'profiles' ? <Users className="h-5 w-5 text-primary" /> :
+                 activeTable === 'doctor_profiles' ? <Stethoscope className="h-5 w-5 text-primary" /> :
+                 activeTable === 'appointments' ? <CalendarCheck className="h-5 w-5 text-primary" /> :
+                 <Building className="h-5 w-5 text-primary" />}
+              </div>
+              <div>
+                <SheetTitle className="text-lg">{displayName}</SheetTitle>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {TABLES.find(t => t.name === activeTable)?.label || activeTable}
+                </p>
+              </div>
+            </div>
           </SheetHeader>
-          <ScrollArea className="h-[calc(85vh-80px)]">
-            <div className="space-y-1 pr-2">
+          <ScrollArea className="h-[calc(85vh-100px)]">
+            <div className="space-y-1 pr-4">
               {Object.entries(viewingRow)
                 .filter(([key]) => !excludeKeys.includes(key))
-                .map(([key, value]) => (
-                  <div key={key} className="flex items-start justify-between gap-4 py-2.5 border-b border-border/30 last:border-0">
-                    <span className="text-xs font-medium text-muted-foreground shrink-0 min-w-[100px]">
-                      {labelMap[key] || key.replace(/_/g, ' ')}
-                    </span>
-                    <span className="text-sm text-foreground text-right break-all">
-                      {formatValue(key, value)}
-                    </span>
-                  </div>
-                ))}
+                .map(([key, value]) => {
+                  const formattedValue = formatValue(key, value);
+                  const isBool = typeof value === 'boolean';
+                  return (
+                    <div key={key} className="flex items-center gap-3 py-3 border-b border-border/20 last:border-0 group/item hover:bg-muted/20 rounded-xl px-3 -mx-3 transition-colors">
+                      <div className="text-muted-foreground/60 group-hover/item:text-muted-foreground transition-colors">
+                        {getIcon(key)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">
+                          {labelMap[key] || key.replace(/_/g, ' ')}
+                        </p>
+                        <p className={`text-sm mt-0.5 break-all ${formattedValue === '—' ? 'text-muted-foreground/40 italic' : 'text-foreground'}`}>
+                          {isBool ? (
+                            <Badge variant={value ? 'default' : 'secondary'} className={`text-[11px] ${value ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20' : 'bg-muted text-muted-foreground'}`}>
+                              {value ? '✓ Ndio' : '✗ Hapana'}
+                            </Badge>
+                          ) : formattedValue}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
             </div>
           </ScrollArea>
         </SheetContent>
@@ -535,52 +591,39 @@ export default function SuperAdminDashboard() {
   const activeTableConfig = TABLES.find(t => t.name === activeTable);
 
   return (
-    <div className="max-w-2xl mx-auto pb-24">
-      {/* Hero header */}
-      <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6 pb-4">
-        <div className="flex items-center gap-3 mb-1">
-          <div className="h-11 w-11 rounded-2xl bg-primary/15 flex items-center justify-center">
-            <Shield className="w-5 h-5 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-foreground">Super Admin</h1>
-            <p className="text-xs text-muted-foreground">Dhibiti mfumo wote wa TeleMed</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Stats grid */}
-      <div className="px-4 -mt-1">
-        <div className="grid grid-cols-3 gap-2.5 mb-5">
+    <div className="max-w-5xl mx-auto pb-24">
+      {/* Stats grid - no hero header */}
+      <div className="p-4 pt-6">
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 mb-6">
           {statCards.map((s, i) => (
-            <div
-              key={i}
-              className={`rounded-2xl bg-gradient-to-br ${s.gradient} p-3.5 text-white relative overflow-hidden`}
-            >
-              <s.icon className="h-4 w-4 opacity-80 mb-1.5" />
-              <p className="text-2xl font-bold leading-none">{s.value}</p>
-              <p className="text-[10px] opacity-80 mt-1 font-medium">{s.label}</p>
-              <div className="absolute -bottom-2 -right-2 h-12 w-12 rounded-full bg-white/10" />
-            </div>
+            <Card key={i} className="border-border/40 hover:shadow-md transition-all duration-300">
+              <CardContent className="p-4 text-center">
+                <div className={`h-10 w-10 rounded-2xl ${s.color} flex items-center justify-center mx-auto mb-2`}>
+                  <s.icon className="h-4 w-4" />
+                </div>
+                <p className="text-2xl font-bold text-foreground">{s.value}</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5 font-medium">{s.label}</p>
+              </CardContent>
+            </Card>
           ))}
         </div>
       </div>
 
       {/* Main tabs */}
       <div className="px-4">
-        <Tabs defaultValue="database" className="space-y-4">
-          <TabsList className="w-full h-auto bg-muted/50 p-1 rounded-2xl grid grid-cols-4 gap-1">
-            <TabsTrigger value="database" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2">
-              <Activity className="h-3.5 w-3.5 mr-1" />Data
+        <Tabs defaultValue="database" className="space-y-5">
+          <TabsList className="w-full h-auto bg-muted/30 p-1.5 rounded-2xl grid grid-cols-4 gap-1">
+            <TabsTrigger value="database" className="text-xs data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
+              <Activity className="h-3.5 w-3.5 mr-1.5" />Data
             </TabsTrigger>
-            <TabsTrigger value="register-user" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2">
-              <UserPlus className="h-3.5 w-3.5 mr-1" />Mtumiaji
+            <TabsTrigger value="register-user" className="text-xs data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
+              <UserPlus className="h-3.5 w-3.5 mr-1.5" />Mtumiaji
             </TabsTrigger>
-            <TabsTrigger value="register-org" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2">
-              <Building className="h-3.5 w-3.5 mr-1" />Shirika
+            <TabsTrigger value="register-org" className="text-xs data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
+              <Building className="h-3.5 w-3.5 mr-1.5" />Shirika
             </TabsTrigger>
-            <TabsTrigger value="register-doctor" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2">
-              <Stethoscope className="h-3.5 w-3.5 mr-1" />Daktari
+            <TabsTrigger value="register-doctor" className="text-xs data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
+              <Stethoscope className="h-3.5 w-3.5 mr-1.5" />Daktari
             </TabsTrigger>
           </TabsList>
 
@@ -594,10 +637,10 @@ export default function SuperAdminDashboard() {
                     <button
                       key={t.name}
                       onClick={() => setActiveTable(t.name)}
-                      className={`shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-medium transition-all ${
+                      className={`shrink-0 flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-medium transition-all duration-200 ${
                         isActive
-                          ? 'bg-primary text-primary-foreground shadow-sm'
-                          : 'bg-muted/60 text-muted-foreground hover:bg-muted'
+                          ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20'
+                          : 'bg-muted/40 text-muted-foreground hover:bg-muted/70 hover:text-foreground'
                       }`}
                     >
                       <t.icon className="h-3.5 w-3.5" />
@@ -610,11 +653,11 @@ export default function SuperAdminDashboard() {
 
             {/* Section header */}
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <h2 className="text-base font-semibold text-foreground">
+              <div className="flex items-center gap-2.5">
+                <h2 className="text-lg font-semibold text-foreground">
                   {activeTableConfig?.label}
                 </h2>
-                <Badge variant="secondary" className="text-xs font-medium">
+                <Badge variant="secondary" className="text-xs font-semibold px-2.5 py-0.5">
                   {tableData.length}
                 </Badge>
               </div>
@@ -622,7 +665,7 @@ export default function SuperAdminDashboard() {
                 size="sm"
                 variant="outline"
                 onClick={() => fetchTableData(activeTable)}
-                className="h-8 text-xs rounded-xl"
+                className="h-9 text-xs rounded-xl px-4"
               >
                 <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${tableLoading ? 'animate-spin' : ''}`} />
                 Pakia upya
