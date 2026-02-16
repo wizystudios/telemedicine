@@ -73,7 +73,7 @@ export default function SuperAdminDashboard() {
       let query;
       switch (tableName) {
         case 'profiles':
-          query = supabase.from('profiles').select('*, user_roles(role)');
+          query = supabase.from('profiles').select('*');
           break;
         case 'doctor_profiles':
           query = supabase.from('doctor_profiles').select('*, profiles:user_id(first_name, last_name, avatar_url, email)');
@@ -148,7 +148,7 @@ export default function SuperAdminDashboard() {
 
   // ─── Card renderers per table ───
   const renderProfileCard = (row: any) => {
-    const role = row.user_roles?.[0]?.role || row.role || 'patient';
+    const role = row.role || 'patient';
     return (
       <Card key={row.id} className="overflow-hidden">
         <CardContent className="p-4">
