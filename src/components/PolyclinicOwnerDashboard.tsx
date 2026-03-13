@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Building2, Users, Plus, Loader2, Stethoscope, 
   TrendingUp, MapPin, Phone, Mail, Clock, Trash2,
-  FileText, Settings, Video
+  FileText, Settings, Video, Bell, MessageCircle, Calendar
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
