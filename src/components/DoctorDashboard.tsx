@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Calendar, MessageCircle, Users, Clock, CheckCircle, XCircle, 
-  Video, Phone, Activity, Loader2, AlertCircle, Settings
+  Video, Phone, Activity, Loader2, AlertCircle, Settings, Bell, FileText
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { SettingsDrawer } from '@/components/SettingsDrawer';
