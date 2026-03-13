@@ -27,6 +27,7 @@ const DAYS = ['Jumapili', 'Jumatatu', 'Jumanne', 'Jumatano', 'Alhamisi', 'Ijumaa
 
 export default function PolyclinicOwnerDashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [polyclinic, setPolyclinic] = useState<any>(null);
   const [doctors, setDoctors] = useState<any[]>([]);
