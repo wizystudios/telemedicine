@@ -140,6 +140,16 @@ export default function HospitalOwnerDashboard() {
         services: servicesData?.length || 0
       });
 
+      // Fetch contents
+      const { data: contentsData } = await supabase
+        .from('institution_content')
+        .select('*')
+        .eq('institution_type', 'hospital')
+        .eq('owner_id', user?.id)
+        .order('created_at', { ascending: false });
+
+      setContents(contentsData || []);
+
       // Chart data
       const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
       setChartData(months.map(name => ({ name, value: Math.floor(Math.random() * 30) + 5 })));
