@@ -15,7 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Building2, Users, Calendar, Plus, Loader2, Stethoscope, 
   TrendingUp, MapPin, Phone, Mail, Clock, Trash2, Ambulance,
-  FileText, Edit, DollarSign, Settings, Video
+  FileText, Edit, DollarSign, Settings, Video, Bell, MessageCircle
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
