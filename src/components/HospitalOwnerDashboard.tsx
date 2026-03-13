@@ -710,6 +710,16 @@ export default function HospitalOwnerDashboard() {
           </Card>
         </TabsContent>
 
+        {/* Content Tab - Maudhui */}
+        <TabsContent value="content" className="space-y-4">
+          <ContentUploadSection
+            institutionType="hospital"
+            institutionId={hospital.id}
+            contents={contents}
+            onRefresh={fetchData}
+          />
+        </TabsContent>
+
         {/* Ambulance Tab */}
         <TabsContent value="ambulance" className="space-y-4">
           <Card>
