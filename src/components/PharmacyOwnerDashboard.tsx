@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,7 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Pill, Package, Plus, Loader2, Trash2, MapPin, Phone, Mail, TrendingUp,
-  Edit, Upload, Video, Quote, Clock, AlertCircle, Building2
+  Edit, Upload, Video, Quote, Clock, AlertCircle, Building2, Bell, MessageCircle, Calendar
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
@@ -22,6 +23,7 @@ import { LogoUpload } from '@/components/LogoUpload';
 
 export default function PharmacyOwnerDashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [pharmacy, setPharmacy] = useState<any>(null);
   const [medicines, setMedicines] = useState<any[]>([]);
@@ -287,6 +289,22 @@ export default function PharmacyOwnerDashboard() {
           </CardContent>
         </Card>
       )}
+
+      {/* Quick Nav */}
+      <div className="grid grid-cols-3 gap-2">
+        <Button variant="outline" className="h-auto py-3 flex-col gap-1" onClick={() => navigate('/notifications')}>
+          <Bell className="h-4 w-4" />
+          <span className="text-[10px]">Arifa</span>
+        </Button>
+        <Button variant="outline" className="h-auto py-3 flex-col gap-1" onClick={() => navigate('/messages')}>
+          <MessageCircle className="h-4 w-4" />
+          <span className="text-[10px]">Ujumbe</span>
+        </Button>
+        <Button variant="outline" className="h-auto py-3 flex-col gap-1" onClick={() => navigate('/appointments')}>
+          <Calendar className="h-4 w-4" />
+          <span className="text-[10px]">Miadi</span>
+        </Button>
+      </div>
 
       <Tabs defaultValue="medicines" className="space-y-4">
         <TabsList className="grid w-full grid-cols-3">

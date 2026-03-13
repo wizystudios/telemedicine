@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Building2, Users, Plus, Loader2, Stethoscope, 
   TrendingUp, MapPin, Phone, Mail, Clock, Trash2,
-  FileText, Settings, Video
+  FileText, Settings, Video, Bell, MessageCircle, Calendar
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
@@ -26,6 +27,7 @@ const DAYS = ['Jumapili', 'Jumatatu', 'Jumanne', 'Jumatano', 'Alhamisi', 'Ijumaa
 
 export default function PolyclinicOwnerDashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [polyclinic, setPolyclinic] = useState<any>(null);
   const [doctors, setDoctors] = useState<any[]>([]);
@@ -344,6 +346,22 @@ export default function PolyclinicOwnerDashboard() {
             <p className="text-[10px] text-muted-foreground">Rating</p>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Quick Nav */}
+      <div className="grid grid-cols-3 gap-2">
+        <Button variant="outline" className="h-auto py-3 flex-col gap-1" onClick={() => navigate('/notifications')}>
+          <Bell className="h-4 w-4" />
+          <span className="text-[10px]">Arifa</span>
+        </Button>
+        <Button variant="outline" className="h-auto py-3 flex-col gap-1" onClick={() => navigate('/messages')}>
+          <MessageCircle className="h-4 w-4" />
+          <span className="text-[10px]">Ujumbe</span>
+        </Button>
+        <Button variant="outline" className="h-auto py-3 flex-col gap-1" onClick={() => navigate('/appointments')}>
+          <Calendar className="h-4 w-4" />
+          <span className="text-[10px]">Miadi</span>
+        </Button>
       </div>
 
       {/* Tabs */}

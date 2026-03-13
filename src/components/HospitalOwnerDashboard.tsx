@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,7 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Building2, Users, Calendar, Plus, Loader2, Stethoscope, 
   TrendingUp, MapPin, Phone, Mail, Clock, Trash2, Ambulance,
-  FileText, Edit, DollarSign, Settings, Video
+  FileText, Edit, DollarSign, Settings, Video, Bell, MessageCircle
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
@@ -29,6 +30,7 @@ const DAYS = ['Jumapili', 'Jumatatu', 'Jumanne', 'Jumatano', 'Alhamisi', 'Ijumaa
 
 export default function HospitalOwnerDashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [hospital, setHospital] = useState<any>(null);
   const [doctors, setDoctors] = useState<any[]>([]);
@@ -139,6 +141,16 @@ export default function HospitalOwnerDashboard() {
         thisMonth: monthlyAppts,
         services: servicesData?.length || 0
       });
+
+      // Fetch contents
+      const { data: contentsData } = await supabase
+        .from('institution_content')
+        .select('*')
+        .eq('institution_type', 'hospital')
+        .eq('owner_id', user?.id)
+        .order('created_at', { ascending: false });
+
+      setContents(contentsData || []);
 
       // Chart data
       const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
@@ -428,6 +440,22 @@ export default function HospitalOwnerDashboard() {
         </Card>
       </div>
 
+      {/* Quick Nav */}
+      <div className="grid grid-cols-3 gap-2">
+        <Button variant="outline" className="h-auto py-3 flex-col gap-1" onClick={() => navigate('/notifications')}>
+          <Bell className="h-4 w-4" />
+          <span className="text-[10px]">Arifa</span>
+        </Button>
+        <Button variant="outline" className="h-auto py-3 flex-col gap-1" onClick={() => navigate('/messages')}>
+          <MessageCircle className="h-4 w-4" />
+          <span className="text-[10px]">Ujumbe</span>
+        </Button>
+        <Button variant="outline" className="h-auto py-3 flex-col gap-1" onClick={() => navigate('/appointments')}>
+          <Calendar className="h-4 w-4" />
+          <span className="text-[10px]">Miadi</span>
+        </Button>
+      </div>
+
       {/* Tabs for different sections */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-5">
@@ -708,6 +736,16 @@ export default function HospitalOwnerDashboard() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Content Tab - Maudhui */}
+        <TabsContent value="content" className="space-y-4">
+          <ContentUploadSection
+            institutionType="hospital"
+            institutionId={hospital.id}
+            contents={contents}
+            onRefresh={fetchData}
+          />
         </TabsContent>
 
         {/* Ambulance Tab */}

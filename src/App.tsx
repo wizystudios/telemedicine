@@ -5,9 +5,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { NavProvider } from "@/contexts/NavContext";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { useRealtimeChatNotifications } from "@/hooks/useRealtimeChatNotifications";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { BottomNav } from "./components/layout/BottomNav";
 
 import Auth from "./pages/Auth";
 import RoleBasedDashboard from "./components/RoleBasedDashboard";
@@ -52,7 +54,7 @@ function AppContent() {
   if (loading) return <LoadingScreen />;
   
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-12 md:pb-0">
       <Navbar />
       <Routes>
         {/* Unauthenticated users go to auth, authenticated go to dashboard (chatbot) */}
@@ -92,6 +94,7 @@ function AppContent() {
         
         <Route path="*" element={<NotFound />} />
       </Routes>
+      <BottomNav />
     </div>
   );
 }
@@ -104,7 +107,9 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
-            <AppContent />
+            <NavProvider>
+              <AppContent />
+            </NavProvider>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>

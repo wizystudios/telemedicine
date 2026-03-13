@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,13 +15,14 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { 
   TestTube, Plus, Trash2, Activity, Edit, Building2, Phone, Mail, 
-  MapPin, Clock, Upload, Video, Loader2, Globe, AlertCircle
+  MapPin, Clock, Upload, Video, Loader2, Globe, AlertCircle, Bell, MessageCircle, Calendar
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { LogoUpload } from '@/components/LogoUpload';
 
 export default function LabOwnerDashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [lab, setLab] = useState<any>(null);
   const [services, setServices] = useState<any[]>([]);
@@ -284,6 +286,22 @@ export default function LabOwnerDashboard() {
             <p className="text-[10px] text-muted-foreground">{lab.total_reviews || 0} reviews</p>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Quick Nav */}
+      <div className="grid grid-cols-3 gap-2">
+        <Button variant="outline" className="h-auto py-3 flex-col gap-1" onClick={() => navigate('/notifications')}>
+          <Bell className="h-4 w-4" />
+          <span className="text-[10px]">Arifa</span>
+        </Button>
+        <Button variant="outline" className="h-auto py-3 flex-col gap-1" onClick={() => navigate('/messages')}>
+          <MessageCircle className="h-4 w-4" />
+          <span className="text-[10px]">Ujumbe</span>
+        </Button>
+        <Button variant="outline" className="h-auto py-3 flex-col gap-1" onClick={() => navigate('/appointments')}>
+          <Calendar className="h-4 w-4" />
+          <span className="text-[10px]">Miadi</span>
+        </Button>
       </div>
 
       <Tabs defaultValue="services" className="space-y-4">
