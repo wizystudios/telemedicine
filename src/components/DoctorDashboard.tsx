@@ -412,7 +412,7 @@ export function DoctorDashboard() {
       />
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-4 gap-2">
         <Button variant="outline" className="h-auto py-3 flex-col gap-1" onClick={() => navigate('/appointments')}>
           <Calendar className="h-4 w-4" />
           <span className="text-[10px]">Miadi</span>
@@ -424,6 +424,10 @@ export function DoctorDashboard() {
         <Button variant="outline" className="h-auto py-3 flex-col gap-1" onClick={() => navigate('/messages')}>
           <MessageCircle className="h-4 w-4" />
           <span className="text-[10px]">Ujumbe</span>
+        </Button>
+        <Button variant="outline" className="h-auto py-3 flex-col gap-1" onClick={() => navigate('/notifications')}>
+          <Bell className="h-4 w-4" />
+          <span className="text-[10px]">Arifa</span>
         </Button>
       </div>
 
