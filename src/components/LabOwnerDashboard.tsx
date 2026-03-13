@@ -22,6 +22,7 @@ import { LogoUpload } from '@/components/LogoUpload';
 
 export default function LabOwnerDashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [lab, setLab] = useState<any>(null);
   const [services, setServices] = useState<any[]>([]);

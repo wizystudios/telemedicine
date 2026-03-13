@@ -23,6 +23,7 @@ import { LogoUpload } from '@/components/LogoUpload';
 
 export default function PharmacyOwnerDashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [pharmacy, setPharmacy] = useState<any>(null);
   const [medicines, setMedicines] = useState<any[]>([]);
