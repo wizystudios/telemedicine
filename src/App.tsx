@@ -54,7 +54,7 @@ function AppContent() {
   if (loading) return <LoadingScreen />;
   
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-12 md:pb-0">
       <Navbar />
       <Routes>
         {/* Unauthenticated users go to auth, authenticated go to dashboard (chatbot) */}
