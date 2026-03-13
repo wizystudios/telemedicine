@@ -15,7 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Pill, Package, Plus, Loader2, Trash2, MapPin, Phone, Mail, TrendingUp,
-  Edit, Upload, Video, Quote, Clock, AlertCircle, Building2
+  Edit, Upload, Video, Quote, Clock, AlertCircle, Building2, Bell, MessageCircle, Calendar
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
