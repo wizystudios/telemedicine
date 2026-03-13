@@ -15,7 +15,7 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { 
   TestTube, Plus, Trash2, Activity, Edit, Building2, Phone, Mail, 
-  MapPin, Clock, Upload, Video, Loader2, Globe, AlertCircle
+  MapPin, Clock, Upload, Video, Loader2, Globe, AlertCircle, Bell, MessageCircle, Calendar
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { LogoUpload } from '@/components/LogoUpload';
