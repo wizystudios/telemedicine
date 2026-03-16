@@ -102,6 +102,15 @@ export default function LabOwnerDashboard() {
 
         setServices(servicesData || []);
 
+        // Fetch bookings
+        const { data: bookingsData } = await supabase
+          .from('lab_bookings')
+          .select('*, patient:profiles!lab_bookings_patient_id_fkey(first_name, last_name, avatar_url, phone)')
+          .eq('laboratory_id', labData.id)
+          .order('created_at', { ascending: false });
+
+        setBookings(bookingsData || []);
+
         // Fetch contents
         const { data: contentsData } = await supabase
           .from('institution_content')
@@ -116,6 +125,20 @@ export default function LabOwnerDashboard() {
       console.error('Error fetching lab data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const updateBookingStatus = async (bookingId: string, status: string) => {
+    const { error } = await supabase
+      .from('lab_bookings')
+      .update({ status, updated_at: new Date().toISOString() })
+      .eq('id', bookingId);
+
+    if (error) {
+      toast({ title: 'Kosa', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Imefanikiwa', description: `Kipimo kimesasishwa: ${status}` });
+      fetchData();
     }
   };
 
