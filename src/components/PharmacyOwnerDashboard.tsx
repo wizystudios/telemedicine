@@ -105,6 +105,15 @@ export default function PharmacyOwnerDashboard() {
 
       setMedicines(medsData || []);
 
+      // Fetch orders
+      const { data: ordersData } = await supabase
+        .from('pharmacy_orders')
+        .select('*, patient:profiles!pharmacy_orders_patient_id_fkey(first_name, last_name, avatar_url, phone)')
+        .eq('pharmacy_id', pharmacyData.id)
+        .order('created_at', { ascending: false });
+
+      setOrders(ordersData || []);
+
       // Fetch contents
       const { data: contentsData } = await supabase
         .from('institution_content')
@@ -118,6 +127,20 @@ export default function PharmacyOwnerDashboard() {
       console.error(error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const updateOrderStatus = async (orderId: string, status: string) => {
+    const { error } = await supabase
+      .from('pharmacy_orders')
+      .update({ status, updated_at: new Date().toISOString() })
+      .eq('id', orderId);
+
+    if (error) {
+      toast({ title: 'Kosa', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Imefanikiwa', description: `Agizo limesasishwa: ${status}` });
+      fetchData();
     }
   };
 
