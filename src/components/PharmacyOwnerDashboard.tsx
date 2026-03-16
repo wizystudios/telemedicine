@@ -27,6 +27,7 @@ export default function PharmacyOwnerDashboard() {
   const [loading, setLoading] = useState(true);
   const [pharmacy, setPharmacy] = useState<any>(null);
   const [medicines, setMedicines] = useState<any[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
   const [isAdding, setIsAdding] = useState(false);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isAddingContent, setIsAddingContent] = useState(false);
