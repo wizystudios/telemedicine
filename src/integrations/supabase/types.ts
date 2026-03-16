@@ -862,6 +862,70 @@ export type Database = {
         }
         Relationships: []
       }
+      lab_bookings: {
+        Row: {
+          booking_date: string | null
+          created_at: string
+          id: string
+          laboratory_id: string
+          notes: string | null
+          patient_id: string
+          result_url: string | null
+          service_id: string | null
+          status: string
+          test_name: string
+          updated_at: string
+        }
+        Insert: {
+          booking_date?: string | null
+          created_at?: string
+          id?: string
+          laboratory_id: string
+          notes?: string | null
+          patient_id: string
+          result_url?: string | null
+          service_id?: string | null
+          status?: string
+          test_name: string
+          updated_at?: string
+        }
+        Update: {
+          booking_date?: string | null
+          created_at?: string
+          id?: string
+          laboratory_id?: string
+          notes?: string | null
+          patient_id?: string
+          result_url?: string | null
+          service_id?: string | null
+          status?: string
+          test_name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lab_bookings_laboratory_id_fkey"
+            columns: ["laboratory_id"]
+            isOneToOne: false
+            referencedRelation: "laboratories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lab_bookings_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lab_bookings_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "laboratory_services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       laboratories: {
         Row: {
           address: string
@@ -1521,6 +1585,73 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "pharmacy_medicines_pharmacy_id_fkey"
+            columns: ["pharmacy_id"]
+            isOneToOne: false
+            referencedRelation: "pharmacies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pharmacy_orders: {
+        Row: {
+          created_at: string
+          id: string
+          medicine_id: string | null
+          medicine_name: string
+          notes: string | null
+          patient_id: string
+          pharmacy_id: string
+          prescription_url: string | null
+          quantity: number
+          status: string
+          total_price: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          medicine_id?: string | null
+          medicine_name: string
+          notes?: string | null
+          patient_id: string
+          pharmacy_id: string
+          prescription_url?: string | null
+          quantity?: number
+          status?: string
+          total_price?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          medicine_id?: string | null
+          medicine_name?: string
+          notes?: string | null
+          patient_id?: string
+          pharmacy_id?: string
+          prescription_url?: string | null
+          quantity?: number
+          status?: string
+          total_price?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pharmacy_orders_medicine_id_fkey"
+            columns: ["medicine_id"]
+            isOneToOne: false
+            referencedRelation: "pharmacy_medicines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pharmacy_orders_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pharmacy_orders_pharmacy_id_fkey"
             columns: ["pharmacy_id"]
             isOneToOne: false
             referencedRelation: "pharmacies"
