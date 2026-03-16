@@ -26,6 +26,7 @@ export default function LabOwnerDashboard() {
   const { toast } = useToast();
   const [lab, setLab] = useState<any>(null);
   const [services, setServices] = useState<any[]>([]);
+  const [bookings, setBookings] = useState<any[]>([]);
   const [contents, setContents] = useState<any[]>([]);
   const [isAddingService, setIsAddingService] = useState(false);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
