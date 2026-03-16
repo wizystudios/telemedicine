@@ -26,6 +26,7 @@ export default function LabOwnerDashboard() {
   const { toast } = useToast();
   const [lab, setLab] = useState<any>(null);
   const [services, setServices] = useState<any[]>([]);
+  const [bookings, setBookings] = useState<any[]>([]);
   const [contents, setContents] = useState<any[]>([]);
   const [isAddingService, setIsAddingService] = useState(false);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -101,6 +102,15 @@ export default function LabOwnerDashboard() {
 
         setServices(servicesData || []);
 
+        // Fetch bookings
+        const { data: bookingsData } = await supabase
+          .from('lab_bookings')
+          .select('*, patient:profiles!lab_bookings_patient_id_fkey(first_name, last_name, avatar_url, phone)')
+          .eq('laboratory_id', labData.id)
+          .order('created_at', { ascending: false });
+
+        setBookings(bookingsData || []);
+
         // Fetch contents
         const { data: contentsData } = await supabase
           .from('institution_content')
@@ -115,6 +125,20 @@ export default function LabOwnerDashboard() {
       console.error('Error fetching lab data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const updateBookingStatus = async (bookingId: string, status: string) => {
+    const { error } = await supabase
+      .from('lab_bookings')
+      .update({ status, updated_at: new Date().toISOString() })
+      .eq('id', bookingId);
+
+    if (error) {
+      toast({ title: 'Kosa', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Imefanikiwa', description: `Kipimo kimesasishwa: ${status}` });
+      fetchData();
     }
   };
 
@@ -304,12 +328,80 @@ export default function LabOwnerDashboard() {
         </Button>
       </div>
 
-      <Tabs defaultValue="services" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
+      <Tabs defaultValue="bookings" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="bookings">Vipimo</TabsTrigger>
           <TabsTrigger value="services">Huduma</TabsTrigger>
           <TabsTrigger value="profile">Taarifa</TabsTrigger>
           <TabsTrigger value="content">Maudhui</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="bookings" className="space-y-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <TestTube className="h-4 w-4" />
+                Maombi ya Vipimo ({bookings.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {bookings.length > 0 ? (
+                <div className="space-y-3">
+                  {bookings.map((booking) => (
+                    <div key={booking.id} className="p-3 rounded-lg border bg-card">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <p className="font-medium text-sm">{booking.test_name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            Mgonjwa: {booking.patient?.first_name} {booking.patient?.last_name}
+                            {booking.patient?.phone && ` • ${booking.patient.phone}`}
+                          </p>
+                          {booking.notes && <p className="text-xs mt-1">Maelezo: {booking.notes}</p>}
+                          <p className="text-[10px] text-muted-foreground mt-1">
+                            {new Date(booking.created_at).toLocaleDateString('sw-TZ')}
+                          </p>
+                        </div>
+                        <Badge variant={
+                          booking.status === 'pending' ? 'secondary' : 
+                          booking.status === 'confirmed' ? 'default' :
+                          booking.status === 'results_ready' ? 'default' :
+                          booking.status === 'completed' ? 'outline' : 'destructive'
+                        }>
+                          {booking.status === 'pending' ? 'Inasubiri' :
+                           booking.status === 'confirmed' ? 'Imekubaliwa' :
+                           booking.status === 'results_ready' ? 'Matokeo Tayari' :
+                           booking.status === 'completed' ? 'Imekamilika' : 'Imeghairiwa'}
+                        </Badge>
+                      </div>
+                      {booking.status === 'pending' && (
+                        <div className="flex gap-2 mt-2">
+                          <Button size="sm" className="h-7 text-xs flex-1" onClick={() => updateBookingStatus(booking.id, 'confirmed')}>
+                            Kubali
+                          </Button>
+                          <Button size="sm" variant="destructive" className="h-7 text-xs flex-1" onClick={() => updateBookingStatus(booking.id, 'cancelled')}>
+                            Kataa
+                          </Button>
+                        </div>
+                      )}
+                      {booking.status === 'confirmed' && (
+                        <Button size="sm" className="h-7 text-xs w-full mt-2" onClick={() => updateBookingStatus(booking.id, 'results_ready')}>
+                          Matokeo Tayari
+                        </Button>
+                      )}
+                      {booking.status === 'results_ready' && (
+                        <Button size="sm" variant="outline" className="h-7 text-xs w-full mt-2" onClick={() => updateBookingStatus(booking.id, 'completed')}>
+                          Kamilisha
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-center text-muted-foreground py-4">Hakuna maombi mapya ya vipimo</p>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="services" className="space-y-4">
           <Card>
