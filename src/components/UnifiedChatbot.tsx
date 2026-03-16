@@ -2025,7 +2025,7 @@ export function UnifiedChatbot() {
                 <div>
                   <h4 className="text-sm font-medium mb-2">Vipimo ({labServices.length})</h4>
                   <div className="space-y-2">
-                    {labServices.map((service) => (
+                     {labServices.map((service) => (
                       <Card key={service.id}>
                         <CardContent className="p-3">
                           <div className="flex justify-between items-start">
@@ -2044,6 +2044,33 @@ export function UnifiedChatbot() {
                           )}
                           {service.preparation_required && (
                             <p className="text-xs"><span className="font-medium">Maandalizi:</span> {service.preparation_required}</p>
+                          )}
+                          {service.is_available && (
+                            <Button 
+                              size="sm" 
+                              className="w-full mt-2 h-8 text-xs"
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                if (!user) {
+                                  toast({ title: 'Ingia kwanza', variant: 'destructive' });
+                                  return;
+                                }
+                                const { error } = await supabase.from('lab_bookings').insert({
+                                  patient_id: user.id,
+                                  laboratory_id: selectedLab.id,
+                                  service_id: service.id,
+                                  test_name: service.name
+                                } as any);
+                                if (error) {
+                                  toast({ title: 'Hitilafu', description: error.message, variant: 'destructive' });
+                                } else {
+                                  toast({ title: 'Kipimo Kimeombwa!', description: `${service.name} imeombwa. Utapata arifa maabara ikithibitisha.` });
+                                }
+                              }}
+                            >
+                              <TestTube className="h-3 w-3 mr-1" />
+                              Panga Kipimo
+                            </Button>
                           )}
                         </CardContent>
                       </Card>
