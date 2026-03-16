@@ -330,12 +330,83 @@ export default function PharmacyOwnerDashboard() {
         </Button>
       </div>
 
-      <Tabs defaultValue="medicines" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
+      <Tabs defaultValue="orders" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="orders">Maagizo</TabsTrigger>
           <TabsTrigger value="medicines">Dawa</TabsTrigger>
           <TabsTrigger value="profile">Taarifa</TabsTrigger>
           <TabsTrigger value="content">Maudhui</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="orders" className="space-y-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Package className="h-4 w-4" />
+                Maagizo ya Dawa ({orders.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {orders.length > 0 ? (
+                <div className="space-y-3">
+                  {orders.map((order) => (
+                    <div key={order.id} className="p-3 rounded-lg border bg-card">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <p className="font-medium text-sm">{order.medicine_name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            Mgonjwa: {order.patient?.first_name} {order.patient?.last_name}
+                            {order.patient?.phone && ` • ${order.patient.phone}`}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Idadi: {order.quantity} {order.total_price ? `• Tsh ${Number(order.total_price).toLocaleString()}` : ''}
+                          </p>
+                          {order.notes && <p className="text-xs mt-1">Maelezo: {order.notes}</p>}
+                          <p className="text-[10px] text-muted-foreground mt-1">
+                            {new Date(order.created_at).toLocaleDateString('sw-TZ')}
+                          </p>
+                        </div>
+                        <Badge variant={
+                          order.status === 'pending' ? 'secondary' : 
+                          order.status === 'confirmed' ? 'default' :
+                          order.status === 'ready' ? 'default' :
+                          order.status === 'completed' ? 'outline' : 'destructive'
+                        }>
+                          {order.status === 'pending' ? 'Inasubiri' :
+                           order.status === 'confirmed' ? 'Imekubaliwa' :
+                           order.status === 'ready' ? 'Tayari' :
+                           order.status === 'completed' ? 'Imekamilika' : 'Imeghairiwa'}
+                        </Badge>
+                      </div>
+                      {order.status === 'pending' && (
+                        <div className="flex gap-2 mt-2">
+                          <Button size="sm" className="h-7 text-xs flex-1" onClick={() => updateOrderStatus(order.id, 'confirmed')}>
+                            Kubali
+                          </Button>
+                          <Button size="sm" variant="destructive" className="h-7 text-xs flex-1" onClick={() => updateOrderStatus(order.id, 'cancelled')}>
+                            Kataa
+                          </Button>
+                        </div>
+                      )}
+                      {order.status === 'confirmed' && (
+                        <Button size="sm" className="h-7 text-xs w-full mt-2" onClick={() => updateOrderStatus(order.id, 'ready')}>
+                          Weka Tayari
+                        </Button>
+                      )}
+                      {order.status === 'ready' && (
+                        <Button size="sm" variant="outline" className="h-7 text-xs w-full mt-2" onClick={() => updateOrderStatus(order.id, 'completed')}>
+                          Kamilisha
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-center text-muted-foreground py-4">Hakuna maagizo mapya</p>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="medicines" className="space-y-4">
           {/* Stats */}
