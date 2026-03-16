@@ -1894,7 +1894,7 @@ export function UnifiedChatbot() {
                 <div>
                   <h4 className="text-sm font-medium mb-2">Dawa ({pharmacyMedicines.length})</h4>
                   <div className="space-y-2">
-                    {pharmacyMedicines.map((med) => (
+                     {pharmacyMedicines.map((med) => (
                       <Card key={med.id}>
                         <CardContent className="p-3">
                           <div className="flex justify-between items-start">
@@ -1913,6 +1913,38 @@ export function UnifiedChatbot() {
                           )}
                           {med.requires_prescription && (
                             <Badge variant="destructive" className="text-[10px] mt-1">Inahitaji Cheti</Badge>
+                          )}
+                          {med.in_stock && (
+                            <Button 
+                              size="sm" 
+                              className="w-full mt-2 h-8 text-xs"
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                if (!user) {
+                                  toast({ title: 'Ingia kwanza', variant: 'destructive' });
+                                  return;
+                                }
+                                const { error } = await supabase.from('pharmacy_orders').insert({
+                                  patient_id: user.id,
+                                  pharmacy_id: selectedPharmacy.id,
+                                  medicine_id: med.id,
+                                  medicine_name: med.name,
+                                  quantity: 1,
+                                  total_price: med.price || 0
+                                } as any);
+                                if (error) {
+                                  toast({ title: 'Hitilafu', description: error.message, variant: 'destructive' });
+                                } else {
+                                  toast({ title: 'Agizo Limetumwa!', description: `${med.name} imeagizwa. Utapata arifa famasi ikithibitisha.` });
+                                }
+                              }}
+                            >
+                              <Pill className="h-3 w-3 mr-1" />
+                              Agiza Dawa
+                            </Button>
+                          )}
+                          {!med.in_stock && (
+                            <Badge variant="secondary" className="text-[10px] mt-2">Haipo kwa sasa</Badge>
                           )}
                         </CardContent>
                       </Card>
