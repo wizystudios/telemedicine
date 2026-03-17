@@ -1,22 +1,11 @@
-
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Calendar, 
-  Clock, 
-  User, 
-  Video, 
-  Phone, 
-  MessageCircle,
-  MapPin,
-  CheckCircle,
-  XCircle
-} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Calendar, Clock, Video, Phone, MessageCircle, MapPin, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { AppointmentApprovalDialog } from '@/components/AppointmentApprovalDialog';
@@ -26,252 +15,161 @@ export default function Appointments() {
   const navigate = useNavigate();
   const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
+  const [filter, setFilter] = useState<'all' | 'upcoming' | 'past'>('upcoming');
 
   const { data: appointments = [], isLoading } = useQuery({
     queryKey: ['appointments', user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
-      
       const { data, error } = await supabase
         .from('appointments')
-        .select(`
-          *,
-          doctor:profiles!appointments_doctor_id_fkey(first_name, last_name, avatar_url),
-          patient:profiles!appointments_patient_id_fkey(first_name, last_name, avatar_url)
-        `)
+        .select(`*, doctor:profiles!appointments_doctor_id_fkey(first_name, last_name, avatar_url), patient:profiles!appointments_patient_id_fkey(first_name, last_name, avatar_url)`)
         .or(`patient_id.eq.${user.id},doctor_id.eq.${user.id}`)
         .order('appointment_date', { ascending: true });
-      
-      if (error) {
-        console.error('Error fetching appointments:', error);
-        return [];
-      }
-      
+      if (error) return [];
       return data || [];
     },
     enabled: !!user?.id
   });
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'scheduled':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'approved':
-        return 'bg-green-100 text-green-800';
-      case 'rejected':
-        return 'bg-red-100 text-red-800';
-      case 'completed':
-        return 'bg-blue-100 text-blue-800';
-      case 'cancelled':
-        return 'bg-gray-100 text-gray-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
+  const now = new Date();
+  const filtered = appointments.filter(a => {
+    if (filter === 'upcoming') return new Date(a.appointment_date) >= now;
+    if (filter === 'past') return new Date(a.appointment_date) < now;
+    return true;
+  });
+
+  const isDoctor = appointments.some(a => a.doctor_id === user?.id);
+
+  const statusMap: Record<string, { label: string; class: string }> = {
+    scheduled: { label: 'Inasubiri', class: 'bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-500/20' },
+    confirmed: { label: 'Imeidhinishwa', class: 'bg-primary/10 text-primary border-primary/20' },
+    approved: { label: 'Imekubaliwa', class: 'bg-primary/10 text-primary border-primary/20' },
+    completed: { label: 'Imekamilika', class: 'bg-muted text-muted-foreground border-border' },
+    cancelled: { label: 'Imeghairiwa', class: 'bg-destructive/10 text-destructive border-destructive/20' },
+    rejected: { label: 'Imekataliwa', class: 'bg-destructive/10 text-destructive border-destructive/20' },
   };
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'scheduled':
-        return 'Inasubiri';
-      case 'approved':
-        return 'Imekubaliwa';
-      case 'rejected':
-        return 'Imekataliwa';
-      case 'completed':
-        return 'Imekamilika';
-      case 'cancelled':
-        return 'Imeghairiwa';
-      default:
-        return status;
-    }
+  const typeIcon: Record<string, React.ReactNode> = {
+    video: <Video className="h-3 w-3" />,
+    audio: <Phone className="h-3 w-3" />,
+    chat: <MessageCircle className="h-3 w-3" />,
+    'in-person': <MapPin className="h-3 w-3" />,
   };
-
-  const getConsultationIcon = (type: string) => {
-    switch (type) {
-      case 'video':
-        return <Video className="w-4 h-4" />;
-      case 'audio':
-        return <Phone className="w-4 h-4" />;
-      case 'chat':
-        return <MessageCircle className="w-4 h-4" />;
-      case 'in-person':
-        return <MapPin className="w-4 h-4" />;
-      default:
-        return <Video className="w-4 h-4" />;
-    }
-  };
-
-  const handleApprovalClick = (appointment: any) => {
-    setSelectedAppointment(appointment);
-    setShowApprovalDialog(true);
-  };
-
-  const isDoctor = user?.id && appointments.some(apt => apt.doctor_id === user.id);
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto"></div>
-            <p className="mt-2 text-gray-600 dark:text-gray-400">Inapakia miadi...</p>
-          </div>
-        </div>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
-      <div className="max-w-4xl mx-auto p-4 space-y-6">
-        
-        {/* Header */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-              Miadi
-            </h1>
-          </div>
-          {!isDoctor && (
-            <Button 
-              onClick={() => navigate('/doctors-list')}
-              className="bg-emerald-600 hover:bg-emerald-700"
-            >
-              Panga Miadi
-            </Button>
-          )}
-        </div>
-
-        {/* Appointments List */}
-        <div className="space-y-4 overflow-x-auto">
-          <div className="min-w-full">
-          {appointments.map((appointment) => {
-            const isPatient = appointment.patient_id === user?.id;
-            const otherUser = isPatient ? appointment.doctor : appointment.patient;
-            
-            return (
-              <Card key={appointment.id} className="dark:bg-gray-800 dark:border-gray-700">
-                <CardContent className="p-4">
-                  <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between space-y-4 lg:space-y-0">
-                    <div className="flex items-start space-x-4 flex-1">
-                      <div className="flex-shrink-0">
-                        <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900 rounded-full flex items-center justify-center">
-                          <User className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
-                        </div>
-                      </div>
-                      
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center space-x-2 mb-2">
-                          <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate">
-                            {isPatient ? 'Dkt.' : ''} {otherUser?.first_name} {otherUser?.last_name}
-                          </h3>
-                          <Badge className={getStatusColor(appointment.status)}>
-                            {getStatusText(appointment.status)}
-                          </Badge>
-                        </div>
-                        
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm text-gray-600 dark:text-gray-400">
-                          <div className="flex items-center space-x-1">
-                            <Calendar className="w-4 h-4" />
-                            <span className="truncate">{format(new Date(appointment.appointment_date), 'dd/MM/yyyy')}</span>
-                          </div>
-                          <div className="flex items-center space-x-1">
-                            <Clock className="w-4 h-4" />
-                            <span>{format(new Date(appointment.appointment_date), 'HH:mm')}</span>
-                          </div>
-                          <div className="flex items-center space-x-1">
-                            {getConsultationIcon(appointment.consultation_type)}
-                            <span className="capitalize truncate">{appointment.consultation_type}</span>
-                          </div>
-                        </div>
-                        
-                        {appointment.symptoms && (
-                          <p className="text-sm text-gray-700 dark:text-gray-300 mt-2">
-                            <strong>Matatizo:</strong> {appointment.symptoms}
-                          </p>
-                        )}
-
-                        {appointment.notes && (
-                          <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">
-                            <strong>Maelezo:</strong> {appointment.notes}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <div className="flex flex-col space-y-2 lg:ml-4">
-                      {/* Doctor actions for pending appointments */}
-                      {!isPatient && appointment.status === 'scheduled' && (
-                        <div className="flex space-x-2">
-                          <Button 
-                            size="sm" 
-                            onClick={() => handleApprovalClick(appointment)}
-                            className="bg-emerald-600 hover:bg-emerald-700"
-                          >
-                            <CheckCircle className="w-4 h-4 mr-1" />
-                            Jibu
-                          </Button>
-                        </div>
-                      )}
-
-                      {/* Common actions for approved appointments */}
-                      {appointment.status === 'approved' && (
-                        <>
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => navigate(`/messages?doctor=${isPatient ? appointment.doctor_id : appointment.patient_id}`)}
-                          >
-                            <MessageCircle className="w-4 h-4 md:mr-2" />
-                            <span className="hidden md:inline">Ujumbe</span>
-                          </Button>
-                          {appointment.consultation_type === 'video' && (
-                            <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700">
-                              <Video className="w-4 h-4 md:mr-2" />
-                              <span className="hidden md:inline">Jiunge</span>
-                            </Button>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-          </div>
-        </div>
-
-        {appointments.length === 0 && (
-          <div className="text-center py-12">
-            <Calendar className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
-              Hakuna miadi bado
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
-              {isDoctor ? 'Miadi zitaonekana hapa baada ya wagonjwa kupanga' : 'Panga miadi yako ya kwanza na daktari'}
-            </p>
-            {!isDoctor && (
-              <Button 
-                onClick={() => navigate('/doctors-list')}
-                className="bg-emerald-600 hover:bg-emerald-700"
-              >
-                Tafuta Daktari
-              </Button>
-            )}
-          </div>
+    <div className="max-w-lg mx-auto px-4 pt-4 pb-20">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-lg font-bold">Miadi</h1>
+        {!isDoctor && (
+          <Button size="sm" onClick={() => navigate('/doctors-list')}>
+            + Panga
+          </Button>
         )}
-        
       </div>
 
-      {/* Approval Dialog */}
+      {/* Filter */}
+      <div className="flex gap-2 mb-4">
+        {(['upcoming', 'past', 'all'] as const).map(f => (
+          <button
+            key={f}
+            onClick={() => setFilter(f)}
+            className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
+              filter === f ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+            }`}
+          >
+            {f === 'upcoming' ? 'Ijayo' : f === 'past' ? 'Zilizopita' : 'Zote'}
+          </button>
+        ))}
+      </div>
+
+      {/* List */}
+      <div className="space-y-2">
+        {filtered.map((apt) => {
+          const isPatient = apt.patient_id === user?.id;
+          const other = isPatient ? apt.doctor : apt.patient;
+          const status = statusMap[apt.status] || statusMap.scheduled;
+
+          return (
+            <div key={apt.id} className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border">
+              <Avatar className="h-10 w-10 shrink-0">
+                <AvatarImage src={other?.avatar_url} />
+                <AvatarFallback className="text-xs bg-primary/10 text-primary">
+                  {other?.first_name?.[0]}{other?.last_name?.[0]}
+                </AvatarFallback>
+              </Avatar>
+              
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-medium truncate">
+                    {isPatient ? 'Dk.' : ''} {other?.first_name} {other?.last_name}
+                  </p>
+                  <Badge variant="outline" className={`text-[10px] px-1.5 py-0 shrink-0 ${status.class}`}>
+                    {status.label}
+                  </Badge>
+                </div>
+                <div className="flex items-center gap-3 mt-1 text-[11px] text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <Calendar className="h-3 w-3" />
+                    {format(new Date(apt.appointment_date), 'dd MMM')}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    {format(new Date(apt.appointment_date), 'HH:mm')}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    {typeIcon[apt.consultation_type] || typeIcon.video}
+                    <span className="capitalize">{apt.consultation_type}</span>
+                  </span>
+                </div>
+              </div>
+
+              {/* Doctor action: respond to pending */}
+              {!isPatient && apt.status === 'scheduled' && (
+                <Button size="sm" variant="outline" className="shrink-0 text-xs h-7"
+                  onClick={() => { setSelectedAppointment(apt); setShowApprovalDialog(true); }}>
+                  Jibu
+                </Button>
+              )}
+
+              {/* Chat action for approved */}
+              {apt.status === 'approved' && (
+                <Button size="sm" variant="ghost" className="shrink-0 h-7 w-7 p-0"
+                  onClick={() => navigate(`/messages?${isPatient ? 'doctor' : 'patient'}=${isPatient ? apt.doctor_id : apt.patient_id}`)}>
+                  <MessageCircle className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {filtered.length === 0 && (
+        <div className="text-center py-16">
+          <Calendar className="h-12 w-12 text-muted-foreground/40 mx-auto mb-3" />
+          <p className="text-sm font-medium text-foreground mb-1">Hakuna miadi</p>
+          <p className="text-xs text-muted-foreground mb-4">
+            {isDoctor ? 'Miadi zitaonekana hapa' : 'Panga miadi na daktari'}
+          </p>
+          {!isDoctor && (
+            <Button size="sm" onClick={() => navigate('/doctors-list')}>Tafuta Daktari</Button>
+          )}
+        </div>
+      )}
+
       <AppointmentApprovalDialog
         appointment={selectedAppointment}
         isOpen={showApprovalDialog}
-        onClose={() => {
-          setShowApprovalDialog(false);
-          setSelectedAppointment(null);
-        }}
+        onClose={() => { setShowApprovalDialog(false); setSelectedAppointment(null); }}
       />
     </div>
   );
