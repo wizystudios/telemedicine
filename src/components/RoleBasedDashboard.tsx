@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Navigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { UnifiedChatbot } from '@/components/UnifiedChatbot';
+import PatientHome from '@/pages/PatientHome';
 import { DoctorDashboard } from '@/components/DoctorDashboard';
 import HospitalOwnerDashboard from '@/components/HospitalOwnerDashboard';
 import SuperAdminDashboard from '@/components/SuperAdminDashboard';
@@ -24,9 +24,19 @@ export default function RoleBasedDashboard() {
         .from('user_roles')
         .select('role')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
       
-      setUserRole(data?.role || 'patient');
+      // Fallback to profiles table then metadata
+      if (!data?.role) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .maybeSingle();
+        setUserRole(profile?.role || user.user_metadata?.role || 'patient');
+      } else {
+        setUserRole(data.role);
+      }
       setLoading(false);
     }
     fetchUserRole();
@@ -36,7 +46,7 @@ export default function RoleBasedDashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-[60vh]">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
@@ -56,7 +66,6 @@ export default function RoleBasedDashboard() {
     case 'polyclinic_owner':
       return <PolyclinicOwnerDashboard />;
     default:
-      // Patients see the unified chatbot as their main interface - NO navigation pages
-      return <UnifiedChatbot />;
+      return <PatientHome />;
   }
 }

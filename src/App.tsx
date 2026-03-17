@@ -10,10 +10,11 @@ import { LoadingScreen } from "@/components/LoadingScreen";
 import { useRealtimeChatNotifications } from "@/hooks/useRealtimeChatNotifications";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { BottomNav } from "./components/layout/BottomNav";
+import { Navbar } from "./components/layout/Navbar";
 
 import Auth from "./pages/Auth";
 import RoleBasedDashboard from "./components/RoleBasedDashboard";
-import { Navbar } from "./components/layout/Navbar";
+import ChatbotPage from "./pages/ChatbotPage";
 import NotFound from "./pages/NotFound";
 import LaboratoryProfile from "./pages/LaboratoryProfile";
 import PolyclinicProfile from "./pages/PolyclinicProfile";
@@ -54,15 +55,17 @@ function AppContent() {
   if (loading) return <LoadingScreen />;
   
   return (
-    <div className="min-h-screen bg-background pb-12 md:pb-0">
+    <div className="min-h-screen bg-background pb-14 md:pb-0">
       <Navbar />
       <Routes>
-        {/* Unauthenticated users go to auth, authenticated go to dashboard (chatbot) */}
         <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Navigate to="/auth" replace />} />
         <Route path="/auth" element={user ? <Navigate to="/dashboard" replace /> : <Auth />} />
         
-        {/* Main dashboard - chatbot is the home for patients, role-based for others */}
+        {/* Main dashboard - role-based */}
         <Route path="/dashboard" element={<ProtectedRoute><RoleBasedDashboard /></ProtectedRoute>} />
+        
+        {/* AI Chatbot */}
+        <Route path="/chatbot" element={<ProtectedRoute><ChatbotPage /></ProtectedRoute>} />
         
         {/* Core Pages */}
         <Route path="/appointments" element={<ProtectedRoute><Appointments /></ProtectedRoute>} />
