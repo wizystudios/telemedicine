@@ -30,7 +30,7 @@ export function DoctorCard({ doctor, isOnline = false, hasPatientProblem = false
           </AvatarFallback>
         </Avatar>
         {isOnline && (
-          <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 border-2 border-background" />
+          <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-primary border-2 border-background" />
         )}
         {hasPatientProblem && (
           <div className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full bg-destructive border-2 border-background animate-pulse" />
