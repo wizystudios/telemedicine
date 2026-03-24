@@ -1244,10 +1244,6 @@ export function UnifiedChatbot() {
               </Button>
             </div>
           </div>
-                </Button>
-              </div>
-            </div>
-          </div>
         </>
       )}
 
