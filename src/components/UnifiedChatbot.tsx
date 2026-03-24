@@ -1133,66 +1133,39 @@ export function UnifiedChatbot() {
 
   // Main chatbot UI
   return (
-    <div className="h-[calc(100vh-2.5rem)] flex flex-col bg-background">
+    <div className="h-[calc(100vh-3.5rem)] flex flex-col bg-background">
 
       {/* Messages Area or Welcome Screen */}
       {!hasStartedChat ? (
-        // Welcome screen - centered
-        <div className="flex-1 flex flex-col items-center justify-center px-6">
-          <div className="text-center mb-8">
-            <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-              <Bot className="h-8 w-8 text-primary" />
+        <div className="flex-1 flex flex-col items-center justify-center px-4">
+          <div className="text-center mb-6">
+            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
+              <Bot className="h-6 w-6 text-primary" />
             </div>
-            <h2 className="text-xl font-semibold mb-2">
-              Habari{user?.user_metadata?.first_name ? ` ${user.user_metadata.first_name}` : ''}! 👋
+            <h2 className="text-lg font-semibold mb-1">
+              Habari{user?.user_metadata?.first_name ? ` ${user.user_metadata.first_name}` : ''}!
             </h2>
-            <p className="text-muted-foreground text-sm">
-              Ninaweza kukusaidia kupata daktari, hospitali, maduka ya dawa, au maabara.
-            </p>
+            <p className="text-muted-foreground text-xs">Tafuta daktari, hospitali, dawa, au maabara</p>
           </div>
 
-          {/* Input box with quick actions inside */}
-          <div className="w-full max-w-md space-y-4">
-            <div className="relative">
-              <div className="flex gap-2">
-                <Button
-                  variant={isListening ? 'destructive' : 'outline'}
-                  size="icon"
-                  onClick={toggleListening}
-                  className="flex-shrink-0"
-                >
-                  {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-                </Button>
-                <Input
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder="Andika swali lako..."
-                  onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                  className="flex-1"
-                />
-                <Button onClick={handleSend} disabled={!input.trim()}>
-                  <Send className="h-4 w-4" />
-                </Button>
-              </div>
+          <div className="w-full max-w-md space-y-3">
+            <div className="flex gap-2">
+              <Button variant={isListening ? 'destructive' : 'outline'} size="icon" onClick={toggleListening} className="h-8 w-8 shrink-0">
+                {isListening ? <MicOff className="h-3.5 w-3.5" /> : <Mic className="h-3.5 w-3.5" />}
+              </Button>
+              <Input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Andika swali lako..."
+                onKeyDown={(e) => e.key === 'Enter' && handleSend()} className="flex-1 h-8 text-sm" />
+              <Button onClick={handleSend} disabled={!input.trim()} size="icon" className="h-8 w-8 shrink-0">
+                <Send className="h-3.5 w-3.5" />
+              </Button>
             </div>
             
-            {/* Quick actions */}
-            <div className="flex flex-wrap gap-2 justify-center">
-              {['Daktari', 'Hospitali', 'Dawa', 'Maabara', 'Maudhui'].map((action) => (
-                <Button
-                  key={action}
-                  variant="secondary"
-                  size="sm"
-                  className="rounded-full text-xs"
-                  onClick={() => handleQuickAction(action)}
-                >
-                  {action === 'Daktari' && '🩺'}
-                  {action === 'Hospitali' && '🏥'}
-                  {action === 'Dawa' && '💊'}
-                  {action === 'Maabara' && '🔬'}
-                  {action === 'Maudhui' && '🎬'}
-                  {' '}{action}
-                </Button>
+            <div className="flex flex-wrap gap-1.5 justify-center">
+              {['Daktari', 'Hospitali', 'Dawa', 'Maabara'].map((action) => (
+                <button key={action} onClick={() => handleQuickAction(action)}
+                  className="text-xs px-3 py-1.5 rounded-full bg-muted text-muted-foreground hover:bg-accent transition-colors">
+                  {action === 'Daktari' && '🩺 '}{action === 'Hospitali' && '🏥 '}{action === 'Dawa' && '💊 '}{action === 'Maabara' && '🔬 '}{action}
+                </button>
               ))}
             </div>
           </div>
@@ -1200,42 +1173,36 @@ export function UnifiedChatbot() {
       ) : (
         // Chat messages
         <>
-          <ScrollArea className="flex-1 p-4">
-            <div className="space-y-4 max-w-2xl mx-auto">
+          <ScrollArea className="flex-1 px-3 py-3">
+            <div className="space-y-3 max-w-lg mx-auto">
               {messages.map((msg) => (
                 <div key={msg.id} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
                   <div className={`max-w-[85%] ${msg.type === 'bot' ? 'flex gap-2' : ''}`}>
                     {msg.type === 'bot' && (
-                      <Avatar className="h-8 w-8 mt-0.5 flex-shrink-0">
-                        <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                          <Bot className="h-4 w-4" />
+                      <Avatar className="h-6 w-6 mt-0.5 shrink-0">
+                        <AvatarFallback className="bg-primary text-primary-foreground text-[10px]">
+                          <Bot className="h-3 w-3" />
                         </AvatarFallback>
                       </Avatar>
                     )}
                     <div>
-                      {/* Bot text - plain without box, User text - with bubble */}
                       {msg.type === 'user' ? (
-                        <div className="rounded-2xl px-4 py-2.5 bg-primary text-primary-foreground">
+                        <div className="rounded-2xl px-3 py-1.5 bg-primary text-primary-foreground rounded-br-sm">
                           <p className="text-sm whitespace-pre-line">{msg.content}</p>
                         </div>
                       ) : (
-                        <p className="text-sm whitespace-pre-line py-1">{msg.content}</p>
+                        <p className="text-sm whitespace-pre-line py-0.5">{msg.content}</p>
                       )}
                       
                       {renderData(msg.data)}
                       
                       {msg.suggestions && (
-                        <div className="flex flex-wrap gap-2 mt-2">
+                        <div className="flex flex-wrap gap-1.5 mt-2">
                           {msg.suggestions.map((s, i) => (
-                            <Button
-                              key={i}
-                              variant="outline"
-                              size="sm"
-                              className="rounded-full text-xs"
-                              onClick={() => handleQuickAction(s.replace(/[^\w\s]/gi, ''))}
-                            >
+                            <button key={i} onClick={() => handleQuickAction(s.replace(/[^\w\s]/gi, ''))}
+                              className="text-xs px-2.5 py-1 rounded-full bg-muted text-muted-foreground hover:bg-accent transition-colors">
                               {s}
-                            </Button>
+                            </button>
                           ))}
                         </div>
                       )}
@@ -1246,16 +1213,16 @@ export function UnifiedChatbot() {
               
               {isLoading && (
                 <div className="flex gap-2">
-                  <Avatar className="h-8 w-8">
+                  <Avatar className="h-6 w-6">
                     <AvatarFallback className="bg-primary text-primary-foreground">
-                      <Bot className="h-4 w-4" />
+                      <Bot className="h-3 w-3" />
                     </AvatarFallback>
                   </Avatar>
-                  <div className="bg-muted rounded-2xl px-4 py-2.5">
+                  <div className="bg-muted rounded-2xl px-3 py-2">
                     <div className="flex gap-1">
-                      <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" />
-                      <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce delay-100" />
-                      <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce delay-200" />
+                      <span className="w-1.5 h-1.5 bg-muted-foreground/50 rounded-full animate-bounce" />
+                      <span className="w-1.5 h-1.5 bg-muted-foreground/50 rounded-full animate-bounce delay-100" />
+                      <span className="w-1.5 h-1.5 bg-muted-foreground/50 rounded-full animate-bounce delay-200" />
                     </div>
                   </div>
                 </div>
@@ -1265,28 +1232,16 @@ export function UnifiedChatbot() {
             </div>
           </ScrollArea>
 
-          {/* Input at bottom */}
-          <div className="p-4 border-t bg-card/50">
-            <div className="max-w-2xl mx-auto">
-              <div className="flex gap-2">
-                <Button
-                  variant={isListening ? 'destructive' : 'outline'}
-                  size="icon"
-                  onClick={toggleListening}
-                >
-                  {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-                </Button>
-                <Input
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder="Andika ujumbe au bofya kitufe..."
-                  onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                  className="flex-1"
-                />
-                <Button onClick={handleSend} disabled={!input.trim()}>
-                  <Send className="h-4 w-4" />
-                </Button>
-              </div>
+          <div className="p-2 border-t">
+            <div className="max-w-lg mx-auto flex gap-2">
+              <Button variant={isListening ? 'destructive' : 'outline'} size="icon" onClick={toggleListening} className="h-8 w-8 shrink-0">
+                {isListening ? <MicOff className="h-3.5 w-3.5" /> : <Mic className="h-3.5 w-3.5" />}
+              </Button>
+              <Input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Andika ujumbe..."
+                onKeyDown={(e) => e.key === 'Enter' && handleSend()} className="flex-1 h-8 text-sm" />
+              <Button onClick={handleSend} disabled={!input.trim()} size="icon" className="h-8 w-8 shrink-0">
+                <Send className="h-3.5 w-3.5" />
+              </Button>
             </div>
           </div>
         </>
