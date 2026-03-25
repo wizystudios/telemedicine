@@ -50,18 +50,22 @@ export default function DoctorsList() {
   }
 
   return (
-    <div className="max-w-lg mx-auto px-4 pt-4 pb-20 space-y-4">
-      <h1 className="text-lg font-bold">Madaktari</h1>
+    <div className="mx-auto max-w-2xl space-y-3 px-3 pt-3 pb-20">
+      <div className="space-y-1">
+        <h1 className="text-base font-semibold">Madaktari</h1>
+        <p className="text-xs text-muted-foreground">Wasifu mfupi, hatua chache, ujumbe mmoja.</p>
+      </div>
+
       <AdvancedDoctorSearch onSearch={setFilters} />
 
-      <div className="flex flex-wrap gap-4">
+      <div className="grid grid-cols-1 gap-2">
         {doctors.map((doctor) => (
           <DoctorCard key={doctor.id} doctor={doctor} isOnline={doctor.isOnline} />
         ))}
       </div>
 
       {doctors.length === 0 && (
-        <div className="text-center py-12">
+        <div className="rounded-2xl border border-dashed border-border py-10 text-center">
           <p className="text-sm text-muted-foreground">
             {filters.searchTerm ? 'Hakuna daktari aliyepatikana' : 'Hakuna madaktari kwa sasa'}
           </p>

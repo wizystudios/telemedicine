@@ -5,20 +5,26 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ExpandableSection } from '@/components/ExpandableSection';
-import { 
-  ArrowLeft, MessageCircle, Phone, Video, Calendar, Star, 
-  Clock, Building, MapPin, Mail, GraduationCap, Languages,
-  Shield, CheckCircle2, Stethoscope
+import {
+  ArrowLeft,
+  MessageCircle,
+  Calendar,
+  Star,
+  Clock,
+  Building,
+  MapPin,
+  Mail,
+  GraduationCap,
+  Languages,
+  Shield,
+  CheckCircle2,
+  Stethoscope,
 } from 'lucide-react';
-import { useCallSession } from '@/hooks/useCallSession';
-import { useToast } from '@/hooks/use-toast';
 import { ReviewsSection } from '@/components/ReviewsSection';
 
 export default function DoctorProfile() {
   const { doctorId } = useParams();
   const navigate = useNavigate();
-  const { initiateCall } = useCallSession();
-  const { toast } = useToast();
 
   const { data: doctor, isLoading } = useQuery({
     queryKey: ['doctor-profile', doctorId],
@@ -35,10 +41,11 @@ export default function DoctorProfile() {
         .eq('id', doctorId)
         .eq('role', 'doctor')
         .single();
+
       if (error) throw error;
       return data;
     },
-    enabled: !!doctorId
+    enabled: !!doctorId,
   });
 
   const { data: timetableData } = useQuery({
@@ -49,35 +56,24 @@ export default function DoctorProfile() {
         .select('*')
         .eq('doctor_id', doctorId!)
         .order('day_of_week');
+
       if (error) throw error;
       return data || [];
     },
-    enabled: !!doctorId
+    enabled: !!doctorId,
   });
-
-  const handleCall = async (type: 'audio' | 'video') => {
-    if (!doctorId) return;
-    try {
-      const session = await initiateCall(doctorId, type);
-      if (session) {
-        toast({ title: 'Ombi la Simu Limetumwa', description: `Ombi lako la ${type === 'audio' ? 'simu' : 'video'} limetumwa kwa daktari` });
-      }
-    } catch (error) {
-      toast({ title: 'Hitilafu', description: 'Imeshindwa kutuma ombi la simu', variant: 'destructive' });
-    }
-  };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-primary" />
       </div>
     );
   }
 
   if (!doctor) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="text-center">
           <h3 className="text-lg font-medium">Daktari hajapatikana</h3>
           <Button onClick={() => navigate('/doctors-list')} className="mt-4">Rudi kwenye Orodha</Button>
@@ -90,160 +86,140 @@ export default function DoctorProfile() {
   const doctorProfile = doctor.doctor_profiles?.[0];
   const timetable = timetableData || [];
   const days = ['Jumapili', 'Jumatatu', 'Jumanne', 'Jumatano', 'Alhamisi', 'Ijumaa', 'Jumamosi'];
-  const availableDays = timetable.filter((t: any) => t.is_available);
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      {/* Header */}
-      <div className="bg-gradient-to-br from-emerald-600 to-teal-700 text-white">
-        <div className="max-w-4xl mx-auto p-4">
-          <Button variant="ghost" onClick={() => navigate(-1)} className="mb-4 text-white hover:bg-white/10">
-            <ArrowLeft className="w-4 h-4 mr-2" /> Rudi Nyuma
-          </Button>
-          <div className="flex items-start gap-4">
-            <Avatar className="w-24 h-24 border-4 border-white/20 shadow-xl">
-              <AvatarImage src={doctor?.avatar_url} alt={displayName} />
-              <AvatarFallback className="bg-white/20 text-white text-2xl font-bold">
-                {doctor?.first_name?.[0]}{doctor?.last_name?.[0]}
+      <div className="mx-auto max-w-2xl space-y-3 px-3 pt-3">
+        <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="h-8 px-2 text-xs">
+          <ArrowLeft className="mr-1 h-3.5 w-3.5" /> Rudi
+        </Button>
+
+        <div className="rounded-3xl border border-border bg-card p-4">
+          <div className="flex items-start gap-3">
+            <Avatar className="h-16 w-16 border border-border">
+              <AvatarImage src={doctor.avatar_url} alt={displayName} />
+              <AvatarFallback className="bg-primary/10 text-lg font-semibold text-primary">
+                {doctor.first_name?.[0]}{doctor.last_name?.[0]}
               </AvatarFallback>
             </Avatar>
-            <div className="flex-1">
-              <h1 className="text-2xl font-bold">{displayName}</h1>
-              <p className="text-white/80 text-sm mt-1">{doctorProfile?.doctor_type || 'Daktari wa Jumla'}</p>
-              <div className="flex flex-wrap gap-2 mt-3">
+
+            <div className="min-w-0 flex-1">
+              <h1 className="truncate text-lg font-semibold">{displayName}</h1>
+              <p className="mt-0.5 text-xs text-muted-foreground">{doctorProfile?.doctor_type || 'Daktari wa Jumla'}</p>
+
+              <div className="mt-2 flex flex-wrap gap-1.5">
                 {doctorProfile?.is_verified && (
-                  <Badge className="bg-white/20 text-white border-0">
-                    <CheckCircle2 className="w-3 h-3 mr-1" /> Amethibitishwa
+                  <Badge variant="secondary" className="h-6 px-2 text-[11px]">
+                    <CheckCircle2 className="mr-1 h-3 w-3" /> Amethibitishwa
                   </Badge>
                 )}
                 {doctorProfile?.hospital_name && (
-                  <Badge className="bg-white/10 text-white border-0">
-                    <Building className="w-3 h-3 mr-1" /> {doctorProfile.hospital_name}
+                  <Badge variant="outline" className="h-6 px-2 text-[11px]">
+                    <Building className="mr-1 h-3 w-3" /> {doctorProfile.hospital_name}
                   </Badge>
                 )}
               </div>
-              <div className="flex items-center gap-4 mt-3">
+
+              <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                 {doctorProfile?.rating > 0 && (
-                  <div className="flex items-center gap-1 text-yellow-300">
-                    <Star className="w-4 h-4 fill-current" />
-                    <span className="font-semibold">{doctorProfile.rating}</span>
-                    <span className="text-white/60 text-sm">({doctorProfile.total_reviews || 0})</span>
+                  <div className="flex items-center gap-1">
+                    <Star className="h-3.5 w-3.5 fill-current text-primary" />
+                    <span className="font-semibold text-foreground">{doctorProfile.rating}</span>
+                    <span>({doctorProfile.total_reviews || 0})</span>
                   </div>
                 )}
                 {doctorProfile?.consultation_fee && (
-                  <div className="text-white/90 text-sm font-medium">TSh {doctorProfile.consultation_fee.toLocaleString()}</div>
+                  <div className="font-medium text-foreground">TSh {doctorProfile.consultation_fee.toLocaleString()}</div>
                 )}
               </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <div className="max-w-4xl mx-auto p-4 space-y-3">
-        {/* Quick Actions */}
-        <div className="grid grid-cols-4 gap-2">
-          <Button onClick={() => navigate(`/messages?doctor=${doctorId}`)} variant="outline" className="flex-col h-auto py-3">
-            <MessageCircle className="w-5 h-5 mb-1 text-primary" />
-            <span className="text-xs">Ujumbe</span>
-          </Button>
-          <Button onClick={() => navigate(`/book-appointment?doctor=${doctorId}`)} variant="outline" className="flex-col h-auto py-3">
-            <Calendar className="w-5 h-5 mb-1 text-primary" />
-            <span className="text-xs">Miadi</span>
-          </Button>
-          <Button onClick={() => handleCall('audio')} variant="outline" className="flex-col h-auto py-3">
-            <Phone className="w-5 h-5 mb-1 text-primary" />
-            <span className="text-xs">Simu</span>
-          </Button>
-          <Button onClick={() => handleCall('video')} variant="outline" className="flex-col h-auto py-3">
-            <Video className="w-5 h-5 mb-1 text-primary" />
-            <span className="text-xs">Video</span>
-          </Button>
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            <Button className="h-9 text-xs" onClick={() => navigate(`/messages?doctor=${doctorId}`)}>
+              <MessageCircle className="mr-1.5 h-3.5 w-3.5" /> Ujumbe
+            </Button>
+            <Button variant="outline" className="h-9 text-xs" onClick={() => navigate(`/book-appointment?doctor=${doctorId}`)}>
+              <Calendar className="mr-1.5 h-3.5 w-3.5" /> Weka miadi
+            </Button>
+          </div>
         </div>
 
-        {/* Contact Info */}
-        <div className="bg-card rounded-xl p-4 shadow-sm border border-border">
-          <h3 className="font-semibold mb-3 flex items-center gap-2">
-            <Stethoscope className="w-4 h-4 text-primary" /> Maelezo ya Daktari
-          </h3>
-          <div className="grid grid-cols-2 gap-3 text-sm">
+        <div className="rounded-2xl border border-border bg-card p-3">
+          <h2 className="mb-2 flex items-center gap-2 text-sm font-medium">
+            <Stethoscope className="h-4 w-4 text-primary" /> Taarifa
+          </h2>
+
+          <div className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-2">
             <div className="flex items-center gap-2 text-muted-foreground">
-              <Mail className="w-4 h-4" /> <span className="truncate">{doctor?.email}</span>
+              <Mail className="h-4 w-4" />
+              <span className="truncate">{doctor.email}</span>
             </div>
-            {doctor?.phone && (
+
+            {doctor.phone && (
               <div className="flex items-center gap-2 text-muted-foreground">
-                <Phone className="w-4 h-4" /> <span>{doctor.phone}</span>
+                <span className="inline-flex h-4 w-4 items-center justify-center text-primary">•</span>
+                <span>{doctor.phone}</span>
               </div>
             )}
+
             <div className="flex items-center gap-2 text-muted-foreground">
-              <MapPin className="w-4 h-4" /> <span>{doctor?.country || 'Tanzania'}</span>
+              <MapPin className="h-4 w-4" />
+              <span>{doctor.country || 'Tanzania'}</span>
             </div>
+
             {doctorProfile?.experience_years && (
               <div className="flex items-center gap-2 text-muted-foreground">
-                <Clock className="w-4 h-4" /> <span>{doctorProfile.experience_years} miaka uzoefu</span>
+                <Clock className="h-4 w-4" />
+                <span>{doctorProfile.experience_years} miaka uzoefu</span>
               </div>
             )}
+
             {doctorProfile?.license_number && (
-              <div className="flex items-center gap-2 text-muted-foreground col-span-2">
-                <Shield className="w-4 h-4" /> <span>Leseni: {doctorProfile.license_number}</span>
+              <div className="col-span-full flex items-center gap-2 text-muted-foreground">
+                <Shield className="h-4 w-4" />
+                <span>Leseni: {doctorProfile.license_number}</span>
               </div>
             )}
           </div>
         </div>
 
-        {/* Timetable - expandable section */}
-        <ExpandableSection
-          title={`Ratiba ya Kazi (${availableDays.length} siku)`}
-          count={timetable.length}
-          icon={<Clock className="w-4 h-4" />}
-        >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+        <ExpandableSection title="Ratiba" count={timetable.length} icon={<Clock className="h-4 w-4" />} className="shadow-none">
+          <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
             {days.map((dayName, dayIndex) => {
               const schedule = timetable.find((t: any) => t.day_of_week === dayIndex);
+              const isAvailable = !!schedule?.is_available;
+
               return (
-                <div key={dayIndex} className={`flex items-center justify-between p-3 rounded-xl ${
-                  schedule?.is_available 
-                    ? 'bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800' 
-                    : 'bg-muted/50'
-                }`}>
-                  <span className="font-medium text-sm">{dayName}</span>
-                  <span className={`text-sm ${schedule?.is_available ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'}`}>
-                    {schedule?.is_available 
-                      ? `${schedule.start_time?.slice(0,5)} - ${schedule.end_time?.slice(0,5)}`
-                      : 'Hapatikani'}
+                <div key={dayIndex} className={`flex items-center justify-between rounded-xl border p-3 ${isAvailable ? 'border-border bg-background' : 'border-transparent bg-muted/50'}`}>
+                  <span className="text-sm font-medium">{dayName}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {isAvailable ? `${schedule.start_time?.slice(0, 5)} - ${schedule.end_time?.slice(0, 5)}` : 'Hapatikani'}
                   </span>
                 </div>
               );
             })}
           </div>
+
           {timetable[0]?.location && (
-            <p className="text-sm text-muted-foreground mt-3 flex items-center gap-2">
-              <MapPin className="w-4 h-4" /> {timetable[0].location}
+            <p className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
+              <MapPin className="h-4 w-4" /> {timetable[0].location}
             </p>
           )}
         </ExpandableSection>
 
-        {/* Education - expandable */}
-        <ExpandableSection
-          title="Elimu na Mafunzo"
-          count={doctorProfile?.education?.length || 0}
-          icon={<GraduationCap className="w-4 h-4" />}
-        >
+        <ExpandableSection title="Elimu na Mafunzo" count={doctorProfile?.education?.length || 0} icon={<GraduationCap className="h-4 w-4" />} className="shadow-none">
           <ul className="space-y-2">
             {doctorProfile?.education?.map((edu: string, index: number) => (
               <li key={index} className="flex items-start gap-2 text-sm">
-                <span className="w-2 h-2 rounded-full bg-primary mt-2 shrink-0"></span>
+                <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-primary" />
                 <span>{edu}</span>
               </li>
             ))}
           </ul>
         </ExpandableSection>
 
-        {/* Languages - expandable */}
-        <ExpandableSection
-          title="Lugha Anazozungumza"
-          count={doctorProfile?.languages?.length || 0}
-          icon={<Languages className="w-4 h-4" />}
-        >
+        <ExpandableSection title="Lugha" count={doctorProfile?.languages?.length || 0} icon={<Languages className="h-4 w-4" />} className="shadow-none">
           <div className="flex flex-wrap gap-2">
             {doctorProfile?.languages?.map((lang: string, index: number) => (
               <Badge key={index} variant="secondary" className="px-3 py-1">{lang}</Badge>
@@ -251,15 +227,13 @@ export default function DoctorProfile() {
           </div>
         </ExpandableSection>
 
-        {/* Bio */}
         {doctorProfile?.bio && (
-          <div className="bg-card rounded-xl p-4 shadow-sm border border-border">
-            <h3 className="font-semibold mb-2">Kuhusu Daktari</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed">{doctorProfile.bio}</p>
+          <div className="rounded-2xl border border-border bg-card p-3">
+            <h3 className="mb-1 text-sm font-medium">Kuhusu</h3>
+            <p className="text-xs leading-relaxed text-muted-foreground">{doctorProfile.bio}</p>
           </div>
         )}
 
-        {/* Reviews */}
         <ReviewsSection entityType="doctor" entityId={doctorId || ''} entityName={displayName} />
       </div>
     </div>
