@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -15,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { 
   Send, Mic, MicOff, Bot, Stethoscope, Building, Pill, TestTube, MapPin, Star, 
   Calendar as CalendarIcon, Clock, Phone, MessageCircle, ArrowLeft,
-  User, Mail, FileText, Globe, Video, PhoneCall, AlertTriangle, LogOut, Settings,
+  User, Mail, FileText, Globe, Video, AlertTriangle, LogOut, Settings,
   Sun, Moon, Heart, Bookmark, Play, ChevronRight, ChevronDown,
   Ambulance, MoreVertical, Users, HeartPulse, Bell, Shield, Briefcase
 } from 'lucide-react';
@@ -52,6 +53,7 @@ const DAYS = ['Jumapili', 'Jumatatu', 'Jumanne', 'Jumatano', 'Alhamisi', 'Ijumaa
 export function UnifiedChatbot() {
   const { user, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([]);
   const [hasStartedChat, setHasStartedChat] = useState(false);
   
@@ -80,12 +82,6 @@ export function UnifiedChatbot() {
   const [availableTimes, setAvailableTimes] = useState<string[]>([]);
   const [bookedTimes, setBookedTimes] = useState<string[]>([]);
   
-  // Doctor chat mode
-  const [chatMode, setChatMode] = useState<'bot' | 'doctor'>('bot');
-  const [chatDoctor, setChatDoctor] = useState<any>(null);
-  const [chatAppointmentId, setChatAppointmentId] = useState<string | null>(null);
-  const [doctorMessages, setDoctorMessages] = useState<any[]>([]);
-
   // Hospital doctors and services
   const [hospitalDoctors, setHospitalDoctors] = useState<any[]>([]);
   const [hospitalServices, setHospitalServices] = useState<any[]>([]);
@@ -110,7 +106,7 @@ export function UnifiedChatbot() {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, doctorMessages]);
+  }, [messages]);
 
   // Fetch user role
   useEffect(() => {
@@ -174,27 +170,6 @@ export function UnifiedChatbot() {
       recognition.current.onend = () => setIsListening(false);
     }
   }, []);
-
-  // Subscribe to doctor messages in real-time
-  useEffect(() => {
-    if (!chatAppointmentId) return;
-    
-    const channel = supabase
-      .channel(`chat-${chatAppointmentId}`)
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'chat_messages',
-        filter: `appointment_id=eq.${chatAppointmentId}`
-      }, (payload) => {
-        if (payload.new.sender_id !== user?.id) {
-          setDoctorMessages(prev => [...prev, payload.new]);
-        }
-      })
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
-  }, [chatAppointmentId, user?.id]);
 
   const toggleListening = () => {
     if (recognition.current) {
@@ -611,12 +586,6 @@ export function UnifiedChatbot() {
   const handleSend = async () => {
     if (!input.trim()) return;
 
-    // If in doctor chat mode, send to doctor
-    if (chatMode === 'doctor') {
-      await sendDoctorMessage();
-      return;
-    }
-
     if (!hasStartedChat) setHasStartedChat(true);
 
     const userMsg: Message = {
@@ -802,47 +771,8 @@ export function UnifiedChatbot() {
       apptId = newAppt?.id;
     }
 
-    // Fetch existing messages
-    const { data: msgs } = await supabase
-      .from('chat_messages')
-      .select('*')
-      .eq('appointment_id', apptId)
-      .order('created_at', { ascending: true });
-
-    setDoctorMessages(msgs || []);
-    setChatDoctor(doctor);
-    setChatAppointmentId(apptId || null);
-    setChatMode('doctor');
     setSelectedDoctor(null);
-  };
-
-  const sendDoctorMessage = async () => {
-    if (!input.trim() || !chatAppointmentId || !user) return;
-
-    const { error } = await supabase.from('chat_messages').insert({
-      appointment_id: chatAppointmentId,
-      sender_id: user.id,
-      message: input,
-      message_type: 'text'
-    });
-
-    if (!error) {
-      setDoctorMessages(prev => [...prev, {
-        id: Date.now().toString(),
-        sender_id: user.id,
-        message: input,
-        created_at: new Date().toISOString()
-      }]);
-    }
-
-    setInput('');
-  };
-
-  const exitDoctorChat = () => {
-    setChatMode('bot');
-    setChatDoctor(null);
-    setChatAppointmentId(null);
-    setDoctorMessages([]);
+    navigate(`/messages?doctor=${doctorId}`);
   };
 
   // Render doctor card
@@ -1066,70 +996,6 @@ export function UnifiedChatbot() {
     }
     return null;
   };
-
-  // Doctor chat mode UI
-  if (chatMode === 'doctor' && chatDoctor) {
-    return (
-      <div className="h-screen flex flex-col bg-background">
-        <div className="flex items-center gap-3 p-4 border-b bg-card/50">
-          <Button variant="ghost" size="icon" onClick={exitDoctorChat}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <Avatar className="h-10 w-10">
-            <AvatarImage src={chatDoctor.profiles?.avatar_url} />
-            <AvatarFallback><Stethoscope className="h-5 w-5" /></AvatarFallback>
-          </Avatar>
-          <div className="flex-1">
-            <p className="font-semibold">Dr. {chatDoctor.profiles?.first_name} {chatDoctor.profiles?.last_name}</p>
-            <p className="text-xs text-muted-foreground">{chatDoctor.specialties?.name || 'Daktari'}</p>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="icon" onClick={() => toast({ title: 'Simu', description: 'Huduma ya simu inakuja...' })}>
-              <PhoneCall className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" size="icon" onClick={() => toast({ title: 'Video', description: 'Huduma ya video inakuja...' })}>
-              <Video className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-
-        <ScrollArea className="flex-1 p-4">
-          <div className="space-y-3">
-            {doctorMessages.map((msg) => (
-              <div key={msg.id} className={`flex ${msg.sender_id === user?.id ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[80%] rounded-2xl px-4 py-2 ${
-                  msg.sender_id === user?.id 
-                    ? 'bg-primary text-primary-foreground' 
-                    : 'bg-muted'
-                }`}>
-                  <p className="text-sm">{msg.message}</p>
-                  <p className="text-[10px] opacity-70 mt-1">
-                    {format(new Date(msg.created_at), 'HH:mm')}
-                  </p>
-                </div>
-              </div>
-            ))}
-            <div ref={messagesEndRef} />
-          </div>
-        </ScrollArea>
-
-        <div className="p-4 border-t bg-card/50">
-          <div className="flex gap-2">
-            <Input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Andika ujumbe..."
-              onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-              className="flex-1"
-            />
-            <Button onClick={handleSend}>
-              <Send className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   // Main chatbot UI
   return (
