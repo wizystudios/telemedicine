@@ -97,6 +97,10 @@ function AppContent() {
         <Route path="/hospital-management" element={<ProtectedRoute><HospitalManagement /></ProtectedRoute>} />
         <Route path="/nearby" element={<ProtectedRoute><NearbyPlaces /></ProtectedRoute>} />
         
+        {/* Prescriptions & Medical Records */}
+        <Route path="/prescriptions" element={<ProtectedRoute><Prescriptions /></ProtectedRoute>} />
+        <Route path="/medical-records" element={<ProtectedRoute><MedicalRecords /></ProtectedRoute>} />
+        
         <Route path="*" element={<NotFound />} />
       </Routes>
       <BottomNav />
