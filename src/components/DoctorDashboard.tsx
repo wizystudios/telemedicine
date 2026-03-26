@@ -395,6 +395,12 @@ export function DoctorDashboard() {
                   <Button size="sm" variant="outline" className="h-7" onClick={() => navigate(`/messages?patient=${apt.patient_id}`)}>
                     <MessageCircle className="h-3 w-3" />
                   </Button>
+                  <Button size="sm" variant="outline" className="h-7" onClick={() => {
+                    setPrescriptionPatient({ id: apt.patient_id, name: `${apt.profiles?.first_name} ${apt.profiles?.last_name}`, appointmentId: apt.id });
+                    setPrescriptionOpen(true);
+                  }}>
+                    <FileText className="h-3 w-3" />
+                  </Button>
                 </div>
               ))}
             </div>
