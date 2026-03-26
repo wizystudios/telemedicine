@@ -21,6 +21,7 @@ import { toast } from '@/hooks/use-toast';
 import { SettingsDrawer } from '@/components/SettingsDrawer';
 import { ContentUploadSection } from '@/components/ContentUploadSection';
 import { HealthTipsSection } from '@/components/HealthTipsSection';
+import { PrescriptionWriter } from '@/components/PrescriptionWriter';
 
 export function DoctorDashboard() {
   const { user } = useAuth();
@@ -43,6 +44,8 @@ export function DoctorDashboard() {
   const [suggestedDate, setSuggestedDate] = useState('');
   const [suggestedTime, setSuggestedTime] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [prescriptionOpen, setPrescriptionOpen] = useState(false);
+  const [prescriptionPatient, setPrescriptionPatient] = useState<any>(null);
 
   useEffect(() => {
     if (user?.id) {
@@ -392,6 +395,12 @@ export function DoctorDashboard() {
                   <Button size="sm" variant="outline" className="h-7" onClick={() => navigate(`/messages?patient=${apt.patient_id}`)}>
                     <MessageCircle className="h-3 w-3" />
                   </Button>
+                  <Button size="sm" variant="outline" className="h-7" onClick={() => {
+                    setPrescriptionPatient({ id: apt.patient_id, name: `${apt.profiles?.first_name} ${apt.profiles?.last_name}`, appointmentId: apt.id });
+                    setPrescriptionOpen(true);
+                  }}>
+                    <FileText className="h-3 w-3" />
+                  </Button>
                 </div>
               ))}
             </div>
@@ -412,7 +421,7 @@ export function DoctorDashboard() {
       />
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-4 gap-2">
+      <div className="grid grid-cols-5 gap-2">
         <Button variant="outline" className="h-auto py-3 flex-col gap-1" onClick={() => navigate('/appointments')}>
           <Calendar className="h-4 w-4" />
           <span className="text-[10px]">Miadi</span>
@@ -420,6 +429,10 @@ export function DoctorDashboard() {
         <Button variant="outline" className="h-auto py-3 flex-col gap-1" onClick={() => navigate('/patients')}>
           <Users className="h-4 w-4" />
           <span className="text-[10px]">Wagonjwa</span>
+        </Button>
+        <Button variant="outline" className="h-auto py-3 flex-col gap-1" onClick={() => navigate('/prescriptions')}>
+          <FileText className="h-4 w-4" />
+          <span className="text-[10px]">Dawa</span>
         </Button>
         <Button variant="outline" className="h-auto py-3 flex-col gap-1" onClick={() => navigate('/messages')}>
           <MessageCircle className="h-4 w-4" />
@@ -506,6 +519,18 @@ export function DoctorDashboard() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Prescription Writer */}
+      {prescriptionPatient && (
+        <PrescriptionWriter
+          open={prescriptionOpen}
+          onOpenChange={setPrescriptionOpen}
+          patientId={prescriptionPatient.id}
+          patientName={prescriptionPatient.name}
+          appointmentId={prescriptionPatient.appointmentId}
+          onSuccess={fetchData}
+        />
+      )}
 
       {/* Settings Drawer */}
       <SettingsDrawer 

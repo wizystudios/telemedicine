@@ -34,6 +34,8 @@ import PharmacyProfile from "./pages/PharmacyProfile";
 import BookAppointment from "./pages/BookAppointment";
 import HospitalManagement from "./pages/HospitalManagement";
 import Notifications from "./pages/Notifications";
+import Prescriptions from "./pages/Prescriptions";
+import MedicalRecords from "./pages/MedicalRecords";
 
 const queryClient = new QueryClient();
 
@@ -94,6 +96,10 @@ function AppContent() {
         {/* Management */}
         <Route path="/hospital-management" element={<ProtectedRoute><HospitalManagement /></ProtectedRoute>} />
         <Route path="/nearby" element={<ProtectedRoute><NearbyPlaces /></ProtectedRoute>} />
+        
+        {/* Prescriptions & Medical Records */}
+        <Route path="/prescriptions" element={<ProtectedRoute><Prescriptions /></ProtectedRoute>} />
+        <Route path="/medical-records" element={<ProtectedRoute><MedicalRecords /></ProtectedRoute>} />
         
         <Route path="*" element={<NotFound />} />
       </Routes>
