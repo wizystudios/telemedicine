@@ -44,6 +44,8 @@ export function DoctorDashboard() {
   const [suggestedDate, setSuggestedDate] = useState('');
   const [suggestedTime, setSuggestedTime] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [prescriptionOpen, setPrescriptionOpen] = useState(false);
+  const [prescriptionPatient, setPrescriptionPatient] = useState<any>(null);
 
   useEffect(() => {
     if (user?.id) {
