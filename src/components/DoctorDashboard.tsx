@@ -21,6 +21,7 @@ import { toast } from '@/hooks/use-toast';
 import { SettingsDrawer } from '@/components/SettingsDrawer';
 import { ContentUploadSection } from '@/components/ContentUploadSection';
 import { HealthTipsSection } from '@/components/HealthTipsSection';
+import { PrescriptionWriter } from '@/components/PrescriptionWriter';
 
 export function DoctorDashboard() {
   const { user } = useAuth();
