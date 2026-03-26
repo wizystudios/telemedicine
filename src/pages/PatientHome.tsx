@@ -92,7 +92,9 @@ export default function PatientHome() {
     { icon: Calendar, label: 'Miadi', path: '/appointments', count: upcomingAppointments.length },
     { icon: MessageCircle, label: 'Ujumbe', path: '/messages', count: 0 },
     { icon: Bell, label: 'Arifa', path: '/notifications', count: unreadNotifications },
-    { icon: FileText, label: 'Rekodi', path: '/profile', count: 0 },
+    { icon: FileText, label: 'Dawa', path: '/prescriptions', count: 0 },
+    { icon: Heart, label: 'Rekodi', path: '/medical-records', count: 0 },
+    { icon: Activity, label: 'Profile', path: '/profile', count: 0 },
   ];
 
   return (
