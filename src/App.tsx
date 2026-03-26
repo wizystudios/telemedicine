@@ -34,6 +34,8 @@ import PharmacyProfile from "./pages/PharmacyProfile";
 import BookAppointment from "./pages/BookAppointment";
 import HospitalManagement from "./pages/HospitalManagement";
 import Notifications from "./pages/Notifications";
+import Prescriptions from "./pages/Prescriptions";
+import MedicalRecords from "./pages/MedicalRecords";
 
 const queryClient = new QueryClient();
 
