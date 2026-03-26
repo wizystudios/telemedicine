@@ -516,6 +516,18 @@ export function DoctorDashboard() {
         </DialogContent>
       </Dialog>
 
+      {/* Prescription Writer */}
+      {prescriptionPatient && (
+        <PrescriptionWriter
+          open={prescriptionOpen}
+          onOpenChange={setPrescriptionOpen}
+          patientId={prescriptionPatient.id}
+          patientName={prescriptionPatient.name}
+          appointmentId={prescriptionPatient.appointmentId}
+          onSuccess={fetchData}
+        />
+      )}
+
       {/* Settings Drawer */}
       <SettingsDrawer 
         open={showSettings} 
