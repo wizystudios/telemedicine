@@ -123,7 +123,7 @@ export default function PatientHome() {
         </button>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-3 gap-2">
           {quickActions.map((action) => (
             <button
               key={action.label}
