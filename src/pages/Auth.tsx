@@ -100,7 +100,7 @@ export default function Auth() {
       {/* Header */}
       <header className="p-4 safe-area-top">
         {mode !== 'select' && (
-          <Button variant="ghost" size="icon" onClick={goBack}>
+          <Button variant="ghost" size="icon" onClick={goBack} className="h-9 w-9 rounded-full border border-border">
             <ChevronLeft className="h-5 w-5" />
           </Button>
         )}
