@@ -13,12 +13,16 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { HeartPulse, LogOut, Settings, User, Activity, Bell } from 'lucide-react';
+import { HeartPulse, LogOut, Settings, User, Activity, Bell, Menu } from 'lucide-react';
 import { ThemeToggle } from '@/components/auth/ThemeToggle';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-export function Navbar() {
+interface NavbarProps {
+  onToggleSidebar?: () => void;
+}
+
+export function Navbar({ onToggleSidebar }: NavbarProps) {
   const { user, signOut } = useAuth();
   const { updateOnlineStatus } = useOnlineStatus();
   const { hideNav } = useNav();
@@ -26,7 +30,6 @@ export function Navbar() {
   const [isOnline, setIsOnline] = useState(false);
   const [userRole, setUserRole] = useState<string>('patient');
 
-  // Fetch real role from user_roles table
   useEffect(() => {
     if (!user) return;
     const fetchRole = async () => {
@@ -44,7 +47,6 @@ export function Navbar() {
     if (userRole === 'doctor') {
       updateOnlineStatus(true);
       setIsOnline(true);
-      
       const handleBeforeUnload = () => updateOnlineStatus(false);
       window.addEventListener('beforeunload', handleBeforeUnload);
       return () => {
@@ -60,19 +62,25 @@ export function Navbar() {
     navigate('/');
   };
 
-  // Hide navbar when in chat mode
   if (hideNav) return null;
   if (!user) return null;
 
   return (
     <nav className="w-full bg-background/95 backdrop-blur-lg border-b sticky top-0 z-40">
       <div className="flex items-center justify-between h-10 px-3">
-        <Link to="/dashboard" className="flex items-center gap-1.5">
-          <div className="h-6 w-6 rounded-md bg-primary flex items-center justify-center">
-            <HeartPulse className="h-3.5 w-3.5 text-primary-foreground" />
-          </div>
-          <span className="font-semibold text-xs">TeleMed</span>
-        </Link>
+        <div className="flex items-center gap-1.5">
+          {/* Hamburger for mobile sidebar */}
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onToggleSidebar}>
+            <Menu className="h-4 w-4" />
+          </Button>
+          
+          <Link to="/dashboard" className="flex items-center gap-1.5">
+            <div className="h-6 w-6 rounded-md bg-primary flex items-center justify-center">
+              <HeartPulse className="h-3.5 w-3.5 text-primary-foreground" />
+            </div>
+            <span className="font-semibold text-xs">TeleMed</span>
+          </Link>
+        </div>
 
         <div className="flex items-center gap-1">
           <ThemeToggle />
