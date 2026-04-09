@@ -66,10 +66,9 @@ export function Navbar({ onToggleSidebar }: NavbarProps) {
   if (!user) return null;
 
   return (
-    <nav className="w-full bg-background/95 backdrop-blur-lg border-b sticky top-0 z-40">
+    <nav className="w-full backdrop-blur-sm border-b border-border/50 sticky top-0 z-40 bg-transparent">
       <div className="flex items-center justify-between h-10 px-3">
         <div className="flex items-center gap-1.5">
-          {/* Hamburger for mobile sidebar */}
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onToggleSidebar}>
             <Menu className="h-4 w-4" />
           </Button>

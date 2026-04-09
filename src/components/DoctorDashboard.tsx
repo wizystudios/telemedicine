@@ -259,9 +259,9 @@ export function DoctorDashboard() {
     <div className="p-4 space-y-4 max-w-4xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-lg font-bold">Habari, Dr. {user?.user_metadata?.first_name}</h1>
-          <p className="text-xs text-muted-foreground">Dashboard yako</p>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">Online</span>
+          <Switch checked={isOnline} onCheckedChange={handleOnlineToggle} />
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs text-muted-foreground">Online</span>
