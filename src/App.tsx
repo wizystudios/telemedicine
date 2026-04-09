@@ -11,6 +11,9 @@ import { useRealtimeChatNotifications } from "@/hooks/useRealtimeChatNotificatio
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { BottomNav } from "./components/layout/BottomNav";
 import { Navbar } from "./components/layout/Navbar";
+import { RoleSidebar } from "./components/layout/RoleSidebar";
+import { useState } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 import Auth from "./pages/Auth";
 import RoleBasedDashboard from "./components/RoleBasedDashboard";
@@ -50,59 +53,58 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 function AppContent() {
   const { user, loading } = useAuth();
+  const isMobile = useIsMobile();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   
   useRealtimeChatNotifications();
   usePushNotifications();
 
   if (loading) return <LoadingScreen />;
   
+  const showSidebar = !!user;
+
   return (
-    <div className="min-h-screen bg-background pb-14 md:pb-0">
-      <Navbar />
-      <Routes>
-        <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Navigate to="/auth" replace />} />
-        <Route path="/auth" element={user ? <Navigate to="/dashboard" replace /> : <Auth />} />
-        
-        {/* Main dashboard - role-based */}
-        <Route path="/dashboard" element={<ProtectedRoute><RoleBasedDashboard /></ProtectedRoute>} />
-        
-        {/* AI Chatbot */}
-        <Route path="/chatbot" element={<ProtectedRoute><ChatbotPage /></ProtectedRoute>} />
-        
-        {/* Core Pages */}
-        <Route path="/appointments" element={<ProtectedRoute><Appointments /></ProtectedRoute>} />
-        <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
-        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-        <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
-        
-        {/* Doctor related */}
-        <Route path="/doctors-list" element={<ProtectedRoute><DoctorsList /></ProtectedRoute>} />
-        <Route path="/doctor-profile/:doctorId" element={<ProtectedRoute><DoctorProfile /></ProtectedRoute>} />
-        <Route path="/book-appointment" element={<ProtectedRoute><BookAppointment /></ProtectedRoute>} />
-        
-        {/* Patient related */}
-        <Route path="/patients" element={<ProtectedRoute><Patients /></ProtectedRoute>} />
-        <Route path="/patient-detail/:patientId" element={<ProtectedRoute><PatientDetail /></ProtectedRoute>} />
-        <Route path="/patient-profile/:patientId" element={<ProtectedRoute><PatientProfile /></ProtectedRoute>} />
-        <Route path="/patient-problems" element={<ProtectedRoute><PatientProblems /></ProtectedRoute>} />
-        <Route path="/patient-problem-form" element={<ProtectedRoute><PatientProblemForm /></ProtectedRoute>} />
-        
-        {/* Institution Profiles */}
-        <Route path="/hospital-profile/:hospitalId" element={<ProtectedRoute><HospitalProfile /></ProtectedRoute>} />
-        <Route path="/pharmacy-profile/:pharmacyId" element={<ProtectedRoute><PharmacyProfile /></ProtectedRoute>} />
-        <Route path="/laboratory-profile/:labId" element={<ProtectedRoute><LaboratoryProfile /></ProtectedRoute>} />
-        <Route path="/polyclinic-profile/:polyclinicId" element={<ProtectedRoute><PolyclinicProfile /></ProtectedRoute>} />
-        
-        {/* Management */}
-        <Route path="/hospital-management" element={<ProtectedRoute><HospitalManagement /></ProtectedRoute>} />
-        <Route path="/nearby" element={<ProtectedRoute><NearbyPlaces /></ProtectedRoute>} />
-        
-        {/* Prescriptions & Medical Records */}
-        <Route path="/prescriptions" element={<ProtectedRoute><Prescriptions /></ProtectedRoute>} />
-        <Route path="/medical-records" element={<ProtectedRoute><MedicalRecords /></ProtectedRoute>} />
-        
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+    <div className="min-h-screen bg-background">
+      <Navbar onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+      <div className="flex">
+        {showSidebar && (
+          <RoleSidebar
+            open={sidebarOpen}
+            onClose={() => setSidebarOpen(false)}
+          />
+        )}
+        <main className="flex-1 min-w-0 pb-14 md:pb-0">
+          <Routes>
+            <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Navigate to="/auth" replace />} />
+            <Route path="/auth" element={user ? <Navigate to="/dashboard" replace /> : <Auth />} />
+            
+            <Route path="/dashboard" element={<ProtectedRoute><RoleBasedDashboard /></ProtectedRoute>} />
+            <Route path="/chatbot" element={<ProtectedRoute><ChatbotPage /></ProtectedRoute>} />
+            <Route path="/appointments" element={<ProtectedRoute><Appointments /></ProtectedRoute>} />
+            <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+            <Route path="/doctors-list" element={<ProtectedRoute><DoctorsList /></ProtectedRoute>} />
+            <Route path="/doctor-profile/:doctorId" element={<ProtectedRoute><DoctorProfile /></ProtectedRoute>} />
+            <Route path="/book-appointment" element={<ProtectedRoute><BookAppointment /></ProtectedRoute>} />
+            <Route path="/patients" element={<ProtectedRoute><Patients /></ProtectedRoute>} />
+            <Route path="/patient-detail/:patientId" element={<ProtectedRoute><PatientDetail /></ProtectedRoute>} />
+            <Route path="/patient-profile/:patientId" element={<ProtectedRoute><PatientProfile /></ProtectedRoute>} />
+            <Route path="/patient-problems" element={<ProtectedRoute><PatientProblems /></ProtectedRoute>} />
+            <Route path="/patient-problem-form" element={<ProtectedRoute><PatientProblemForm /></ProtectedRoute>} />
+            <Route path="/hospital-profile/:hospitalId" element={<ProtectedRoute><HospitalProfile /></ProtectedRoute>} />
+            <Route path="/pharmacy-profile/:pharmacyId" element={<ProtectedRoute><PharmacyProfile /></ProtectedRoute>} />
+            <Route path="/laboratory-profile/:labId" element={<ProtectedRoute><LaboratoryProfile /></ProtectedRoute>} />
+            <Route path="/polyclinic-profile/:polyclinicId" element={<ProtectedRoute><PolyclinicProfile /></ProtectedRoute>} />
+            <Route path="/hospital-management" element={<ProtectedRoute><HospitalManagement /></ProtectedRoute>} />
+            <Route path="/nearby" element={<ProtectedRoute><NearbyPlaces /></ProtectedRoute>} />
+            <Route path="/prescriptions" element={<ProtectedRoute><Prescriptions /></ProtectedRoute>} />
+            <Route path="/medical-records" element={<ProtectedRoute><MedicalRecords /></ProtectedRoute>} />
+            
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </main>
+      </div>
       <BottomNav />
     </div>
   );
