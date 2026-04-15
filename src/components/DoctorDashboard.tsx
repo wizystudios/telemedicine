@@ -260,19 +260,14 @@ export function DoctorDashboard() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">Online</span>
-          <Switch checked={isOnline} onCheckedChange={handleOnlineToggle} />
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">Online</span>
           <Switch checked={isOnline} onCheckedChange={handleOnlineToggle} />
           <Badge variant={isOnline ? 'default' : 'secondary'} className="text-[10px]">
             {isOnline ? 'Mtandaoni' : 'Nje'}
           </Badge>
-          <Button variant="ghost" size="icon" onClick={() => setShowSettings(true)}>
-            <Settings className="h-5 w-5" />
-          </Button>
         </div>
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setShowSettings(true)}>
+          <Settings className="h-4 w-4" />
+        </Button>
       </div>
 
       {/* Stats */}

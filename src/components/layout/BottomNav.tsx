@@ -18,7 +18,7 @@ export function BottomNav() {
     setTimeout(() => {
       setAiTapped(false);
       navigate('/chatbot');
-    }, 400);
+    }, 500);
   };
 
   const navItems = [
@@ -30,8 +30,8 @@ export function BottomNav() {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 w-full border-t border-border/50 md:hidden z-50 safe-area-bottom bg-transparent backdrop-blur-sm">
-      <div className="flex justify-around items-end h-16 px-2">
+    <nav className="fixed bottom-0 left-0 right-0 w-full border-t border-border/30 md:hidden z-50 safe-area-bottom glass">
+      <div className="flex justify-around items-end h-16 px-1">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = location.pathname === item.path;
@@ -41,19 +41,16 @@ export function BottomNav() {
               <button
                 key={item.path}
                 onClick={handleAiClick}
-                className={cn(
-                  "relative -mt-5 flex flex-col items-center justify-center transition-all",
-                  aiTapped && "animate-bounce"
-                )}
+                className="relative -mt-5 flex flex-col items-center justify-center"
               >
                 <div className={cn(
-                  "h-12 w-12 rounded-full bg-primary flex items-center justify-center shadow-lg transition-transform",
+                  "h-13 w-13 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/25 transition-all duration-500",
                   aiTapped && "scale-110 rotate-[360deg]",
-                  !aiTapped && "hover:scale-105"
-                )} style={{ transition: 'transform 0.4s ease' }}>
+                  !aiTapped && "hover:scale-105 hover:shadow-primary/40"
+                )} style={{ height: '52px', width: '52px' }}>
                   <Bot className="h-6 w-6 text-primary-foreground" />
                 </div>
-                <span className="text-[9px] font-semibold text-primary mt-0.5">{item.label}</span>
+                <span className="text-[9px] font-bold text-primary mt-1">{item.label}</span>
               </button>
             );
           }
@@ -63,12 +60,12 @@ export function BottomNav() {
               key={item.path}
               onClick={() => navigate(item.path)}
               className={cn(
-                "flex flex-col items-center justify-center gap-0.5 py-2 px-2 transition-colors min-w-0",
+                "flex flex-col items-center justify-center gap-0.5 py-2 px-3 transition-colors min-w-0",
                 isActive ? "text-primary" : "text-muted-foreground"
               )}
             >
-              <Icon className={cn("h-5 w-5", isActive && "stroke-[2.5px]")} />
-              <span className="text-[10px] font-medium leading-tight">{item.label}</span>
+              <Icon className={cn("h-5 w-5 transition-all", isActive && "stroke-[2.5px]")} />
+              <span className={cn("text-[10px] leading-tight", isActive ? "font-semibold" : "font-medium")}>{item.label}</span>
             </button>
           );
         })}
