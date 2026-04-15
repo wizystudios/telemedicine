@@ -4,77 +4,66 @@
 
 @layer base {
   :root {
-    /* ChatGPT-style Dark Theme */
-    --background: 220 15% 13%;
-    --foreground: 0 0% 95%;
-    --card: 220 15% 16%;
-    --card-foreground: 0 0% 95%;
-    --popover: 220 15% 16%;
-    --popover-foreground: 0 0% 95%;
-    
-    /* Primary - Soft teal accent */
-    --primary: 170 70% 50%;
+    /* Premium Health Light Theme */
+    --background: 210 20% 98%;
+    --foreground: 220 20% 14%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 20% 14%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 20% 14%;
+
+    /* Primary - Medical Emerald */
+    --primary: 162 63% 41%;
     --primary-foreground: 0 0% 100%;
-    
+
     /* Secondary */
-    --secondary: 220 15% 20%;
-    --secondary-foreground: 0 0% 85%;
-    
-    --muted: 220 15% 25%;
-    --muted-foreground: 0 0% 65%;
-    --accent: 220 15% 22%;
-    --accent-foreground: 0 0% 95%;
-    
-    /* Alert colors */
-    --destructive: 0 70% 50%;
+    --secondary: 210 20% 96%;
+    --secondary-foreground: 220 20% 30%;
+
+    --muted: 210 15% 94%;
+    --muted-foreground: 220 10% 50%;
+    --accent: 162 40% 95%;
+    --accent-foreground: 162 63% 30%;
+
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
-    
-    --border: 220 15% 22%;
-    --input: 220 15% 20%;
-    --ring: 170 70% 50%;
+
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 162 63% 41%;
     --radius: 0.75rem;
-    
-    /* Medical Color System */
-    --medical-blue: 207 90% 54%;
-    --medical-green: 134 61% 41%;
-    --medical-teal: 170 70% 50%;
-    --medical-light-blue: 207 100% 97%;
-    --medical-light-green: 134 100% 96%;
-    --medical-success: 134 61% 41%;
-    --medical-warning: 38 92% 50%;
-    --medical-error: 0 70% 50%;
-    --medical-gray: 0 0% 65%;
-    
-    /* Chat colors */
-    --chat-user: 220 15% 25%;
-    --chat-bot: 220 15% 18%;
-    --chat-input: 220 15% 18%;
+
+    /* Semantic health tokens */
+    --success: 152 58% 42%;
+    --warning: 38 92% 50%;
+    --info: 210 90% 56%;
   }
 
-  .light {
-    --background: 0 0% 100%;
-    --foreground: 215 25% 27%;
-    --card: 0 0% 100%;
-    --card-foreground: 215 25% 27%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 215 25% 27%;
-    --primary: 170 70% 45%;
+  .dark {
+    --background: 222 20% 10%;
+    --foreground: 210 20% 95%;
+    --card: 222 18% 13%;
+    --card-foreground: 210 20% 95%;
+    --popover: 222 18% 13%;
+    --popover-foreground: 210 20% 95%;
+
+    --primary: 162 60% 45%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 210 100% 98%;
-    --secondary-foreground: 215 25% 27%;
-    --muted: 210 100% 96%;
-    --muted-foreground: 215 13% 55%;
-    --accent: 210 100% 95%;
-    --accent-foreground: 215 25% 27%;
-    --destructive: 0 84% 60%;
+
+    --secondary: 222 15% 17%;
+    --secondary-foreground: 210 15% 80%;
+
+    --muted: 222 15% 20%;
+    --muted-foreground: 210 10% 55%;
+    --accent: 222 15% 18%;
+    --accent-foreground: 162 60% 60%;
+
+    --destructive: 0 62% 55%;
     --destructive-foreground: 0 0% 100%;
-    --border: 215 15% 90%;
-    --input: 215 15% 95%;
-    --ring: 170 70% 45%;
-    
-    --chat-user: 170 70% 45%;
-    --chat-bot: 215 15% 97%;
-    --chat-input: 215 15% 97%;
+
+    --border: 222 13% 20%;
+    --input: 222 13% 18%;
+    --ring: 162 60% 45%;
   }
 }
 
@@ -82,63 +71,41 @@
   * {
     @apply border-border;
   }
+  html {
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
   body {
     @apply bg-background text-foreground;
   }
 }
 
-/* Utility Classes */
-@layer utilities {
-  .bg-chat-user {
-    background-color: hsl(var(--chat-user));
-  }
-  
-  .bg-chat-bot {
-    background-color: hsl(var(--chat-bot));
-  }
-  
-  .bg-chat-input {
-    background-color: hsl(var(--chat-input));
-  }
-  
-  .text-medical-teal {
-    color: hsl(var(--medical-teal));
-  }
-  
-  .bg-medical-teal {
-    background-color: hsl(var(--medical-teal));
-  }
-}
-
-/* Smooth Scrollbar */
+/* Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 4px;
 }
-
 ::-webkit-scrollbar-track {
   background: transparent;
 }
-
 ::-webkit-scrollbar-thumb {
   background: hsl(var(--muted));
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--muted-foreground));
+  border-radius: 2px;
 }
 
 /* Animations */
 @keyframes fade-in {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
-
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 0 0 hsl(var(--primary) / 0.4); }
+  0%, 100% { box-shadow: 0 0 0 0 hsl(var(--primary) / 0.3); }
   50% { box-shadow: 0 0 0 8px hsl(var(--primary) / 0); }
 }
-
 @keyframes typing-dot {
   0%, 60%, 100% { transform: translateY(0); opacity: 0.6; }
   30% { transform: translateY(-4px); opacity: 1; }
@@ -147,7 +114,9 @@
 .animate-fade-in {
   animation: fade-in 0.3s ease-out;
 }
-
+.animate-slide-up {
+  animation: slide-up 0.4s ease-out;
+}
 .animate-pulse-glow {
   animation: pulse-glow 2s infinite;
 }
@@ -156,13 +125,14 @@
 .typing-dot:nth-child(2) { animation: typing-dot 1s infinite 0.15s; }
 .typing-dot:nth-child(3) { animation: typing-dot 1s infinite 0.3s; }
 
-/* Voice Recording */
-.voice-recording {
-  animation: pulse-glow 1s infinite;
-}
-
 /* Glass Effect */
 .glass {
-  background: hsl(var(--card) / 0.8);
-  backdrop-filter: blur(12px);
+  background: hsl(var(--card) / 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+/* Safe area for mobile */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
