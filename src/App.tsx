@@ -16,6 +16,7 @@ import { useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import RoleBasedDashboard from "./components/RoleBasedDashboard";
 import ChatbotPage from "./pages/ChatbotPage";
 import NotFound from "./pages/NotFound";
@@ -77,6 +78,7 @@ function AppContent() {
           <Routes>
             <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Navigate to="/auth" replace />} />
             <Route path="/auth" element={user ? <Navigate to="/dashboard" replace /> : <Auth />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             
             <Route path="/dashboard" element={<ProtectedRoute><RoleBasedDashboard /></ProtectedRoute>} />
             <Route path="/chatbot" element={<ProtectedRoute><ChatbotPage /></ProtectedRoute>} />
