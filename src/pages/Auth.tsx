@@ -43,6 +43,24 @@ export default function Auth() {
   const totalLoginSteps = 2;
   const totalRegisterSteps = authMethod === 'email' ? 7 : 6;
 
+  const handleForgotPassword = async () => {
+    const id = authMethod === 'email' ? email : phone;
+    if (!id || authMethod === 'phone') {
+      toast({ title: 'Email inahitajika', description: 'Tumia email kurejesha nenosiri.', variant: 'destructive' });
+      return;
+    }
+    setIsLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`
+    });
+    setIsLoading(false);
+    if (error) {
+      toast({ title: 'Kosa', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Tumeshatuma', description: 'Angalia email yako kwa kiungo cha kurejesha nenosiri.' });
+    }
+  };
+
   const handleLogin = async () => {
     setIsLoading(true);
     try {
@@ -98,7 +116,7 @@ export default function Auth() {
   const inputClass = "h-12 rounded-2xl bg-secondary/50 border-0 px-4 text-sm focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:bg-card transition-all";
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="h-screen overflow-hidden bg-background flex flex-col">
       {/* Header */}
       <header className="p-4 safe-area-top h-14 flex items-center">
         {mode !== 'select' && (
@@ -226,6 +244,15 @@ export default function Auth() {
             >
               {isLoading ? 'Subiri...' : 'Ingia'}
             </Button>
+
+            <button
+              type="button"
+              onClick={handleForgotPassword}
+              disabled={isLoading}
+              className="w-full text-xs text-primary hover:underline font-medium"
+            >
+              Umesahau nenosiri?
+            </button>
           </div>
         )}
 
