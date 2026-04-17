@@ -64,7 +64,7 @@ function AppContent() {
 
   if (loading) return <LoadingScreen />;
   
-  const showSidebar = !!user;
+  const showSidebar = !!user && !isAuthRoute;
 
   return (
     <div className="min-h-screen bg-background">
