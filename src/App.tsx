@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { NavProvider } from "@/contexts/NavContext";
@@ -54,19 +54,21 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 function AppContent() {
   const { user, loading } = useAuth();
+  const location = useLocation();
   const isMobile = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const isAuthRoute = location.pathname === '/auth' || location.pathname === '/reset-password';
   
   useRealtimeChatNotifications();
   usePushNotifications();
 
   if (loading) return <LoadingScreen />;
   
-  const showSidebar = !!user;
+  const showSidebar = !!user && !isAuthRoute;
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+      {!isAuthRoute && <Navbar onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />}
       <div className="flex">
         {showSidebar && (
           <RoleSidebar
@@ -74,7 +76,7 @@ function AppContent() {
             onClose={() => setSidebarOpen(false)}
           />
         )}
-        <main className="flex-1 min-w-0 pb-14 md:pb-0">
+        <main className={`flex-1 min-w-0 ${isAuthRoute ? 'h-screen overflow-hidden' : 'pb-14 md:pb-0'}`}>
           <Routes>
             <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Navigate to="/auth" replace />} />
             <Route path="/auth" element={user ? <Navigate to="/dashboard" replace /> : <Auth />} />
@@ -107,7 +109,7 @@ function AppContent() {
           </Routes>
         </main>
       </div>
-      <BottomNav />
+      {!isAuthRoute && <BottomNav />}
     </div>
   );
 }
