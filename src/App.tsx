@@ -54,8 +54,10 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 function AppContent() {
   const { user, loading } = useAuth();
+  const location = useLocation();
   const isMobile = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const isAuthRoute = location.pathname === '/auth' || location.pathname === '/reset-password';
   
   useRealtimeChatNotifications();
   usePushNotifications();
