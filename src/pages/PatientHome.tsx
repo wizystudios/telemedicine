@@ -8,6 +8,8 @@ import {
   Stethoscope, Building2, Pill, FlaskConical, Clock,
   ChevronRight, Search, MapPin
 } from 'lucide-react';
+import { AdBanner } from '@/components/AdBanner';
+import { HealthTipCard } from '@/components/HealthTipCard';
 
 export default function PatientHome() {
   const { user } = useAuth();
@@ -54,6 +56,9 @@ export default function PatientHome() {
           className="w-full h-11 pl-10 pr-4 rounded-2xl bg-card border border-border text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
         />
       </form>
+
+      <AdBanner page="home" />
+      <HealthTipCard />
 
       {/* Services — minimal: icon + label, no background */}
       <div className="grid grid-cols-4 gap-2">
