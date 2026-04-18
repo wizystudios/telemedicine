@@ -18,12 +18,13 @@ export interface SearchFilters {
 
 interface Props {
   onSearch: (filters: SearchFilters) => void;
+  initialSearchTerm?: string;
 }
 
-export function AdvancedDoctorSearch({ onSearch }: Props) {
+export function AdvancedDoctorSearch({ onSearch, initialSearchTerm = '' }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [filters, setFilters] = useState<SearchFilters>({
-    searchTerm: '', specialty: '', location: '', minPrice: 0, maxPrice: 200000, isAvailable: undefined
+    searchTerm: initialSearchTerm, specialty: '', location: '', minPrice: 0, maxPrice: 200000, isAvailable: undefined
   });
 
   const { data: specialties = [] } = useQuery({

@@ -58,17 +58,21 @@ function AppContent() {
   const isMobile = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const isAuthRoute = location.pathname === '/auth' || location.pathname === '/reset-password';
-  
+  // Hide nav on active 1:1 chat (when ?doctor= or ?patient= is set on /messages)
+  const search = location.search;
+  const isActiveChat = location.pathname === '/messages' && (search.includes('doctor=') || search.includes('patient='));
+  const hideChrome = isAuthRoute || isActiveChat;
+
   useRealtimeChatNotifications();
   usePushNotifications();
 
   if (loading) return <LoadingScreen />;
   
-  const showSidebar = !!user && !isAuthRoute;
+  const showSidebar = !!user && !hideChrome;
 
   return (
     <div className="min-h-screen bg-background">
-      {!isAuthRoute && <Navbar onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />}
+      {!hideChrome && <Navbar onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />}
       <div className="flex">
         {showSidebar && (
           <RoleSidebar
@@ -76,7 +80,7 @@ function AppContent() {
             onClose={() => setSidebarOpen(false)}
           />
         )}
-        <main className={`flex-1 min-w-0 ${isAuthRoute ? 'h-screen overflow-hidden' : 'pb-14 md:pb-0'}`}>
+        <main className={`flex-1 min-w-0 ${isAuthRoute ? 'h-screen overflow-hidden' : isActiveChat ? '' : 'pb-14 md:pb-0'}`}>
           <Routes>
             <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Navigate to="/auth" replace />} />
             <Route path="/auth" element={user ? <Navigate to="/dashboard" replace /> : <Auth />} />
@@ -109,7 +113,7 @@ function AppContent() {
           </Routes>
         </main>
       </div>
-      {!isAuthRoute && <BottomNav />}
+      {!hideChrome && <BottomNav />}
     </div>
   );
 }
