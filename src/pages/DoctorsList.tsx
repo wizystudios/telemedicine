@@ -59,7 +59,7 @@ export default function DoctorsList() {
         <p className="text-xs text-muted-foreground">Wasifu mfupi, hatua chache, ujumbe mmoja.</p>
       </div>
 
-      <AdvancedDoctorSearch onSearch={setFilters} />
+      <AdvancedDoctorSearch onSearch={setFilters} initialSearchTerm={initialQ} />
 
       <div className="grid grid-cols-1 gap-2">
         {doctors.map((doctor) => (
