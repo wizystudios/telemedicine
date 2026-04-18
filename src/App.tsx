@@ -40,6 +40,8 @@ import HospitalManagement from "./pages/HospitalManagement";
 import Notifications from "./pages/Notifications";
 import Prescriptions from "./pages/Prescriptions";
 import MedicalRecords from "./pages/MedicalRecords";
+import Cart from "./pages/Cart";
+import { WizyAgent } from "./components/WizyAgent";
 
 const queryClient = new QueryClient();
 
@@ -108,12 +110,14 @@ function AppContent() {
             <Route path="/nearby" element={<ProtectedRoute><NearbyPlaces /></ProtectedRoute>} />
             <Route path="/prescriptions" element={<ProtectedRoute><Prescriptions /></ProtectedRoute>} />
             <Route path="/medical-records" element={<ProtectedRoute><MedicalRecords /></ProtectedRoute>} />
+            <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
             
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
       </div>
       {!hideChrome && <BottomNav />}
+      {user && <WizyAgent />}
     </div>
   );
 }
