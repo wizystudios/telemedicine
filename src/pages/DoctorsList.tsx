@@ -4,12 +4,15 @@ import { useAuth } from '@/hooks/useAuth';
 import { DoctorCard } from '@/components/DoctorCard';
 import { AdvancedDoctorSearch, SearchFilters } from '@/components/AdvancedDoctorSearch';
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 
 export default function DoctorsList() {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const initialQ = searchParams.get('q') || '';
   const [filters, setFilters] = useState<SearchFilters>({
-    searchTerm: '', specialty: '', location: '', minPrice: 0, maxPrice: 200000, isAvailable: undefined
+    searchTerm: initialQ, specialty: '', location: '', minPrice: 0, maxPrice: 200000, isAvailable: undefined
   });
 
   const { data: doctors = [], isLoading } = useQuery({

@@ -19,22 +19,43 @@ export default function HospitalProfile() {
   const { data: hospital, isLoading } = useQuery({
     queryKey: ['hospital-profile', hospitalId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Fetch hospital + related data separately to avoid brittle nested embeds
+      const { data: h, error: hErr } = await supabase
         .from('hospitals')
-        .select(`
-          *,
-          doctor_profiles!doctor_profiles_hospital_id_fkey (
-            user_id, bio, experience_years, consultation_fee, doctor_type, is_available,
-            profiles!doctor_profiles_user_id_fkey (first_name, last_name, avatar_url),
-            doctor_timetable (day_of_week, start_time, end_time, is_available, location)
-          ),
-          hospital_services (id, name, description, price, category, is_available),
-          hospital_insurance (insurance_id)
-        `)
+        .select('*')
         .eq('id', hospitalId)
-        .single();
-      if (error) throw error;
-      return data;
+        .maybeSingle();
+      if (hErr) throw hErr;
+      if (!h) return null;
+
+      const [servicesRes, insRes, docsRes] = await Promise.all([
+        supabase.from('hospital_services').select('*').eq('hospital_id', hospitalId),
+        supabase.from('hospital_insurance').select('insurance_id').eq('hospital_id', hospitalId),
+        supabase.from('doctor_profiles')
+          .select('user_id, bio, experience_years, consultation_fee, doctor_type, is_available')
+          .eq('hospital_id', hospitalId),
+      ]);
+
+      const doctorIds = (docsRes.data || []).map((d: any) => d.user_id).filter(Boolean);
+      let profilesMap: Record<string, any> = {};
+      if (doctorIds.length) {
+        const { data: profs } = await supabase
+          .from('profiles')
+          .select('id, first_name, last_name, avatar_url')
+          .in('id', doctorIds);
+        profilesMap = Object.fromEntries((profs || []).map((p: any) => [p.id, p]));
+      }
+      const doctor_profiles = (docsRes.data || []).map((d: any) => ({
+        ...d,
+        profiles: profilesMap[d.user_id] || null,
+      }));
+
+      return {
+        ...h,
+        hospital_services: servicesRes.data || [],
+        hospital_insurance: insRes.data || [],
+        doctor_profiles,
+      };
     },
     enabled: !!hospitalId
   });
