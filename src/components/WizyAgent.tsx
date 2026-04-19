@@ -170,20 +170,6 @@ export function WizyAgent() {
 
   return createPortal(
     <>
-      {/* Floating launcher */}
-      {!open && (
-        <button
-          onClick={() => setOpen(true)}
-          className="fixed bottom-20 right-4 md:bottom-6 z-50 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 flex items-center justify-center transition-transform hover:scale-105 active:scale-95"
-          aria-label="Fungua Wizy"
-        >
-          <Bot className="h-6 w-6" />
-          {wakeListening && (
-            <span className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-400 animate-pulse ring-2 ring-background" />
-          )}
-        </button>
-      )}
-
       {open && (
         <div className="fixed inset-0 z-50 flex items-end justify-center md:items-center bg-black/40 backdrop-blur-sm" onClick={() => setOpen(false)}>
           <div
