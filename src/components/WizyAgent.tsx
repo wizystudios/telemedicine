@@ -41,6 +41,13 @@ export function WizyAgent() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages, loading]);
 
+  // Listen for global "open wizy" events (from BottomNav AI button etc.)
+  useEffect(() => {
+    const handler = () => setOpen(true);
+    window.addEventListener('wizy:open', handler);
+    return () => window.removeEventListener('wizy:open', handler);
+  }, []);
+
   // Setup foreground recognition (used while drawer open)
   useEffect(() => {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
