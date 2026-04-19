@@ -2,13 +2,17 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Bot, Mic, MicOff, Send, X, Sparkles, Loader2 } from 'lucide-react';
+import { Bot, Mic, MicOff, Send, X, Sparkles, Loader2, Stethoscope, Building2, Pill, TestTube, MapPin, Star, Phone, Calendar as CalIcon, ShoppingCart, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 
+interface ToolResult { tool: string; args: any; result: any }
 interface Msg {
   role: 'user' | 'assistant';
   content: string;
+  results?: ToolResult[];
 }
 
 declare global {
@@ -139,19 +143,13 @@ export function WizyAgent() {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
-      setMessages(prev => [...prev, { role: 'assistant', content: data?.reply || 'Hakuna jibu.' }]);
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: data?.reply || '',
+        results: Array.isArray(data?.results) ? data.results : [],
+      }]);
 
-      // Apply navigation actions
-      if (Array.isArray(data?.actions)) {
-        for (const path of data.actions) {
-          if (typeof path === 'string' && path.startsWith('/')) {
-            setTimeout(() => navigate(path), 600);
-            break;
-          }
-        }
-      }
-
-      // Speak reply (Swahili TTS if available)
+      // Speak reply (Swahili TTS if available) — but skip auto-navigation (intrusive)
       if ('speechSynthesis' in window && data?.reply) {
         const utt = new SpeechSynthesisUtterance(data.reply);
         utt.lang = 'sw-TZ';
