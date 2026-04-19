@@ -7,31 +7,40 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-const SYSTEM_PROMPT = `Wewe ni Wizy, msaidizi wa AI kwa app ya TeleMed Tanzania.
-Lugha kuu ni Kiswahili. Jibu kwa Kiswahili kifupi na cha kirafiki.
+const SYSTEM_PROMPT = `Wewe ni Wizy, msaidizi mkuu wa AI wa app ya TeleMed Tanzania.
+Lugha kuu ni Kiswahili. Jibu kifupi, kwa kirafiki, na kwa hatua wazi.
 
-Una uwezo wa:
-- Kutafuta madaktari, hospitali, famasi, maabara
-- Kuangalia miadi ya mtumiaji
-- Kuomba kuweka miadi (booking request)
-- Kutuma ujumbe kwa daktari
-- Kuongeza dawa kwenye cart na kuagiza
-- Kuonyesha rekodi za matibabu
-- Kuchambua dalili za afya
+UWEZO WAKO (tumia tools, usibuni majibu):
+- Kutafuta MADAKTARI kwa jina au utaalamu (search_doctors)
+- Kutafuta HOSPITALI, FAMASI, MAABARA kwa jina (search_facilities)
+- Kuangalia MIADI ya mtumiaji (list_my_appointments)
+- Kuomba/kuweka MIADI mpya na daktari (create_appointment_request)
+- Kutafuta DAWA kwenye famasi zote (search_medicines)
+- Kuongeza dawa kwenye CART na kuagiza (add_to_cart)
+- Kuangalia UJUMBE/CHATS za mtumiaji (list_my_messages)
+- Kupost TATIZO la mgonjwa madaktari waone (post_patient_problem)
+- Kuonyesha REKODI za matibabu (list_medical_records)
+- Kuchambua DALILI na kushauri huduma (analyze_symptoms)
+- HUDUMA YA HARAKA / first aid (emergency_guidance)
+- Kumpeleka mtumiaji ukurasa fulani (navigate_to)
 
-Tumia tools zilizopatikana ku-fetch data halisi badala ya kubuni. Endapo mtumiaji haja-login, mwambie a-login kwanza.
-Kama ni dharura ya kiafya, sema wazi na shauri kwenda hospitali haraka.`;
+KANUNI:
+1. Kabla hujajibu kwa maandishi tu, tumia tool inayofaa kupata data halisi.
+2. Endapo mtumiaji haja-login na tool inahitaji login, mwambie a-bonyeze 'Mimi' apate kuingia.
+3. Ukigundua dharura (kupumua kwa shida, kifua kuumia, damu nyingi, kupoteza fahamu) — sema waziwazi piga 112 na shauri kwenda hospitali HARAKA.
+4. Toa orodha fupi (3-5) na ongeza link/ukurasa wa kuona zaidi.
+5. Tumia emoji kidogo tu kwa uwazi.`;
 
 const TOOLS = [
   {
     type: "function",
     function: {
       name: "search_doctors",
-      description: "Tafuta madaktari kwa jina, utaalamu, au eneo",
+      description: "Tafuta madaktari kwa jina au utaalamu",
       parameters: {
         type: "object",
         properties: {
-          query: { type: "string", description: "Search term (specialty/name)" },
+          query: { type: "string", description: "Jina au utaalamu, mfano 'moyo'" },
           limit: { type: "number", default: 5 },
         },
       },
@@ -41,12 +50,13 @@ const TOOLS = [
     type: "function",
     function: {
       name: "search_facilities",
-      description: "Tafuta hospitali, famasi au maabara",
+      description: "Tafuta hospitali, famasi, polyclinics au maabara",
       parameters: {
         type: "object",
         properties: {
-          type: { type: "string", enum: ["hospitals", "pharmacies", "laboratories"] },
-          query: { type: "string" },
+          type: { type: "string", enum: ["hospitals", "pharmacies", "laboratories", "polyclinics"] },
+          query: { type: "string", description: "Sehemu ya jina la kituo (optional)" },
+          limit: { type: "number", default: 5 },
         },
         required: ["type"],
       },
@@ -64,7 +74,7 @@ const TOOLS = [
     type: "function",
     function: {
       name: "create_appointment_request",
-      description: "Omba kuweka miadi na daktari",
+      description: "Omba/weka miadi na daktari",
       parameters: {
         type: "object",
         properties: {
@@ -107,14 +117,70 @@ const TOOLS = [
   {
     type: "function",
     function: {
+      name: "list_my_messages",
+      description: "Onyesha mazungumzo (chats) ya mtumiaji aliye-login",
+      parameters: { type: "object", properties: {} },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "post_patient_problem",
+      description: "Pos tatizo la mgonjwa ili madaktari waone na wajibu",
+      parameters: {
+        type: "object",
+        properties: {
+          problem_text: { type: "string" },
+          urgency_level: { type: "string", enum: ["low", "normal", "high", "urgent"], default: "normal" },
+          category: { type: "string", default: "general" },
+        },
+        required: ["problem_text"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "list_medical_records",
+      description: "Onyesha rekodi za matibabu za mtumiaji",
+      parameters: { type: "object", properties: {} },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "analyze_symptoms",
+      description: "Pokea dalili za mgonjwa na shauri huduma au utaalamu wa daktari",
+      parameters: {
+        type: "object",
+        properties: { symptoms: { type: "string" } },
+        required: ["symptoms"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "emergency_guidance",
+      description: "Toa msaada wa first-aid kwa hali ya dharura",
+      parameters: {
+        type: "object",
+        properties: { situation: { type: "string" } },
+        required: ["situation"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
       name: "navigate_to",
-      description: "Pelekea mtumiaji ukurasa fulani kwenye app",
+      description: "Pelekea mtumiaji ukurasa fulani",
       parameters: {
         type: "object",
         properties: {
           path: {
             type: "string",
-            description: "Route path, mfano /appointments, /doctors-list, /cart, /messages, /medical-records, /nearby, /prescriptions",
+            description: "Mfano /appointments, /doctors-list, /cart, /messages, /medical-records, /nearby, /prescriptions, /notifications",
           },
         },
         required: ["path"],
@@ -136,17 +202,21 @@ async function executeTool(
           .from("doctor_profiles")
           .select("user_id, bio, consultation_fee, doctor_type, experience_years, rating, profiles!inner(first_name, last_name, avatar_url)")
           .limit(args.limit || 5);
-        if (args.query) q = q.ilike("doctor_type", `%${args.query}%`);
+        if (args.query) {
+          q = q.or(`doctor_type.ilike.%${args.query}%,bio.ilike.%${args.query}%`);
+        }
         const { data } = await q;
-        return { doctors: data || [] };
+        return { doctors: data || [], navigate: "/doctors-list" + (args.query ? `?q=${encodeURIComponent(args.query)}` : "") };
       }
       case "search_facilities": {
-        const { data } = await supabase
+        let q = supabase
           .from(args.type)
           .select("id, name, address, phone, logo_url, rating")
           .eq("is_verified", true)
-          .limit(5);
-        return { items: data || [], type: args.type };
+          .limit(args.limit || 5);
+        if (args.query) q = q.ilike("name", `%${args.query}%`);
+        const { data } = await q;
+        return { items: data || [], type: args.type, navigate: "/nearby" };
       }
       case "list_my_appointments": {
         if (!userId) return { error: "Tafadhali ingia kwanza" };
@@ -156,7 +226,7 @@ async function executeTool(
           .eq("patient_id", userId)
           .order("appointment_date", { ascending: false })
           .limit(10);
-        return { appointments: data || [] };
+        return { appointments: data || [], navigate: "/appointments" };
       }
       case "create_appointment_request": {
         if (!userId) return { error: "Tafadhali ingia kwanza" };
@@ -173,7 +243,7 @@ async function executeTool(
           .select()
           .single();
         if (error) return { error: error.message };
-        return { success: true, appointment: data };
+        return { success: true, appointment: data, navigate: "/appointments" };
       }
       case "search_medicines": {
         const { data } = await supabase
@@ -202,7 +272,59 @@ async function executeTool(
           { onConflict: "user_id,medicine_id" }
         );
         if (error) return { error: error.message };
-        return { success: true };
+        return { success: true, navigate: "/cart" };
+      }
+      case "list_my_messages": {
+        if (!userId) return { error: "Tafadhali ingia kwanza" };
+        const { data } = await supabase
+          .from("appointments")
+          .select("id, doctor_id, patient_id, status")
+          .or(`patient_id.eq.${userId},doctor_id.eq.${userId}`)
+          .limit(10);
+        return { conversations: data || [], navigate: "/messages" };
+      }
+      case "post_patient_problem": {
+        if (!userId) return { error: "Tafadhali ingia kwanza" };
+        const { data, error } = await supabase
+          .from("patient_problems")
+          .insert({
+            patient_id: userId,
+            problem_text: args.problem_text,
+            category: args.category || "general",
+            urgency_level: args.urgency_level || "normal",
+          })
+          .select()
+          .single();
+        if (error) return { error: error.message };
+        return { success: true, problem: data, navigate: "/patient-problems" };
+      }
+      case "list_medical_records": {
+        if (!userId) return { error: "Tafadhali ingia kwanza" };
+        const { data } = await supabase
+          .from("medical_records")
+          .select("id, title, record_type, created_at")
+          .eq("patient_id", userId)
+          .order("created_at", { ascending: false })
+          .limit(10);
+        return { records: data || [], navigate: "/medical-records" };
+      }
+      case "analyze_symptoms": {
+        // Heuristic mapping symptoms → specialty hint
+        const s = (args.symptoms || "").toLowerCase();
+        let specialty = "general";
+        if (/(moyo|kifua|chest|heart)/.test(s)) specialty = "moyo";
+        else if (/(kichwa|head|migraine)/.test(s)) specialty = "neva";
+        else if (/(tumbo|stomach|kidney|figo)/.test(s)) specialty = "tumbo";
+        else if (/(ngozi|skin|rash)/.test(s)) specialty = "ngozi";
+        else if (/(mtoto|child|baby)/.test(s)) specialty = "watoto";
+        return { suggested_specialty: specialty, advice: "Pendekezo: tafuta daktari wa " + specialty };
+      }
+      case "emergency_guidance": {
+        return {
+          emergency: true,
+          guidance: "🚨 PIGA 112 SASA. Hatua za haraka:\n• Damu: bonyeza eneo kwa kitambaa safi\n• Kuchomwa: pumzisha kwa maji baridi\n• Kushindwa kupumua: keti, fungua dirisha\n• CPR: bonyeza kifua mara 30, pumua mara 2.",
+          navigate: "/nearby",
+        };
       }
       case "navigate_to": {
         return { navigate: args.path };
@@ -244,8 +366,10 @@ serve(async (req) => {
       ...messages,
     ];
 
-    // Up to 4 tool-call iterations
-    for (let i = 0; i < 4; i++) {
+    const navActions: string[] = [];
+
+    // Up to 5 tool-call iterations
+    for (let i = 0; i < 5; i++) {
       const response = await fetch(
         "https://ai.gateway.lovable.dev/v1/chat/completions",
         {
@@ -289,18 +413,15 @@ serve(async (req) => {
 
       const toolCalls = msg.tool_calls;
       if (!toolCalls || toolCalls.length === 0) {
-        const navigateActions: string[] = [];
         return new Response(
           JSON.stringify({
             reply: msg.content || "",
-            actions: navigateActions,
+            actions: navActions,
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
-      // Execute every tool call
-      const navActions: string[] = [];
       for (const tc of toolCalls) {
         const fnName = tc.function?.name;
         let args: any = {};
@@ -318,7 +439,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ reply: "Samahani, sijaweza kukamilisha ombi." }),
+      JSON.stringify({ reply: "Samahani, sijaweza kukamilisha ombi.", actions: navActions }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e: any) {

@@ -33,7 +33,14 @@ export default function PatientHome() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     const q = searchQuery.trim();
-    navigate(q ? `/doctors-list?q=${encodeURIComponent(q)}` : '/doctors-list');
+    if (!q) { navigate('/doctors-list'); return; }
+    // Heuristic universal search: route to the right page based on keywords
+    const lower = q.toLowerCase();
+    if (/(hospitali|hospital)/.test(lower)) navigate(`/nearby?type=hospitals&q=${encodeURIComponent(q)}`);
+    else if (/(famasi|pharmacy|dawa)/.test(lower)) navigate(`/nearby?type=pharmacies&q=${encodeURIComponent(q)}`);
+    else if (/(maabara|lab)/.test(lower)) navigate(`/nearby?type=laboratories&q=${encodeURIComponent(q)}`);
+    else if (/(polyclinic)/.test(lower)) navigate(`/nearby?type=polyclinics&q=${encodeURIComponent(q)}`);
+    else navigate(`/doctors-list?q=${encodeURIComponent(q)}`);
   };
 
   const services = [
