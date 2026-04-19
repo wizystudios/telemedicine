@@ -7,29 +7,19 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-const SYSTEM_PROMPT = `Wewe ni Wizy, msaidizi mkuu wa AI wa app ya TeleMed Tanzania.
-Lugha kuu ni Kiswahili. Jibu kifupi, kwa kirafiki, na kwa hatua wazi.
+const SYSTEM_PROMPT = `Wewe ni Wizy, msaidizi mahiri wa afya wa TeleMed Tanzania.
+Lugha: Kiswahili. Jibu fupi, moja kwa moja, na kwa vitendo (action-first).
 
-UWEZO WAKO (tumia tools, usibuni majibu):
-- Kutafuta MADAKTARI kwa jina au utaalamu (search_doctors)
-- Kutafuta HOSPITALI, FAMASI, MAABARA kwa jina (search_facilities)
-- Kuangalia MIADI ya mtumiaji (list_my_appointments)
-- Kuomba/kuweka MIADI mpya na daktari (create_appointment_request)
-- Kutafuta DAWA kwenye famasi zote (search_medicines)
-- Kuongeza dawa kwenye CART na kuagiza (add_to_cart)
-- Kuangalia UJUMBE/CHATS za mtumiaji (list_my_messages)
-- Kupost TATIZO la mgonjwa madaktari waone (post_patient_problem)
-- Kuonyesha REKODI za matibabu (list_medical_records)
-- Kuchambua DALILI na kushauri huduma (analyze_symptoms)
-- HUDUMA YA HARAKA / first aid (emergency_guidance)
-- Kumpeleka mtumiaji ukurasa fulani (navigate_to)
+KANUNI MUHIMU:
+1. USIULIZE swali la ziada kabla ya kutumia tool. Mfano: mtumiaji akisema "tafuta daktari" — TUMIA search_doctors moja kwa moja na query="" kuonyesha madaktari wote, USISEME "nipe jina au utaalamu".
+2. Mtumiaji akisema "hospitali" / "famasi" / "maabara" / "polyclinics" — tumia search_facilities moja kwa moja.
+3. Mtumiaji akisema "miadi yangu" / "ujumbe" / "rekodi" / "cart" — tumia tool inayohusika moja kwa moja.
+4. Baada ya tool kurudi data, jibu kwa sentensi 1 fupi tu (mfano: "Nimepata madaktari 5:") — UI itaonyesha card. USIANDIKE orodha ndefu ya majina kwenye text.
+5. Kwa dharura (kupumua shida, kifua kuumia, damu nyingi, kupoteza fahamu) — tumia emergency_guidance, sema PIGA 112.
+6. Mtumiaji akisha-chagua daktari na akasema "weka miadi" — tumia create_appointment_request.
+7. Endapo tool inahitaji login na hakuna user — sema kwa sentensi moja "Tafadhali ingia kwanza kupitia 'Mimi'."
 
-KANUNI:
-1. Kabla hujajibu kwa maandishi tu, tumia tool inayofaa kupata data halisi.
-2. Endapo mtumiaji haja-login na tool inahitaji login, mwambie a-bonyeze 'Mimi' apate kuingia.
-3. Ukigundua dharura (kupumua kwa shida, kifua kuumia, damu nyingi, kupoteza fahamu) — sema waziwazi piga 112 na shauri kwenda hospitali HARAKA.
-4. Toa orodha fupi (3-5) na ongeza link/ukurasa wa kuona zaidi.
-5. Tumia emoji kidogo tu kwa uwazi.`;
+KAULI YA MWISHO: Sentensi moja, wazi, na kionjo cha hatua. Hakuna kuomba "nipe jina" — chukua hatua kwanza.`;
 
 const TOOLS = [
   {
@@ -200,23 +190,23 @@ async function executeTool(
       case "search_doctors": {
         let q = supabase
           .from("doctor_profiles")
-          .select("user_id, bio, consultation_fee, doctor_type, experience_years, rating, profiles!inner(first_name, last_name, avatar_url)")
+          .select("id, user_id, bio, consultation_fee, doctor_type, experience_years, rating, total_reviews, is_available, profiles!doctor_profiles_user_id_fkey(first_name, last_name, avatar_url), specialties(name)")
           .limit(args.limit || 5);
-        if (args.query) {
+        if (args.query && args.query.trim()) {
           q = q.or(`doctor_type.ilike.%${args.query}%,bio.ilike.%${args.query}%`);
         }
         const { data } = await q;
-        return { doctors: data || [], navigate: "/doctors-list" + (args.query ? `?q=${encodeURIComponent(args.query)}` : "") };
+        return { doctors: data || [], query: args.query || "" };
       }
       case "search_facilities": {
         let q = supabase
           .from(args.type)
-          .select("id, name, address, phone, logo_url, rating")
+          .select("id, name, address, phone, logo_url, rating, total_reviews")
           .eq("is_verified", true)
           .limit(args.limit || 5);
-        if (args.query) q = q.ilike("name", `%${args.query}%`);
+        if (args.query && args.query.trim()) q = q.ilike("name", `%${args.query}%`);
         const { data } = await q;
-        return { items: data || [], type: args.type, navigate: "/nearby" };
+        return { items: data || [], type: args.type };
       }
       case "list_my_appointments": {
         if (!userId) return { error: "Tafadhali ingia kwanza" };
@@ -367,6 +357,7 @@ serve(async (req) => {
     ];
 
     const navActions: string[] = [];
+    const toolResults: any[] = [];
 
     // Up to 5 tool-call iterations
     for (let i = 0; i < 5; i++) {
@@ -417,6 +408,7 @@ serve(async (req) => {
           JSON.stringify({
             reply: msg.content || "",
             actions: navActions,
+            results: toolResults,
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
@@ -430,6 +422,7 @@ serve(async (req) => {
         } catch {}
         const result = await executeTool(fnName, args, supabase, userId);
         if (result?.navigate) navActions.push(result.navigate);
+        toolResults.push({ tool: fnName, args, result });
         conversation.push({
           role: "tool",
           tool_call_id: tc.id,
@@ -439,7 +432,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ reply: "Samahani, sijaweza kukamilisha ombi.", actions: navActions }),
+      JSON.stringify({ reply: "Samahani, sijaweza kukamilisha ombi.", actions: navActions, results: toolResults }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e: any) {
