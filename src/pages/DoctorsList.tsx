@@ -15,7 +15,7 @@ export default function DoctorsList() {
     searchTerm: initialQ, specialty: '', location: '', minPrice: 0, maxPrice: 200000, isAvailable: undefined
   });
 
-  const { data: doctors = [], isLoading } = useQuery({
+  const { data: doctors = [], isLoading, isFetching } = useQuery({
     queryKey: ['doctors', filters],
     queryFn: async () => {
       let query = supabase
@@ -41,16 +41,9 @@ export default function DoctorsList() {
       if (filters.isAvailable) filtered = filtered.filter(d => d.isOnline);
       return filtered;
     },
-    enabled: !!user
+    enabled: !!user,
+    placeholderData: (prev) => prev,
   });
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="h-5 w-5 animate-spin text-primary" />
-      </div>
-    );
-  }
 
   return (
     <div className="mx-auto max-w-2xl space-y-3 px-3 pt-3 pb-20">
@@ -61,18 +54,25 @@ export default function DoctorsList() {
 
       <AdvancedDoctorSearch onSearch={setFilters} initialSearchTerm={initialQ} />
 
-      <div className="grid grid-cols-1 gap-2">
-        {doctors.map((doctor) => (
-          <DoctorCard key={doctor.id} doctor={doctor} isOnline={doctor.isOnline} />
-        ))}
-      </div>
-
-      {doctors.length === 0 && (
-        <div className="rounded-2xl border border-dashed border-border py-10 text-center">
-          <p className="text-sm text-muted-foreground">
-            {filters.searchTerm ? 'Hakuna daktari aliyepatikana' : 'Hakuna madaktari kwa sasa'}
-          </p>
+      {isLoading ? (
+        <div className="flex items-center justify-center py-16">
+          <Loader2 className="h-5 w-5 animate-spin text-primary" />
         </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 gap-2 transition-opacity" style={{ opacity: isFetching ? 0.6 : 1 }}>
+            {doctors.map((doctor) => (
+              <DoctorCard key={doctor.id} doctor={doctor} isOnline={doctor.isOnline} />
+            ))}
+          </div>
+          {doctors.length === 0 && (
+            <div className="rounded-2xl border border-dashed border-border py-10 text-center">
+              <p className="text-sm text-muted-foreground">
+                {filters.searchTerm ? 'Hakuna daktari aliyepatikana' : 'Hakuna madaktari kwa sasa'}
+              </p>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

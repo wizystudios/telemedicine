@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search, SlidersHorizontal, X } from 'lucide-react';
@@ -39,6 +39,16 @@ export function AdvancedDoctorSearch({ onSearch, initialSearchTerm = '' }: Props
 
   const apply = (nextFilters = filters) => onSearch(nextFilters);
 
+  // Debounce so search bar doesn't refetch on every keystroke (was causing UI flicker)
+  const debounceRef = useRef<number | null>(null);
+  const onSearchTermChange = (value: string) => {
+    const next = { ...filters, searchTerm: value };
+    setFilters(next);
+    if (debounceRef.current) window.clearTimeout(debounceRef.current);
+    debounceRef.current = window.setTimeout(() => apply(next), 350);
+  };
+  useEffect(() => () => { if (debounceRef.current) window.clearTimeout(debounceRef.current); }, []);
+
   const reset = () => {
     const r: SearchFilters = { searchTerm: '', specialty: '', location: '', minPrice: 0, maxPrice: 200000, isAvailable: undefined };
     setFilters(r);
@@ -53,11 +63,7 @@ export function AdvancedDoctorSearch({ onSearch, initialSearchTerm = '' }: Props
           <Input
             placeholder="Tafuta daktari..."
             value={filters.searchTerm}
-            onChange={(e) => {
-              const nextFilters = { ...filters, searchTerm: e.target.value };
-              setFilters(nextFilters);
-              apply(nextFilters);
-            }}
+            onChange={(e) => onSearchTermChange(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && apply()}
             className="h-9 pl-9 text-sm"
           />

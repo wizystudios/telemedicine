@@ -66,7 +66,7 @@ export function Navbar({ onToggleSidebar }: NavbarProps) {
   if (!user) return null;
 
   return (
-    <nav className="w-full border-b border-border/40 sticky top-0 z-40 glass">
+    <nav className="w-full sticky top-0 z-40 bg-transparent">
       <div className="flex items-center justify-between h-12 px-4">
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onToggleSidebar}>
