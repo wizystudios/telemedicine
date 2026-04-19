@@ -15,16 +15,14 @@ export function BottomNav() {
 
   const handleAiClick = () => {
     setAiTapped(true);
-    setTimeout(() => {
-      setAiTapped(false);
-      navigate('/chatbot');
-    }, 500);
+    window.dispatchEvent(new CustomEvent('wizy:open'));
+    setTimeout(() => setAiTapped(false), 500);
   };
 
   const navItems = [
     { icon: Home, label: 'Nyumbani', path: '/dashboard' },
     { icon: Calendar, label: 'Miadi', path: '/appointments' },
-    { icon: Bot, label: 'AI', path: '/chatbot', isCenter: true },
+    { icon: Bot, label: 'Wizy', path: '#wizy', isCenter: true },
     { icon: MessageCircle, label: 'Ujumbe', path: '/messages' },
     { icon: User, label: 'Mimi', path: '/profile' },
   ];
