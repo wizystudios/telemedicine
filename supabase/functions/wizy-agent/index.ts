@@ -190,23 +190,23 @@ async function executeTool(
       case "search_doctors": {
         let q = supabase
           .from("doctor_profiles")
-          .select("user_id, bio, consultation_fee, doctor_type, experience_years, rating, profiles!inner(first_name, last_name, avatar_url)")
+          .select("id, user_id, bio, consultation_fee, doctor_type, experience_years, rating, total_reviews, is_available, profiles!doctor_profiles_user_id_fkey(first_name, last_name, avatar_url), specialties(name)")
           .limit(args.limit || 5);
-        if (args.query) {
+        if (args.query && args.query.trim()) {
           q = q.or(`doctor_type.ilike.%${args.query}%,bio.ilike.%${args.query}%`);
         }
         const { data } = await q;
-        return { doctors: data || [], navigate: "/doctors-list" + (args.query ? `?q=${encodeURIComponent(args.query)}` : "") };
+        return { doctors: data || [], query: args.query || "" };
       }
       case "search_facilities": {
         let q = supabase
           .from(args.type)
-          .select("id, name, address, phone, logo_url, rating")
+          .select("id, name, address, phone, logo_url, rating, total_reviews")
           .eq("is_verified", true)
           .limit(args.limit || 5);
-        if (args.query) q = q.ilike("name", `%${args.query}%`);
+        if (args.query && args.query.trim()) q = q.ilike("name", `%${args.query}%`);
         const { data } = await q;
-        return { items: data || [], type: args.type, navigate: "/nearby" };
+        return { items: data || [], type: args.type };
       }
       case "list_my_appointments": {
         if (!userId) return { error: "Tafadhali ingia kwanza" };
