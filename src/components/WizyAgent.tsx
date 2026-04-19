@@ -294,3 +294,143 @@ export function WizyAgent() {
     document.body
   );
 }
+
+// ───────── Rich tool-result cards ─────────
+
+function ToolResultCard({
+  tool,
+  result,
+  onNavigate,
+  onSend,
+}: {
+  tool: string;
+  result: any;
+  onNavigate: (path: string) => void;
+  onSend: (text: string) => void;
+}) {
+  if (!result || result.error) return null;
+
+  if (tool === 'search_doctors' && Array.isArray(result.doctors) && result.doctors.length > 0) {
+    return (
+      <div className="space-y-1.5">
+        {result.doctors.slice(0, 5).map((d: any) => {
+          const name = `Dr. ${d.profiles?.first_name || ''} ${d.profiles?.last_name || ''}`.trim();
+          const specialty = d.specialties?.name || d.doctor_type || 'Daktari wa jumla';
+          return (
+            <div key={d.id || d.user_id} className="flex items-center gap-3 p-2.5 rounded-xl bg-card border border-border">
+              <Avatar className="h-10 w-10">
+                <AvatarImage src={d.profiles?.avatar_url} alt={name} />
+                <AvatarFallback>{(d.profiles?.first_name || 'D')[0]}</AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold truncate">{name}</p>
+                <p className="text-[11px] text-muted-foreground truncate flex items-center gap-1">
+                  <Stethoscope className="h-3 w-3" /> {specialty}
+                  {d.rating > 0 && <span className="ml-1 flex items-center gap-0.5"><Star className="h-3 w-3 fill-yellow-500 text-yellow-500" />{Number(d.rating).toFixed(1)}</span>}
+                </p>
+              </div>
+              <Button size="sm" className="h-7 px-2 text-[11px]" onClick={() => onNavigate(`/doctor-profile/${d.user_id}`)}>
+                Tazama
+              </Button>
+            </div>
+          );
+        })}
+        <button
+          onClick={() => onNavigate('/doctors-list')}
+          className="w-full text-[11px] text-primary hover:underline flex items-center justify-center gap-1 py-1"
+        >
+          Madaktari wote <ArrowRight className="h-3 w-3" />
+        </button>
+      </div>
+    );
+  }
+
+  if (tool === 'search_facilities' && Array.isArray(result.items) && result.items.length > 0) {
+    const Icon = result.type === 'pharmacies' ? Pill : result.type === 'laboratories' ? TestTube : Building2;
+    const route = result.type === 'pharmacies' ? '/pharmacy-profile/' : result.type === 'laboratories' ? '/laboratory-profile/' : result.type === 'polyclinics' ? '/polyclinic-profile/' : '/hospital-profile/';
+    return (
+      <div className="space-y-1.5">
+        {result.items.slice(0, 5).map((it: any) => (
+          <div key={it.id} className="flex items-center gap-3 p-2.5 rounded-xl bg-card border border-border">
+            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
+              {it.logo_url ? <img src={it.logo_url} alt={it.name} className="h-10 w-10 object-cover" /> : <Icon className="h-5 w-5 text-primary" />}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold truncate">{it.name}</p>
+              <p className="text-[11px] text-muted-foreground truncate flex items-center gap-1">
+                <MapPin className="h-3 w-3" /> {it.address || 'Anwani haijapatikana'}
+              </p>
+            </div>
+            <Button size="sm" className="h-7 px-2 text-[11px]" onClick={() => onNavigate(`${route}${it.id}`)}>
+              Tazama
+            </Button>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (tool === 'search_medicines' && Array.isArray(result.medicines) && result.medicines.length > 0) {
+    return (
+      <div className="space-y-1.5">
+        {result.medicines.slice(0, 5).map((m: any) => (
+          <div key={m.id} className="flex items-center gap-3 p-2.5 rounded-xl bg-card border border-border">
+            <div className="h-9 w-9 rounded-lg bg-green-500/10 flex items-center justify-center">
+              <Pill className="h-4 w-4 text-green-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold truncate">{m.name}</p>
+              <p className="text-[11px] text-muted-foreground truncate">{m.pharmacies?.name} • {m.price ? `TSh ${m.price}` : 'Bei kwa simu'}</p>
+            </div>
+            <Button size="sm" variant="outline" className="h-7 px-2 text-[11px]" onClick={() => onSend(`Ongeza ${m.name} kwenye cart`)}>
+              <ShoppingCart className="h-3 w-3 mr-1" />Ongeza
+            </Button>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (tool === 'list_my_appointments' && Array.isArray(result.appointments) && result.appointments.length > 0) {
+    return (
+      <div className="space-y-1.5">
+        {result.appointments.slice(0, 5).map((a: any) => (
+          <div key={a.id} className="flex items-center gap-3 p-2.5 rounded-xl bg-card border border-border">
+            <CalIcon className="h-4 w-4 text-primary shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium">{new Date(a.appointment_date).toLocaleString('sw-TZ')}</p>
+              <p className="text-[11px] text-muted-foreground truncate">{a.symptoms || a.consultation_type}</p>
+            </div>
+            <Badge variant="secondary" className="text-[10px]">{a.status}</Badge>
+          </div>
+        ))}
+        <button onClick={() => onNavigate('/appointments')} className="w-full text-[11px] text-primary hover:underline flex items-center justify-center gap-1 py-1">
+          Miadi yote <ArrowRight className="h-3 w-3" />
+        </button>
+      </div>
+    );
+  }
+
+  if (tool === 'emergency_guidance') {
+    return (
+      <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/30 text-sm space-y-2">
+        <p className="font-bold text-destructive flex items-center gap-2">🚨 Dharura — Piga 112</p>
+        <p className="whitespace-pre-line text-foreground/90 text-[12px]">{result.guidance}</p>
+        <Button size="sm" variant="destructive" className="h-7 text-[11px] w-full" onClick={() => onNavigate('/nearby')}>
+          <MapPin className="h-3 w-3 mr-1" />Hospitali za karibu
+        </Button>
+      </div>
+    );
+  }
+
+  if (result.success && result.appointment) {
+    return (
+      <div className="p-3 rounded-xl bg-green-500/10 border border-green-500/30 text-sm">
+        <p className="font-semibold text-green-700 dark:text-green-400">✅ Miadi imewekwa!</p>
+        <Button size="sm" className="mt-2 h-7 text-[11px]" onClick={() => onNavigate('/appointments')}>Tazama miadi</Button>
+      </div>
+    );
+  }
+
+  return null;
+}
