@@ -226,14 +226,29 @@ export function WizyAgent() {
                 </div>
               )}
               {messages.map((m, i) => (
-                <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[80%] rounded-2xl px-3.5 py-2 text-sm whitespace-pre-line ${
-                    m.role === 'user'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted text-foreground'
-                  }`}>
-                    {m.content}
-                  </div>
+                <div key={i} className={`flex flex-col ${m.role === 'user' ? 'items-end' : 'items-start'} gap-2`}>
+                  {m.content && (
+                    <div className={`max-w-[85%] rounded-2xl px-3.5 py-2 text-sm whitespace-pre-line ${
+                      m.role === 'user'
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted text-foreground'
+                    }`}>
+                      {m.content}
+                    </div>
+                  )}
+                  {m.role === 'assistant' && m.results && m.results.length > 0 && (
+                    <div className="w-full max-w-[95%] space-y-2">
+                      {m.results.map((r, idx) => (
+                        <ToolResultCard
+                          key={idx}
+                          tool={r.tool}
+                          result={r.result}
+                          onNavigate={(path) => { navigate(path); setOpen(false); }}
+                          onSend={(t) => sendMessage(t)}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
               {loading && (
