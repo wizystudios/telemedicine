@@ -357,6 +357,7 @@ serve(async (req) => {
     ];
 
     const navActions: string[] = [];
+    const toolResults: any[] = [];
 
     // Up to 5 tool-call iterations
     for (let i = 0; i < 5; i++) {
@@ -407,6 +408,7 @@ serve(async (req) => {
           JSON.stringify({
             reply: msg.content || "",
             actions: navActions,
+            results: toolResults,
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
@@ -420,6 +422,7 @@ serve(async (req) => {
         } catch {}
         const result = await executeTool(fnName, args, supabase, userId);
         if (result?.navigate) navActions.push(result.navigate);
+        toolResults.push({ tool: fnName, args, result });
         conversation.push({
           role: "tool",
           tool_call_id: tc.id,
@@ -429,7 +432,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ reply: "Samahani, sijaweza kukamilisha ombi.", actions: navActions }),
+      JSON.stringify({ reply: "Samahani, sijaweza kukamilisha ombi.", actions: navActions, results: toolResults }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e: any) {
