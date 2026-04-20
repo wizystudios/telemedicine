@@ -20,6 +20,7 @@ import {
 import { toast } from '@/hooks/use-toast';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { LogoUpload } from '@/components/LogoUpload';
+import OrgStaffManager from '@/components/OrgStaffManager';
 
 export default function PharmacyOwnerDashboard() {
   const { user } = useAuth();
@@ -130,18 +131,34 @@ export default function PharmacyOwnerDashboard() {
     }
   };
 
-  const updateOrderStatus = async (orderId: string, status: string) => {
+  const updateOrderStatus = async (orderId: string, status: string, extra: Record<string, any> = {}) => {
+    const stamp: Record<string, any> = { status, updated_at: new Date().toISOString(), ...extra };
+    if (status === 'confirmed') stamp.confirmed_at = new Date().toISOString();
+    if (status === 'ready') stamp.ready_at = new Date().toISOString();
+    if (status === 'dispatched') stamp.dispatched_at = new Date().toISOString();
+    if (status === 'completed') stamp.completed_at = new Date().toISOString();
+
     const { error } = await supabase
       .from('pharmacy_orders')
-      .update({ status, updated_at: new Date().toISOString() })
+      .update(stamp)
       .eq('id', orderId);
 
     if (error) {
       toast({ title: 'Kosa', description: error.message, variant: 'destructive' });
     } else {
-      toast({ title: 'Imefanikiwa', description: `Agizo limesasishwa: ${status}` });
+      toast({ title: 'Imefanikiwa', description: `Agizo limesasishwa` });
       fetchData();
     }
+  };
+
+  const assignDelivery = async (orderId: string) => {
+    const name = prompt('Jina la mtoaji wa huduma:');
+    if (!name) return;
+    const phone = prompt('Simu ya mtoaji wa huduma:') || '';
+    await updateOrderStatus(orderId, 'dispatched', {
+      delivery_person_name: name,
+      delivery_person_phone: phone,
+    });
   };
 
   const handleAdd = async () => {
@@ -331,11 +348,12 @@ export default function PharmacyOwnerDashboard() {
       </div>
 
       <Tabs defaultValue="orders" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="orders">Maagizo</TabsTrigger>
           <TabsTrigger value="medicines">Dawa</TabsTrigger>
           <TabsTrigger value="profile">Taarifa</TabsTrigger>
           <TabsTrigger value="content">Maudhui</TabsTrigger>
+          <TabsTrigger value="staff">Wafanyakazi</TabsTrigger>
         </TabsList>
 
         <TabsContent value="orders" className="space-y-4">
@@ -393,9 +411,19 @@ export default function PharmacyOwnerDashboard() {
                           Weka Tayari
                         </Button>
                       )}
-                      {order.status === 'ready' && (
+                      {order.status === 'ready' && order.fulfillment_type === 'delivery' && (
+                        <Button size="sm" className="h-7 text-xs w-full mt-2" onClick={() => assignDelivery(order.id)}>
+                          Tuma kwa Mtoaji
+                        </Button>
+                      )}
+                      {order.status === 'ready' && order.fulfillment_type !== 'delivery' && (
                         <Button size="sm" variant="outline" className="h-7 text-xs w-full mt-2" onClick={() => updateOrderStatus(order.id, 'completed')}>
-                          Kamilisha
+                          Mteja Amechukua
+                        </Button>
+                      )}
+                      {order.status === 'dispatched' && (
+                        <Button size="sm" variant="outline" className="h-7 text-xs w-full mt-2" onClick={() => updateOrderStatus(order.id, 'completed')}>
+                          Imefikishwa
                         </Button>
                       )}
                     </div>
@@ -679,6 +707,14 @@ export default function PharmacyOwnerDashboard() {
               ) : (
                 <p className="text-xs text-center text-muted-foreground py-4">Hakuna maudhui - ongeza video, tutorials, au makala</p>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="staff" className="space-y-4">
+          <Card>
+            <CardContent className="pt-4">
+              <OrgStaffManager orgType="pharmacy" orgId={pharmacy.id} />
             </CardContent>
           </Card>
         </TabsContent>

@@ -1,8 +1,10 @@
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '@/hooks/useCart';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Trash2, Plus, Minus, ShoppingBag, Pill } from 'lucide-react';
+import { ArrowLeft, Trash2, Plus, Minus, ShoppingBag, Pill, Truck, Store } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useState } from 'react';
 
 export default function Cart() {
@@ -10,12 +12,21 @@ export default function Cart() {
   const { items, totalPrice, updateQuantity, removeItem, checkout, loading } = useCart();
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [fulfillType, setFulfillType] = useState<'pickup' | 'delivery'>('pickup');
+  const [address, setAddress] = useState('');
+  const [pickupTime, setPickupTime] = useState('');
+  const [phone, setPhone] = useState('');
 
   const handleCheckout = async () => {
     setSubmitting(true);
-    const ok = await checkout(notes);
+    const ok = await checkout(notes, {
+      type: fulfillType,
+      address: fulfillType === 'delivery' ? address : undefined,
+      pickup_time: fulfillType === 'pickup' && pickupTime ? new Date(pickupTime).toISOString() : undefined,
+      phone,
+    });
     setSubmitting(false);
-    if (ok) navigate('/dashboard');
+    if (ok) navigate('/my-orders');
   };
 
   // Group by pharmacy
@@ -89,14 +100,61 @@ export default function Cart() {
 
         {items.length > 0 && (
           <>
-            <div className="rounded-2xl border border-border bg-card p-3 space-y-2">
-              <label className="text-xs font-medium">Maelekezo (hiari)</label>
-              <Textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Mfano: Naja kuchukua mchana..."
-                className="text-sm min-h-[60px]"
-              />
+            <div className="rounded-2xl border border-border bg-card p-3 space-y-3">
+              <div>
+                <Label className="text-xs font-medium mb-2 block">Aina ya kupokea</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setFulfillType('pickup')}
+                    className={`p-3 rounded-xl border text-xs flex flex-col items-center gap-1 transition ${
+                      fulfillType === 'pickup' ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-muted/30'
+                    }`}
+                  >
+                    <Store className="h-4 w-4" />
+                    <span className="font-medium">Naja kuchukua</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFulfillType('delivery')}
+                    className={`p-3 rounded-xl border text-xs flex flex-col items-center gap-1 transition ${
+                      fulfillType === 'delivery' ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-muted/30'
+                    }`}
+                  >
+                    <Truck className="h-4 w-4" />
+                    <span className="font-medium">Niletewe</span>
+                  </button>
+                </div>
+              </div>
+
+              {fulfillType === 'delivery' && (
+                <div>
+                  <Label className="text-xs">Anwani ya kupokea *</Label>
+                  <Input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Mfano: Sinza, Block A, Nyumba 12" className="h-9 text-sm" />
+                </div>
+              )}
+
+              {fulfillType === 'pickup' && (
+                <div>
+                  <Label className="text-xs">Saa ya kuja kuchukua (hiari)</Label>
+                  <Input type="datetime-local" value={pickupTime} onChange={(e) => setPickupTime(e.target.value)} className="h-9 text-sm" />
+                </div>
+              )}
+
+              <div>
+                <Label className="text-xs">Simu yako *</Label>
+                <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+255..." className="h-9 text-sm" />
+              </div>
+
+              <div>
+                <Label className="text-xs">Maelekezo (hiari)</Label>
+                <Textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Mfano: Piga kabla ya kuja..."
+                  className="text-sm min-h-[60px]"
+                />
+              </div>
             </div>
 
             {/* Sticky submit bar — sits ABOVE the mobile bottom nav (h-16) */}
@@ -109,7 +167,7 @@ export default function Cart() {
                 </div>
                 <Button
                   onClick={handleCheckout}
-                  disabled={submitting}
+                  disabled={submitting || !phone.trim() || (fulfillType === 'delivery' && !address.trim())}
                   className="px-6"
                 >
                   {submitting ? 'Inatuma...' : 'Tuma Agizo'}
