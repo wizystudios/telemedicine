@@ -71,7 +71,21 @@ export default function Auth() {
     }
   };
 
+  const validatePasswordStrength = (pw: string): string | null => {
+    if (pw.length < 8) return 'Angalau herufi 8';
+    if (!/[A-Z]/.test(pw)) return 'Angalau herufi 1 KUBWA';
+    if (!/[0-9]/.test(pw)) return 'Angalau namba 1';
+    if (!/[!@#$%^&*(),.?":{}|<>_\-+=/\\]/.test(pw)) return 'Angalau alama 1 maalum (!@#$...)';
+    return null;
+  };
+
   const handleRegister = async () => {
+    const pwError = validatePasswordStrength(password);
+    if (pwError) {
+      toast({ title: 'Nenosiri dhaifu', description: pwError, variant: 'destructive' });
+      setRegisterStep(3);
+      return;
+    }
     setIsLoading(true);
     try {
       const signUpEmail = authMethod === 'email' ? email : `${phone.replace(/[^0-9]/g, '')}@phone.telemed.tz`;
@@ -84,8 +98,13 @@ export default function Auth() {
       if (error) throw error;
       if (data?.user) {
         await supabase.from('user_roles').insert([{ user_id: data.user.id, role: role as any }]);
+        // Mark password as just set so user is not asked to change immediately
+        await supabase.from('profiles').update({
+          must_change_password: false,
+          password_changed_at: new Date().toISOString(),
+        } as any).eq('id', data.user.id);
       }
-      toast({ title: 'Umefanikiwa!', description: 'Akaunti yako imetengenezwa.' });
+      toast({ title: 'Umefanikiwa!', description: 'Akaunti yako ya mgonjwa imetengenezwa.' });
       navigate('/dashboard');
     } catch (error: any) {
       toast({ title: 'Kosa', description: error.message, variant: 'destructive' });
