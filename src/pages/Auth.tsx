@@ -10,16 +10,11 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
-type Role = 'patient' | 'doctor' | 'hospital_owner' | 'pharmacy_owner' | 'lab_owner';
+type Role = 'patient';
 type AuthMethod = 'email' | 'phone';
 
-const roles = [
-  { id: 'patient', label: 'Mgonjwa', icon: User },
-  { id: 'doctor', label: 'Daktari', icon: Stethoscope },
-  { id: 'hospital_owner', label: 'Hospitali', icon: Building2 },
-  { id: 'pharmacy_owner', label: 'Famasi', icon: Pill },
-  { id: 'lab_owner', label: 'Maabara', icon: FlaskConical },
-];
+// Public registration is patient-only. All other roles (doctor, hospital, pharmacy, lab, polyclinic)
+// are created by Super Admin to ensure proper verification.
 
 export default function Auth() {
   const [mode, setMode] = useState<'select' | 'login' | 'register'>('select');
@@ -34,14 +29,15 @@ export default function Auth() {
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [role, setRole] = useState<Role>('patient');
+  const role: Role = 'patient'; // Public signup is patient-only
   
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const totalLoginSteps = 2;
-  const totalRegisterSteps = authMethod === 'email' ? 7 : 6;
+  // Removed role-selection step: patient-only public signup
+  const totalRegisterSteps = authMethod === 'email' ? 6 : 5;
 
   const handleForgotPassword = async () => {
     const id = authMethod === 'email' ? email : phone;
@@ -391,12 +387,12 @@ export default function Auth() {
           </div>
         )}
 
-        {/* REGISTER STEP 6 (email): Phone optional */}
+        {/* REGISTER STEP 6 (email): Phone optional + FINISH (patient-only) */}
         {mode === 'register' && registerStep === 6 && authMethod === 'email' && (
           <div className="w-full max-w-sm space-y-5 animate-fade-in">
             <div className="text-center">
               <h2 className="text-lg font-bold">Nambari ya simu</h2>
-              <p className="text-xs text-muted-foreground mt-1">Si lazima</p>
+              <p className="text-xs text-muted-foreground mt-1">Si lazima — bonyeza Maliza ukikosa</p>
             </div>
             <Input
               type="tel"
@@ -407,52 +403,35 @@ export default function Auth() {
               autoFocus
             />
             <Button
-              onClick={() => setRegisterStep(7)}
+              onClick={handleRegister}
+              disabled={isLoading}
               className="w-full h-12 text-sm font-semibold"
             >
-              Endelea <ArrowRight className="h-4 w-4 ml-2" />
+              {isLoading ? 'Subiri...' : 'Maliza Usajili'}
             </Button>
+            <p className="text-[11px] text-center text-muted-foreground">
+              Madaktari, hospitali, famasi & maabara husajiliwa na Msimamizi.
+            </p>
           </div>
         )}
 
-        {/* REGISTER ROLE STEP */}
-        {mode === 'register' && ((registerStep === 6 && authMethod === 'phone') || (registerStep === 7 && authMethod === 'email')) && (
+        {/* REGISTER STEP 5 (phone): Finish directly (patient-only) */}
+        {mode === 'register' && registerStep === 5 && authMethod === 'phone' && (
           <div className="w-full max-w-sm space-y-5 animate-fade-in">
-            <h2 className="text-lg font-bold text-center">Unatumia kama nani?</h2>
-            
-            <div className="grid grid-cols-2 gap-2.5">
-              {roles.map((r) => {
-                const Icon = r.icon;
-                const isSelected = role === r.id;
-                return (
-                  <button
-                    key={r.id}
-                    type="button"
-                    onClick={() => setRole(r.id as Role)}
-                    className={`p-4 rounded-2xl transition-all text-center border ${
-                      isSelected 
-                        ? 'bg-primary/10 border-primary ring-1 ring-primary' 
-                        : 'bg-card border-border hover:border-primary/30'
-                    }`}
-                  >
-                    <div className={`h-10 w-10 rounded-xl mx-auto mb-2 flex items-center justify-center ${
-                      isSelected ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
-                    } transition-colors`}>
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    <p className="text-xs font-semibold">{r.label}</p>
-                  </button>
-                );
-              })}
-            </div>
-
+            <h2 className="text-lg font-bold text-center">Karibu TeleMed!</h2>
+            <p className="text-xs text-center text-muted-foreground">
+              Bonyeza Maliza kuanza kutumia akaunti yako ya mgonjwa.
+            </p>
             <Button
               onClick={handleRegister}
               disabled={isLoading}
               className="w-full h-12 text-sm font-semibold"
             >
-              {isLoading ? 'Subiri...' : 'Maliza'}
+              {isLoading ? 'Subiri...' : 'Maliza Usajili'}
             </Button>
+            <p className="text-[11px] text-center text-muted-foreground">
+              Madaktari, hospitali, famasi & maabara husajiliwa na Msimamizi.
+            </p>
           </div>
         )}
 
