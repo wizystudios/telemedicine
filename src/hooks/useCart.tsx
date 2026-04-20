@@ -98,9 +98,12 @@ export function useCart() {
     await supabase.from('cart_items').delete().eq('user_id', user.id);
   }, [user]);
 
-  const checkout = useCallback(async (notes?: string) => {
+  const checkout = useCallback(async (
+    notes?: string,
+    fulfillment?: { type: 'pickup' | 'delivery'; address?: string; pickup_time?: string; phone?: string }
+  ) => {
     if (!user || items.length === 0) return false;
-    // Create one pharmacy_order row per item (table has medicine_name + qty)
+    const ftype = fulfillment?.type || 'pickup';
     const rows = items.map(it => ({
       patient_id: user.id,
       pharmacy_id: it.pharmacy_id,
@@ -110,6 +113,10 @@ export function useCart() {
       total_price: (it.pharmacy_medicines?.price || 0) * it.quantity,
       notes: notes || null,
       status: 'pending',
+      fulfillment_type: ftype,
+      delivery_address: ftype === 'delivery' ? (fulfillment?.address || null) : null,
+      pickup_time: ftype === 'pickup' && fulfillment?.pickup_time ? fulfillment.pickup_time : null,
+      patient_phone: fulfillment?.phone || null,
     }));
     const { error } = await supabase.from('pharmacy_orders').insert(rows);
     if (error) {
