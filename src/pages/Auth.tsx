@@ -5,21 +5,16 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
-  HeartPulse, Eye, EyeOff, User, Stethoscope, Building2, Pill, FlaskConical,
+  HeartPulse, Eye, EyeOff,
   ChevronLeft, ArrowRight, Phone, Mail
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
-type Role = 'patient' | 'doctor' | 'hospital_owner' | 'pharmacy_owner' | 'lab_owner';
+type Role = 'patient';
 type AuthMethod = 'email' | 'phone';
 
-const roles = [
-  { id: 'patient', label: 'Mgonjwa', icon: User },
-  { id: 'doctor', label: 'Daktari', icon: Stethoscope },
-  { id: 'hospital_owner', label: 'Hospitali', icon: Building2 },
-  { id: 'pharmacy_owner', label: 'Famasi', icon: Pill },
-  { id: 'lab_owner', label: 'Maabara', icon: FlaskConical },
-];
+// Public registration is patient-only. All other roles (doctor, hospital, pharmacy, lab, polyclinic)
+// are created by Super Admin to ensure proper verification.
 
 export default function Auth() {
   const [mode, setMode] = useState<'select' | 'login' | 'register'>('select');
@@ -34,14 +29,15 @@ export default function Auth() {
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [role, setRole] = useState<Role>('patient');
+  const role: Role = 'patient'; // Public signup is patient-only
   
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const totalLoginSteps = 2;
-  const totalRegisterSteps = authMethod === 'email' ? 7 : 6;
+  // Removed role-selection step: patient-only public signup
+  const totalRegisterSteps = authMethod === 'email' ? 6 : 5;
 
   const handleForgotPassword = async () => {
     const id = authMethod === 'email' ? email : phone;
@@ -75,7 +71,21 @@ export default function Auth() {
     }
   };
 
+  const validatePasswordStrength = (pw: string): string | null => {
+    if (pw.length < 8) return 'Angalau herufi 8';
+    if (!/[A-Z]/.test(pw)) return 'Angalau herufi 1 KUBWA';
+    if (!/[0-9]/.test(pw)) return 'Angalau namba 1';
+    if (!/[!@#$%^&*(),.?":{}|<>_\-+=/\\]/.test(pw)) return 'Angalau alama 1 maalum (!@#$...)';
+    return null;
+  };
+
   const handleRegister = async () => {
+    const pwError = validatePasswordStrength(password);
+    if (pwError) {
+      toast({ title: 'Nenosiri dhaifu', description: pwError, variant: 'destructive' });
+      setRegisterStep(3);
+      return;
+    }
     setIsLoading(true);
     try {
       const signUpEmail = authMethod === 'email' ? email : `${phone.replace(/[^0-9]/g, '')}@phone.telemed.tz`;
@@ -88,8 +98,13 @@ export default function Auth() {
       if (error) throw error;
       if (data?.user) {
         await supabase.from('user_roles').insert([{ user_id: data.user.id, role: role as any }]);
+        // Mark password as just set so user is not asked to change immediately
+        await supabase.from('profiles').update({
+          must_change_password: false,
+          password_changed_at: new Date().toISOString(),
+        } as any).eq('id', data.user.id);
       }
-      toast({ title: 'Umefanikiwa!', description: 'Akaunti yako imetengenezwa.' });
+      toast({ title: 'Umefanikiwa!', description: 'Akaunti yako ya mgonjwa imetengenezwa.' });
       navigate('/dashboard');
     } catch (error: any) {
       toast({ title: 'Kosa', description: error.message, variant: 'destructive' });
@@ -313,21 +328,20 @@ export default function Auth() {
           </div>
         )}
 
-        {/* REGISTER STEP 3: Password */}
+        {/* REGISTER STEP 3: Password (strong) */}
         {mode === 'register' && registerStep === 3 && (
-          <div className="w-full max-w-sm space-y-5 animate-fade-in">
+          <div className="w-full max-w-sm space-y-4 animate-fade-in">
             <div className="text-center">
               <h2 className="text-lg font-bold">Tengeneza nenosiri</h2>
-              <p className="text-xs text-muted-foreground mt-1">Angalau herufi 6</p>
+              <p className="text-xs text-muted-foreground mt-1">8+ herufi, KUBWA, namba, alama</p>
             </div>
-            
             <div className="relative">
               <Input
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className={`${inputClass} pr-10`}
-                placeholder="Nenosiri"
+                placeholder="Nenosiri imara"
                 autoFocus
               />
               <button
@@ -338,10 +352,21 @@ export default function Auth() {
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
-
+            <div className="space-y-1 text-[11px]">
+              {[
+                { ok: password.length >= 8, label: '8+ herufi' },
+                { ok: /[A-Z]/.test(password), label: '1 herufi KUBWA' },
+                { ok: /[0-9]/.test(password), label: '1 namba' },
+                { ok: /[!@#$%^&*(),.?":{}|<>_\-+=/\\]/.test(password), label: '1 alama maalum' },
+              ].map(r => (
+                <p key={r.label} className={r.ok ? 'text-primary' : 'text-muted-foreground'}>
+                  {r.ok ? '✓' : '○'} {r.label}
+                </p>
+              ))}
+            </div>
             <Button
               onClick={() => setRegisterStep(4)}
-              disabled={password.length < 6}
+              disabled={!!validatePasswordStrength(password)}
               className="w-full h-12 text-sm font-semibold"
             >
               Endelea <ArrowRight className="h-4 w-4 ml-2" />
@@ -391,12 +416,12 @@ export default function Auth() {
           </div>
         )}
 
-        {/* REGISTER STEP 6 (email): Phone optional */}
+        {/* REGISTER STEP 6 (email): Phone optional + FINISH (patient-only) */}
         {mode === 'register' && registerStep === 6 && authMethod === 'email' && (
           <div className="w-full max-w-sm space-y-5 animate-fade-in">
             <div className="text-center">
               <h2 className="text-lg font-bold">Nambari ya simu</h2>
-              <p className="text-xs text-muted-foreground mt-1">Si lazima</p>
+              <p className="text-xs text-muted-foreground mt-1">Si lazima — bonyeza Maliza ukikosa</p>
             </div>
             <Input
               type="tel"
@@ -407,52 +432,35 @@ export default function Auth() {
               autoFocus
             />
             <Button
-              onClick={() => setRegisterStep(7)}
+              onClick={handleRegister}
+              disabled={isLoading}
               className="w-full h-12 text-sm font-semibold"
             >
-              Endelea <ArrowRight className="h-4 w-4 ml-2" />
+              {isLoading ? 'Subiri...' : 'Maliza Usajili'}
             </Button>
+            <p className="text-[11px] text-center text-muted-foreground">
+              Madaktari, hospitali, famasi & maabara husajiliwa na Msimamizi.
+            </p>
           </div>
         )}
 
-        {/* REGISTER ROLE STEP */}
-        {mode === 'register' && ((registerStep === 6 && authMethod === 'phone') || (registerStep === 7 && authMethod === 'email')) && (
+        {/* REGISTER STEP 5 (phone): Finish directly (patient-only) */}
+        {mode === 'register' && registerStep === 5 && authMethod === 'phone' && (
           <div className="w-full max-w-sm space-y-5 animate-fade-in">
-            <h2 className="text-lg font-bold text-center">Unatumia kama nani?</h2>
-            
-            <div className="grid grid-cols-2 gap-2.5">
-              {roles.map((r) => {
-                const Icon = r.icon;
-                const isSelected = role === r.id;
-                return (
-                  <button
-                    key={r.id}
-                    type="button"
-                    onClick={() => setRole(r.id as Role)}
-                    className={`p-4 rounded-2xl transition-all text-center border ${
-                      isSelected 
-                        ? 'bg-primary/10 border-primary ring-1 ring-primary' 
-                        : 'bg-card border-border hover:border-primary/30'
-                    }`}
-                  >
-                    <div className={`h-10 w-10 rounded-xl mx-auto mb-2 flex items-center justify-center ${
-                      isSelected ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
-                    } transition-colors`}>
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    <p className="text-xs font-semibold">{r.label}</p>
-                  </button>
-                );
-              })}
-            </div>
-
+            <h2 className="text-lg font-bold text-center">Karibu TeleMed!</h2>
+            <p className="text-xs text-center text-muted-foreground">
+              Bonyeza Maliza kuanza kutumia akaunti yako ya mgonjwa.
+            </p>
             <Button
               onClick={handleRegister}
               disabled={isLoading}
               className="w-full h-12 text-sm font-semibold"
             >
-              {isLoading ? 'Subiri...' : 'Maliza'}
+              {isLoading ? 'Subiri...' : 'Maliza Usajili'}
             </Button>
+            <p className="text-[11px] text-center text-muted-foreground">
+              Madaktari, hospitali, famasi & maabara husajiliwa na Msimamizi.
+            </p>
           </div>
         )}
 

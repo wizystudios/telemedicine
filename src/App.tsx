@@ -17,6 +17,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
+import ForcePasswordChange from "./pages/ForcePasswordChange";
 import RoleBasedDashboard from "./components/RoleBasedDashboard";
 import ChatbotPage from "./pages/ChatbotPage";
 import NotFound from "./pages/NotFound";
@@ -41,7 +42,9 @@ import Notifications from "./pages/Notifications";
 import Prescriptions from "./pages/Prescriptions";
 import MedicalRecords from "./pages/MedicalRecords";
 import Cart from "./pages/Cart";
+import Marketplace from "./pages/Marketplace";
 import { WizyAgent } from "./components/WizyAgent";
+import { PasswordChangeGuard } from "./components/PasswordChangeGuard";
 
 const queryClient = new QueryClient();
 
@@ -87,6 +90,7 @@ function AppContent() {
             <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Navigate to="/auth" replace />} />
             <Route path="/auth" element={user ? <Navigate to="/dashboard" replace /> : <Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/force-password-change" element={<ProtectedRoute><ForcePasswordChange /></ProtectedRoute>} />
             
             <Route path="/dashboard" element={<ProtectedRoute><RoleBasedDashboard /></ProtectedRoute>} />
             <Route path="/chatbot" element={<ProtectedRoute><ChatbotPage /></ProtectedRoute>} />
@@ -111,6 +115,7 @@ function AppContent() {
             <Route path="/prescriptions" element={<ProtectedRoute><Prescriptions /></ProtectedRoute>} />
             <Route path="/medical-records" element={<ProtectedRoute><MedicalRecords /></ProtectedRoute>} />
             <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
+            <Route path="/marketplace" element={<ProtectedRoute><Marketplace /></ProtectedRoute>} />
             
             <Route path="*" element={<NotFound />} />
           </Routes>
@@ -118,6 +123,7 @@ function AppContent() {
       </div>
       {!hideChrome && <BottomNav />}
       {user && <WizyAgent />}
+      {user && <PasswordChangeGuard />}
     </div>
   );
 }

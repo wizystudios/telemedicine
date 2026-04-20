@@ -29,6 +29,7 @@ export default function RegisterOrganizationForm() {
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [website, setWebsite] = useState('');
+  const [autoApprove, setAutoApprove] = useState(true);
   
   // Location
   const [latitude, setLatitude] = useState('');
@@ -125,8 +126,21 @@ export default function RegisterOrganizationForm() {
     return data.publicUrl;
   };
 
+  const validateStrongPassword = (pw: string): string | null => {
+    if (pw.length < 8) return 'Nenosiri lazima liwe na herufi 8+';
+    if (!/[A-Z]/.test(pw)) return 'Nenosiri lazima liwe na herufi 1 KUBWA';
+    if (!/[0-9]/.test(pw)) return 'Nenosiri lazima liwe na namba 1';
+    if (!/[!@#$%^&*(),.?":{}|<>_\-+=/\\]/.test(pw)) return 'Nenosiri lazima liwe na alama 1 maalum';
+    return null;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const pwError = validateStrongPassword(ownerPassword);
+    if (pwError) {
+      toast({ title: 'Nenosiri dhaifu', description: pwError, variant: 'destructive' });
+      return;
+    }
     setIsSubmitting(true);
 
     try {
@@ -174,7 +188,7 @@ export default function RegisterOrganizationForm() {
         address,
         phone,
         email,
-        is_verified: false,
+        is_verified: autoApprove,
       };
 
       if (orgType === 'hospital') {
@@ -565,16 +579,41 @@ export default function RegisterOrganizationForm() {
                       type="password"
                       value={ownerPassword}
                       onChange={(e) => setOwnerPassword(e.target.value)}
-                      placeholder="Angalau herufi 6"
+                      placeholder="8+ herufi, KUBWA, namba, alama"
                       className="h-9"
                       required
-                      minLength={6}
+                      minLength={8}
                     />
+                    <p className="text-[10px] text-muted-foreground mt-1">
+                      Mfano: Telemed@2026
+                    </p>
                   </div>
                 </div>
 
+                {/* Approval / Verification toggle */}
+                <div className="border-t pt-4">
+                  <label className="flex items-start gap-3 cursor-pointer p-3 rounded-lg bg-muted/40 hover:bg-muted/60 transition-colors">
+                    <input
+                      type="checkbox"
+                      checked={autoApprove}
+                      onChange={(e) => setAutoApprove(e.target.checked)}
+                      className="mt-0.5 h-4 w-4 accent-primary"
+                    />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">
+                        {autoApprove ? '✓ Thibitisha sasa hivi' : '⏳ Sajili bila kuthibitisha'}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        {autoApprove
+                          ? 'Shirika litaonekana kwa watumiaji mara moja.'
+                          : 'Shirika halitaonekana hadi uthibitishe baadaye kwenye orodha ya mashirika.'}
+                      </p>
+                    </div>
+                  </label>
+                </div>
+
                 <Button type="submit" disabled={isSubmitting} className="w-full">
-                  {isSubmitting ? 'Inasajili...' : `Sajili ${orgType}`}
+                  {isSubmitting ? 'Inasajili...' : `Sajili ${orgType}${autoApprove ? ' & Thibitisha' : ''}`}
                 </Button>
               </>
             )}
