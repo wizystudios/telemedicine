@@ -44,8 +44,8 @@ export default function Cart() {
           <div className="text-center py-16 text-muted-foreground">
             <Pill className="h-12 w-12 mx-auto mb-3 opacity-30" />
             <p className="text-sm">Cart yako ni tupu.</p>
-            <Button onClick={() => navigate('/nearby')} className="mt-4" size="sm">
-              Tazama Famasi
+            <Button onClick={() => navigate('/marketplace')} className="mt-4" size="sm">
+              Tazama Soko la Dawa
             </Button>
           </div>
         )}
