@@ -27,7 +27,7 @@ export default function Cart() {
   }, {} as Record<string, { pharmacy: any; items: typeof items }>);
 
   return (
-    <div className="min-h-screen bg-background pb-32">
+    <div className="min-h-screen bg-background pb-40 md:pb-32">
       <div className="mx-auto max-w-2xl px-3 pt-3 space-y-3">
         <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="h-8 px-2 text-xs">
           <ArrowLeft className="mr-1 h-3.5 w-3.5" /> Rudi
@@ -99,7 +99,9 @@ export default function Cart() {
               />
             </div>
 
-            <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border p-3">
+            {/* Sticky submit bar — sits ABOVE the mobile bottom nav (h-16) */}
+            <div className="fixed left-0 right-0 bg-background/95 backdrop-blur-md border-t border-border p-3 z-40
+                            bottom-16 md:bottom-0 safe-area-bottom">
               <div className="mx-auto max-w-2xl flex items-center gap-3">
                 <div className="flex-1">
                   <p className="text-[10px] text-muted-foreground">Jumla</p>
