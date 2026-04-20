@@ -69,11 +69,11 @@ export default function ForcePasswordChange() {
       </div>
 
       <div className="w-full max-w-sm space-y-5">
-        <div className="rounded-2xl bg-amber-500/10 border border-amber-500/30 p-4 flex gap-3">
-          <ShieldAlert className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+        <div className="rounded-2xl bg-primary/5 border border-primary/20 p-4 flex gap-3">
+          <ShieldAlert className="h-5 w-5 text-primary shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-semibold text-amber-900 dark:text-amber-200">Badilisha nenosiri</p>
-            <p className="text-xs text-amber-800/80 dark:text-amber-200/80 mt-1">
+            <p className="text-sm font-semibold text-foreground">Badilisha nenosiri</p>
+            <p className="text-xs text-muted-foreground mt-1">
               Kwa usalama, tafadhali tengeneza nenosiri jipya imara kabla ya kuendelea.
             </p>
           </div>
