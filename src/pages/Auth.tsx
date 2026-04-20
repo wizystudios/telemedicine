@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
-  HeartPulse, Eye, EyeOff, User, Stethoscope, Building2, Pill, FlaskConical,
+  HeartPulse, Eye, EyeOff,
   ChevronLeft, ArrowRight, Phone, Mail
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -328,21 +328,20 @@ export default function Auth() {
           </div>
         )}
 
-        {/* REGISTER STEP 3: Password */}
+        {/* REGISTER STEP 3: Password (strong) */}
         {mode === 'register' && registerStep === 3 && (
-          <div className="w-full max-w-sm space-y-5 animate-fade-in">
+          <div className="w-full max-w-sm space-y-4 animate-fade-in">
             <div className="text-center">
               <h2 className="text-lg font-bold">Tengeneza nenosiri</h2>
-              <p className="text-xs text-muted-foreground mt-1">Angalau herufi 6</p>
+              <p className="text-xs text-muted-foreground mt-1">8+ herufi, KUBWA, namba, alama</p>
             </div>
-            
             <div className="relative">
               <Input
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className={`${inputClass} pr-10`}
-                placeholder="Nenosiri"
+                placeholder="Nenosiri imara"
                 autoFocus
               />
               <button
@@ -353,10 +352,21 @@ export default function Auth() {
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
-
+            <div className="space-y-1 text-[11px]">
+              {[
+                { ok: password.length >= 8, label: '8+ herufi' },
+                { ok: /[A-Z]/.test(password), label: '1 herufi KUBWA' },
+                { ok: /[0-9]/.test(password), label: '1 namba' },
+                { ok: /[!@#$%^&*(),.?":{}|<>_\-+=/\\]/.test(password), label: '1 alama maalum' },
+              ].map(r => (
+                <p key={r.label} className={r.ok ? 'text-primary' : 'text-muted-foreground'}>
+                  {r.ok ? '✓' : '○'} {r.label}
+                </p>
+              ))}
+            </div>
             <Button
               onClick={() => setRegisterStep(4)}
-              disabled={password.length < 6}
+              disabled={!!validatePasswordStrength(password)}
               className="w-full h-12 text-sm font-semibold"
             >
               Endelea <ArrowRight className="h-4 w-4 ml-2" />
