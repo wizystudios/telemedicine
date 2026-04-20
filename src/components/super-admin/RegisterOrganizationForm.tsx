@@ -29,6 +29,7 @@ export default function RegisterOrganizationForm() {
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [website, setWebsite] = useState('');
+  const [autoApprove, setAutoApprove] = useState(true);
   
   // Location
   const [latitude, setLatitude] = useState('');
@@ -125,8 +126,21 @@ export default function RegisterOrganizationForm() {
     return data.publicUrl;
   };
 
+  const validateStrongPassword = (pw: string): string | null => {
+    if (pw.length < 8) return 'Nenosiri lazima liwe na herufi 8+';
+    if (!/[A-Z]/.test(pw)) return 'Nenosiri lazima liwe na herufi 1 KUBWA';
+    if (!/[0-9]/.test(pw)) return 'Nenosiri lazima liwe na namba 1';
+    if (!/[!@#$%^&*(),.?":{}|<>_\-+=/\\]/.test(pw)) return 'Nenosiri lazima liwe na alama 1 maalum';
+    return null;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const pwError = validateStrongPassword(ownerPassword);
+    if (pwError) {
+      toast({ title: 'Nenosiri dhaifu', description: pwError, variant: 'destructive' });
+      return;
+    }
     setIsSubmitting(true);
 
     try {
@@ -174,7 +188,7 @@ export default function RegisterOrganizationForm() {
         address,
         phone,
         email,
-        is_verified: false,
+        is_verified: autoApprove,
       };
 
       if (orgType === 'hospital') {
