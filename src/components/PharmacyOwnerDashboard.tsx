@@ -331,11 +331,12 @@ export default function PharmacyOwnerDashboard() {
       </div>
 
       <Tabs defaultValue="orders" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="orders">Maagizo</TabsTrigger>
           <TabsTrigger value="medicines">Dawa</TabsTrigger>
           <TabsTrigger value="profile">Taarifa</TabsTrigger>
           <TabsTrigger value="content">Maudhui</TabsTrigger>
+          <TabsTrigger value="staff">Wafanyakazi</TabsTrigger>
         </TabsList>
 
         <TabsContent value="orders" className="space-y-4">
