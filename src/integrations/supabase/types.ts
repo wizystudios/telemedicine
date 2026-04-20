@@ -1394,6 +1394,42 @@ export type Database = {
           },
         ]
       }
+      org_staff: {
+        Row: {
+          created_at: string
+          id: string
+          invited_by: string
+          is_active: boolean
+          org_id: string
+          org_type: string
+          permissions: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          invited_by: string
+          is_active?: boolean
+          org_id: string
+          org_type: string
+          permissions?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          invited_by?: string
+          is_active?: boolean
+          org_id?: string
+          org_type?: string
+          permissions?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       patient_problem_indicators: {
         Row: {
           created_at: string | null
@@ -1729,43 +1765,73 @@ export type Database = {
       }
       pharmacy_orders: {
         Row: {
+          completed_at: string | null
+          confirmed_at: string | null
           created_at: string
+          delivery_address: string | null
+          delivery_person_name: string | null
+          delivery_person_phone: string | null
+          dispatched_at: string | null
+          fulfillment_type: string
           id: string
           medicine_id: string | null
           medicine_name: string
           notes: string | null
           patient_id: string
+          patient_phone: string | null
           pharmacy_id: string
+          pickup_time: string | null
           prescription_url: string | null
           quantity: number
+          ready_at: string | null
           status: string
           total_price: number | null
           updated_at: string
         }
         Insert: {
+          completed_at?: string | null
+          confirmed_at?: string | null
           created_at?: string
+          delivery_address?: string | null
+          delivery_person_name?: string | null
+          delivery_person_phone?: string | null
+          dispatched_at?: string | null
+          fulfillment_type?: string
           id?: string
           medicine_id?: string | null
           medicine_name: string
           notes?: string | null
           patient_id: string
+          patient_phone?: string | null
           pharmacy_id: string
+          pickup_time?: string | null
           prescription_url?: string | null
           quantity?: number
+          ready_at?: string | null
           status?: string
           total_price?: number | null
           updated_at?: string
         }
         Update: {
+          completed_at?: string | null
+          confirmed_at?: string | null
           created_at?: string
+          delivery_address?: string | null
+          delivery_person_name?: string | null
+          delivery_person_phone?: string | null
+          dispatched_at?: string | null
+          fulfillment_type?: string
           id?: string
           medicine_id?: string | null
           medicine_name?: string
           notes?: string | null
           patient_id?: string
+          patient_phone?: string | null
           pharmacy_id?: string
+          pickup_time?: string | null
           prescription_url?: string | null
           quantity?: number
+          ready_at?: string | null
           status?: string
           total_price?: number | null
           updated_at?: string
@@ -2046,6 +2112,8 @@ export type Database = {
           first_name: string | null
           id: string
           last_name: string | null
+          must_change_password: boolean
+          password_changed_at: string | null
           phone: string | null
           role: Database["public"]["Enums"]["user_role"] | null
           updated_at: string | null
@@ -2060,6 +2128,8 @@ export type Database = {
           first_name?: string | null
           id: string
           last_name?: string | null
+          must_change_password?: boolean
+          password_changed_at?: string | null
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"] | null
           updated_at?: string | null
@@ -2074,6 +2144,8 @@ export type Database = {
           first_name?: string | null
           id?: string
           last_name?: string | null
+          must_change_password?: boolean
+          password_changed_at?: string | null
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"] | null
           updated_at?: string | null
@@ -2337,6 +2409,10 @@ export type Database = {
       }
       is_hospital_owner_of_doctor: {
         Args: { _doctor_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_org_owner: {
+        Args: { _org_id: string; _org_type: string; _user_id: string }
         Returns: boolean
       }
       is_polyclinic_owner_of_doctor: {
