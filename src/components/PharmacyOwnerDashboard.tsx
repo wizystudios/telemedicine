@@ -20,6 +20,7 @@ import {
 import { toast } from '@/hooks/use-toast';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { LogoUpload } from '@/components/LogoUpload';
+import OrgStaffManager from '@/components/OrgStaffManager';
 
 export default function PharmacyOwnerDashboard() {
   const { user } = useAuth();
@@ -680,6 +681,14 @@ export default function PharmacyOwnerDashboard() {
               ) : (
                 <p className="text-xs text-center text-muted-foreground py-4">Hakuna maudhui - ongeza video, tutorials, au makala</p>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="staff" className="space-y-4">
+          <Card>
+            <CardContent className="pt-4">
+              <OrgStaffManager orgType="pharmacy" orgId={pharmacy.id} />
             </CardContent>
           </Card>
         </TabsContent>
