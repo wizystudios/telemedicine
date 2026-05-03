@@ -108,14 +108,15 @@ const TOOLS = [
     type: "function",
     function: {
       name: "add_to_cart",
-      description: "Ongeza dawa kwenye cart ya mtumiaji",
+      description: "Ongeza dawa kwenye cart. Tumia medicine_name (jina la dawa) — tool itatafuta ID yenyewe. Pia inaweza kupokea pharmacy_name kufafanua famasi.",
       parameters: {
         type: "object",
         properties: {
-          medicine_id: { type: "string" },
+          medicine_id: { type: "string", description: "ID ya dawa kama tayari unajua" },
+          medicine_name: { type: "string", description: "Jina la dawa kama Panadol, Amoxicillin" },
+          pharmacy_name: { type: "string", description: "Jina la famasi (optional)" },
           quantity: { type: "number", default: 1 },
         },
-        required: ["medicine_id"],
       },
     },
   },
