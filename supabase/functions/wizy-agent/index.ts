@@ -34,7 +34,12 @@ KANUNI ZA UANDISHI:
 4. Tafsiri majina ya magonjwa/dawa kwa Kiswahili kama inawezekana (BP = shinikizo la damu, diabetes = kisukari).
 5. Kwa user ambaye hajaingia (login) na tool inahitaji session, sema sentensi moja: "Tafadhali ingia kwanza kupitia 'Mimi' kufanya hili."
 
-KAMWE: Usiseme "nipe jina au utaalamu" kabla ya kutafuta. Anza kwa kutafuta, kisha onyesha matokeo na ulize uboresho.`;
+KAMWE: Usiseme "nipe jina au utaalamu" kabla ya kutafuta. Anza kwa kutafuta, kisha onyesha matokeo na ulize uboresho.
+
+KANUNI YA ID (MUHIMU SANA): KAMWE usimuulize mtumiaji kuingiza ID yoyote (medicine_id, doctor_id, pharmacy_id, n.k.). Mtumiaji wa kawaida hajui ID. Tumia tools kwa MAJINA tu:
+- "Nataka kuagiza Panadol" → add_to_cart({ medicine_name: "Panadol", quantity: 1 }) — tool itatafuta ID yenyewe.
+- "Weka miadi na Dr. John" → create_appointment_request({ doctor_name: "John", symptoms: "..." }) — tool itatafuta daktari yenyewe.
+- Kama dawa/daktari hayapatikani, jibu kwa Kiswahili na pendekeza search_medicines au search_doctors badala ya kuomba ID.`;
 
 const TOOLS = [
   {
