@@ -63,7 +63,23 @@ export function Navbar({ onToggleSidebar }: NavbarProps) {
   };
 
   if (hideNav) return null;
-  if (!user) return null;
+  if (!user) {
+    return (
+      <nav className="w-full sticky top-0 z-40 bg-transparent">
+        <div className="flex items-center justify-between h-12 px-4">
+          <Link to="/" className="flex items-center gap-2">
+            <div className="h-7 w-7 rounded-lg bg-primary flex items-center justify-center">
+              <HeartPulse className="h-4 w-4 text-primary-foreground" />
+            </div>
+            <span className="font-bold text-sm tracking-tight">TeleMed</span>
+          </Link>
+          <Button size="sm" className="h-8 text-xs rounded-full" onClick={() => navigate('/auth')}>
+            Ingia
+          </Button>
+        </div>
+      </nav>
+    );
+  }
 
   return (
     <nav className="w-full sticky top-0 z-40 bg-transparent">
