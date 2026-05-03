@@ -79,16 +79,16 @@ const TOOLS = [
     type: "function",
     function: {
       name: "create_appointment_request",
-      description: "Omba/weka miadi na daktari",
+      description: "Omba/weka miadi na daktari. Unaweza kutumia doctor_id au doctor_name (jina la daktari) — tool itatafuta yenyewe.",
       parameters: {
         type: "object",
         properties: {
           doctor_id: { type: "string" },
-          appointment_date: { type: "string", description: "ISO date-time" },
+          doctor_name: { type: "string", description: "Jina la daktari (kama doctor_id haijulikani)" },
+          appointment_date: { type: "string", description: "ISO date-time. Kama haijatolewa, tumia kesho saa 4 asubuhi." },
           symptoms: { type: "string" },
-          consultation_type: { type: "string", enum: ["video", "audio", "chat", "in_person"] },
+          consultation_type: { type: "string", enum: ["video", "audio", "chat", "in_person"], default: "video" },
         },
-        required: ["doctor_id", "appointment_date"],
       },
     },
   },
