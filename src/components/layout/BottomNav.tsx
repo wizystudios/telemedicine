@@ -10,7 +10,6 @@ export function BottomNav() {
   const { user } = useAuth();
   const [aiTapped, setAiTapped] = useState(false);
 
-  if (!user) return null;
   if (location.pathname === '/auth') return null;
 
   const handleAiClick = () => {
@@ -19,13 +18,20 @@ export function BottomNav() {
     setTimeout(() => setAiTapped(false), 500);
   };
 
-  const navItems = [
-    { icon: Home, label: 'Nyumbani', path: '/dashboard' },
-    { icon: Calendar, label: 'Miadi', path: '/appointments' },
-    { icon: Bot, label: 'Wizy', path: '#wizy', isCenter: true },
-    { icon: MessageCircle, label: 'Ujumbe', path: '/messages' },
-    { icon: User, label: 'Mimi', path: '/profile' },
-  ];
+  const navItems = user
+    ? [
+        { icon: Home, label: 'Nyumbani', path: '/dashboard' },
+        { icon: Calendar, label: 'Miadi', path: '/appointments' },
+        { icon: Bot, label: 'Wizy', path: '#wizy', isCenter: true },
+        { icon: MessageCircle, label: 'Ujumbe', path: '/messages' },
+        { icon: User, label: 'Mimi', path: '/profile' },
+      ]
+    : [
+        { icon: Home, label: 'Tafuta', path: '/doctors-list' },
+        { icon: Calendar, label: 'Soko', path: '/marketplace' },
+        { icon: Bot, label: 'Wizy', path: '#wizy', isCenter: true },
+        { icon: User, label: 'Ingia', path: '/auth' },
+      ];
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 w-full md:hidden z-50 safe-area-bottom bg-transparent">

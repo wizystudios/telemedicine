@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { LogoUpload } from '@/components/LogoUpload';
+import OrgStaffManager from '@/components/OrgStaffManager';
 
 export default function LabOwnerDashboard() {
   const { user } = useAuth();
@@ -329,11 +330,12 @@ export default function LabOwnerDashboard() {
       </div>
 
       <Tabs defaultValue="bookings" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="bookings">Vipimo</TabsTrigger>
           <TabsTrigger value="services">Huduma</TabsTrigger>
           <TabsTrigger value="profile">Taarifa</TabsTrigger>
           <TabsTrigger value="content">Maudhui</TabsTrigger>
+          <TabsTrigger value="staff">Wafanyakazi</TabsTrigger>
         </TabsList>
 
         <TabsContent value="bookings" className="space-y-4">
@@ -641,6 +643,9 @@ export default function LabOwnerDashboard() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+        <TabsContent value="staff" className="space-y-4">
+          <Card><CardContent className="p-3"><OrgStaffManager orgType="laboratory" orgId={lab.id} /></CardContent></Card>
         </TabsContent>
       </Tabs>
 

@@ -44,6 +44,7 @@ import MedicalRecords from "./pages/MedicalRecords";
 import Cart from "./pages/Cart";
 import Marketplace from "./pages/Marketplace";
 import MyOrders from "./pages/MyOrders";
+import PendingActions from "./pages/PendingActions";
 import { WizyAgent } from "./components/WizyAgent";
 import { PasswordChangeGuard } from "./components/PasswordChangeGuard";
 
@@ -88,43 +89,47 @@ function AppContent() {
         )}
         <main className={`flex-1 min-w-0 ${isAuthRoute ? 'h-screen overflow-hidden' : isActiveChat ? '' : 'pb-14 md:pb-0'}`}>
           <Routes>
-            <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Navigate to="/auth" replace />} />
+            <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Navigate to="/doctors-list" replace />} />
             <Route path="/auth" element={user ? <Navigate to="/dashboard" replace /> : <Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/force-password-change" element={<ProtectedRoute><ForcePasswordChange /></ProtectedRoute>} />
-            
+
             <Route path="/dashboard" element={<ProtectedRoute><RoleBasedDashboard /></ProtectedRoute>} />
             <Route path="/chatbot" element={<ProtectedRoute><ChatbotPage /></ProtectedRoute>} />
             <Route path="/appointments" element={<ProtectedRoute><Appointments /></ProtectedRoute>} />
             <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
-            <Route path="/doctors-list" element={<ProtectedRoute><DoctorsList /></ProtectedRoute>} />
-            <Route path="/doctor-profile/:doctorId" element={<ProtectedRoute><DoctorProfile /></ProtectedRoute>} />
+            <Route path="/pending-actions" element={<ProtectedRoute><PendingActions /></ProtectedRoute>} />
+
+            {/* Public browse routes (guest allowed) */}
+            <Route path="/doctors-list" element={<DoctorsList />} />
+            <Route path="/doctor-profile/:doctorId" element={<DoctorProfile />} />
+            <Route path="/hospital-profile/:hospitalId" element={<HospitalProfile />} />
+            <Route path="/pharmacy-profile/:pharmacyId" element={<PharmacyProfile />} />
+            <Route path="/laboratory-profile/:labId" element={<LaboratoryProfile />} />
+            <Route path="/polyclinic-profile/:polyclinicId" element={<PolyclinicProfile />} />
+            <Route path="/nearby" element={<NearbyPlaces />} />
+            <Route path="/marketplace" element={<Marketplace />} />
+
             <Route path="/book-appointment" element={<ProtectedRoute><BookAppointment /></ProtectedRoute>} />
             <Route path="/patients" element={<ProtectedRoute><Patients /></ProtectedRoute>} />
             <Route path="/patient-detail/:patientId" element={<ProtectedRoute><PatientDetail /></ProtectedRoute>} />
             <Route path="/patient-profile/:patientId" element={<ProtectedRoute><PatientProfile /></ProtectedRoute>} />
             <Route path="/patient-problems" element={<ProtectedRoute><PatientProblems /></ProtectedRoute>} />
             <Route path="/patient-problem-form" element={<ProtectedRoute><PatientProblemForm /></ProtectedRoute>} />
-            <Route path="/hospital-profile/:hospitalId" element={<ProtectedRoute><HospitalProfile /></ProtectedRoute>} />
-            <Route path="/pharmacy-profile/:pharmacyId" element={<ProtectedRoute><PharmacyProfile /></ProtectedRoute>} />
-            <Route path="/laboratory-profile/:labId" element={<ProtectedRoute><LaboratoryProfile /></ProtectedRoute>} />
-            <Route path="/polyclinic-profile/:polyclinicId" element={<ProtectedRoute><PolyclinicProfile /></ProtectedRoute>} />
             <Route path="/hospital-management" element={<ProtectedRoute><HospitalManagement /></ProtectedRoute>} />
-            <Route path="/nearby" element={<ProtectedRoute><NearbyPlaces /></ProtectedRoute>} />
             <Route path="/prescriptions" element={<ProtectedRoute><Prescriptions /></ProtectedRoute>} />
             <Route path="/medical-records" element={<ProtectedRoute><MedicalRecords /></ProtectedRoute>} />
             <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
-            <Route path="/marketplace" element={<ProtectedRoute><Marketplace /></ProtectedRoute>} />
             <Route path="/my-orders" element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />
-            
+
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
       </div>
       {!hideChrome && <BottomNav />}
-      {user && <WizyAgent />}
+      <WizyAgent />
       {user && <PasswordChangeGuard />}
     </div>
   );

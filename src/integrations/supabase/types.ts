@@ -1582,6 +1582,54 @@ export type Database = {
           },
         ]
       }
+      pending_actions: {
+        Row: {
+          action_type: string
+          contact: string
+          contact_type: string
+          created_at: string
+          error: string | null
+          expires_at: string
+          human_summary: string
+          id: string
+          matched_user_id: string | null
+          payload: Json
+          result_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          action_type: string
+          contact: string
+          contact_type: string
+          created_at?: string
+          error?: string | null
+          expires_at?: string
+          human_summary: string
+          id?: string
+          matched_user_id?: string | null
+          payload?: Json
+          result_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          action_type?: string
+          contact?: string
+          contact_type?: string
+          created_at?: string
+          error?: string | null
+          expires_at?: string
+          human_summary?: string
+          id?: string
+          matched_user_id?: string | null
+          payload?: Json
+          result_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       pharmacies: {
         Row: {
           address: string
@@ -2387,6 +2435,34 @@ export type Database = {
         Args: { username_to_check: string }
         Returns: boolean
       }
+      fuzzy_search_doctors: {
+        Args: { lim?: number; q: string }
+        Returns: {
+          avatar_url: string
+          bio: string
+          consultation_fee: number
+          doctor_type: string
+          first_name: string
+          last_name: string
+          rating: number
+          similarity: number
+          user_id: string
+        }[]
+      }
+      fuzzy_search_medicines: {
+        Args: { lim?: number; q: string }
+        Returns: {
+          category: string
+          dosage: string
+          id: string
+          in_stock: boolean
+          name: string
+          pharmacy_id: string
+          pharmacy_name: string
+          price: number
+          similarity: number
+        }[]
+      }
       get_current_user_role: { Args: never; Returns: string }
       get_user_role: {
         Args: { _user_id: string }
@@ -2420,6 +2496,18 @@ export type Database = {
         Returns: boolean
       }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      lookup_user_by_contact: {
+        Args: { contact: string }
+        Returns: {
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          phone: string
+        }[]
+      }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
       update_doctor_online_status: {
         Args: { is_online_param: boolean; status_message_param?: string }
         Returns: undefined

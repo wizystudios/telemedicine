@@ -22,6 +22,7 @@ import { LogoUpload } from '@/components/LogoUpload';
 import { SettingsDrawer } from '@/components/SettingsDrawer';
 import { ContentUploadSection } from '@/components/ContentUploadSection';
 import { DoctorImageUpload } from '@/components/DoctorImageUpload';
+import OrgStaffManager from '@/components/OrgStaffManager';
 
 const DAYS = ['Jumapili', 'Jumatatu', 'Jumanne', 'Jumatano', 'Alhamisi', 'Ijumaa', 'Jumamosi'];
 
@@ -366,11 +367,12 @@ export default function PolyclinicOwnerDashboard() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="overview" className="text-xs">Muhtasari</TabsTrigger>
           <TabsTrigger value="doctors" className="text-xs">Madaktari</TabsTrigger>
           <TabsTrigger value="services" className="text-xs">Huduma</TabsTrigger>
           <TabsTrigger value="content" className="text-xs">Maudhui</TabsTrigger>
+          <TabsTrigger value="staff" className="text-xs">Wafanyakazi</TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
@@ -631,6 +633,9 @@ export default function PolyclinicOwnerDashboard() {
             institutionType="polyclinic" 
             institutionId={polyclinic?.id}
           />
+        </TabsContent>
+        <TabsContent value="staff" className="space-y-4">
+          <Card><CardContent className="p-3"><OrgStaffManager orgType="polyclinic" orgId={polyclinic.id} /></CardContent></Card>
         </TabsContent>
       </Tabs>
 
