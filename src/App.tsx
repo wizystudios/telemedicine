@@ -44,6 +44,7 @@ import MedicalRecords from "./pages/MedicalRecords";
 import Cart from "./pages/Cart";
 import Marketplace from "./pages/Marketplace";
 import MyOrders from "./pages/MyOrders";
+import PendingActions from "./pages/PendingActions";
 import { WizyAgent } from "./components/WizyAgent";
 import { PasswordChangeGuard } from "./components/PasswordChangeGuard";
 
