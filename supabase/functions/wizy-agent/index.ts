@@ -235,13 +235,30 @@ async function executeTool(
         return { appointments: data || [], navigate: "/appointments" };
       }
       case "create_appointment_request": {
-        if (!userId) return { error: "Tafadhali ingia kwanza" };
+        if (!userId) return { error: "Tafadhali ingia kwanza kupitia 'Mimi'." };
+        let doctorId = args.doctor_id;
+        if (!doctorId && args.doctor_name) {
+          const name = String(args.doctor_name).trim();
+          const parts = name.split(/\s+/);
+          const { data: docs } = await supabase
+            .from("doctor_profiles")
+            .select("user_id, profiles!doctor_profiles_user_id_fkey(first_name,last_name)")
+            .limit(20);
+          const match = (docs || []).find((d: any) => {
+            const fn = (d.profiles?.first_name || "").toLowerCase();
+            const ln = (d.profiles?.last_name || "").toLowerCase();
+            return parts.every((p) => fn.includes(p.toLowerCase()) || ln.includes(p.toLowerCase()));
+          }) || (docs || [])[0];
+          doctorId = match?.user_id;
+        }
+        if (!doctorId) return { error: "Sijapata daktari. Tafadhali taja jina kamili la daktari au chagua kutoka orodha." };
+        const apptDate = args.appointment_date || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
         const { data, error } = await supabase
           .from("appointments")
           .insert({
             patient_id: userId,
-            doctor_id: args.doctor_id,
-            appointment_date: args.appointment_date,
+            doctor_id: doctorId,
+            appointment_date: apptDate,
             symptoms: args.symptoms || null,
             consultation_type: args.consultation_type || "video",
             status: "scheduled",
@@ -261,18 +278,42 @@ async function executeTool(
         return { medicines: data || [] };
       }
       case "add_to_cart": {
-        if (!userId) return { error: "Tafadhali ingia kwanza" };
-        const { data: med } = await supabase
-          .from("pharmacy_medicines")
-          .select("pharmacy_id")
-          .eq("id", args.medicine_id)
-          .single();
-        if (!med) return { error: "Dawa haijapatikana" };
+        if (!userId) return { error: "Tafadhali ingia kwanza kupitia 'Mimi'." };
+        let medicineId = args.medicine_id;
+        let pharmacyId: string | null = null;
+        if (!medicineId && args.medicine_name) {
+          const { data: meds } = await supabase
+            .from("pharmacy_medicines")
+            .select("id, pharmacy_id, price, pharmacies!inner(name)")
+            .ilike("name", `%${String(args.medicine_name).trim()}%`)
+            .eq("in_stock", true)
+            .order("price", { ascending: true })
+            .limit(10);
+          let pick: any = (meds || [])[0];
+          if (args.pharmacy_name && meds?.length) {
+            const pn = String(args.pharmacy_name).toLowerCase();
+            pick = meds.find((m: any) => (m.pharmacies?.name || "").toLowerCase().includes(pn)) || pick;
+          }
+          if (pick) {
+            medicineId = pick.id;
+            pharmacyId = pick.pharmacy_id;
+          }
+        }
+        if (!medicineId) return { error: "Sijapata dawa hiyo. Jaribu jina lingine au tembelea Soko la Dawa." };
+        if (!pharmacyId) {
+          const { data: med } = await supabase
+            .from("pharmacy_medicines")
+            .select("pharmacy_id")
+            .eq("id", medicineId)
+            .single();
+          pharmacyId = med?.pharmacy_id ?? null;
+        }
+        if (!pharmacyId) return { error: "Famasi haijapatikana." };
         const { error } = await supabase.from("cart_items").upsert(
           {
             user_id: userId,
-            medicine_id: args.medicine_id,
-            pharmacy_id: med.pharmacy_id,
+            medicine_id: medicineId,
+            pharmacy_id: pharmacyId,
             quantity: args.quantity || 1,
           },
           { onConflict: "user_id,medicine_id" }
