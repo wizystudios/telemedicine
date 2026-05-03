@@ -129,7 +129,7 @@ function AppContent() {
         </main>
       </div>
       {!hideChrome && <BottomNav />}
-      {user && <WizyAgent />}
+      <WizyAgent />
       {user && <PasswordChangeGuard />}
     </div>
   );

@@ -25,6 +25,7 @@ import { SettingsDrawer } from '@/components/SettingsDrawer';
 import { ContentUploadSection } from '@/components/ContentUploadSection';
 import { DoctorImageUpload } from '@/components/DoctorImageUpload';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import OrgStaffManager from '@/components/OrgStaffManager';
 
 const DAYS = ['Jumapili', 'Jumatatu', 'Jumanne', 'Jumatano', 'Alhamisi', 'Ijumaa', 'Jumamosi'];
 
@@ -458,12 +459,13 @@ export default function HospitalOwnerDashboard() {
 
       {/* Tabs for different sections */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="overview" className="text-xs">Muhtasari</TabsTrigger>
           <TabsTrigger value="doctors" className="text-xs">Madaktari</TabsTrigger>
           <TabsTrigger value="services" className="text-xs">Huduma</TabsTrigger>
           <TabsTrigger value="content" className="text-xs">Maudhui</TabsTrigger>
           <TabsTrigger value="ambulance" className="text-xs">Ambulance</TabsTrigger>
+          <TabsTrigger value="staff" className="text-xs">Wafanyakazi</TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
@@ -801,6 +803,9 @@ export default function HospitalOwnerDashboard() {
               </Button>
             </CardContent>
           </Card>
+        </TabsContent>
+        <TabsContent value="staff" className="space-y-4">
+          <Card><CardContent className="p-3"><OrgStaffManager orgType="hospital" orgId={hospital.id} /></CardContent></Card>
         </TabsContent>
       </Tabs>
 
