@@ -1,54 +1,90 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
+const TYPE_TO_URL: Record<string, string> = {
+  pending_action: '/pending-actions',
+  appointment: '/appointments',
+  appointment_request: '/appointments',
+  message: '/messages',
+  pharmacy_order: '/my-orders',
+  prescription: '/prescriptions',
+  patient_problem: '/patient-problems',
+  lab_booking: '/appointments',
+};
+
 export function usePushNotifications() {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const swRegRef = useRef<ServiceWorkerRegistration | null>(null);
+
+  // Register SW once
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return;
+    navigator.serviceWorker.register('/sw.js').then(reg => {
+      swRegRef.current = reg;
+    }).catch(err => console.warn('SW register failed', err));
+
+    const onMsg = (e: MessageEvent) => {
+      if (e.data?.type === 'NAVIGATE' && e.data.url) navigate(e.data.url);
+    };
+    navigator.serviceWorker.addEventListener('message', onMsg);
+    return () => navigator.serviceWorker.removeEventListener('message', onMsg);
+  }, [navigate]);
 
   const requestPermission = useCallback(async () => {
-    if (!('Notification' in window)) {
-      console.log('Browser does not support notifications');
-      return false;
-    }
-
-    if (Notification.permission === 'granted') {
-      return true;
-    }
-
+    if (!('Notification' in window)) return false;
+    if (Notification.permission === 'granted') return true;
     if (Notification.permission !== 'denied') {
       const permission = await Notification.requestPermission();
       return permission === 'granted';
     }
-
     return false;
   }, []);
 
-  const showNotification = useCallback((title: string, options?: NotificationOptions) => {
-    if (Notification.permission === 'granted') {
-      const notification = new Notification(title, {
-        icon: '/favicon.ico',
-        badge: '/favicon.ico',
-        ...options,
-      });
+  const showNotification = useCallback(async (
+    title: string,
+    options?: NotificationOptions & { url?: string },
+  ) => {
+    if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+    const url = (options as any)?.url || '/';
+    const payload = {
+      title,
+      body: options?.body || '',
+      tag: options?.tag,
+      icon: options?.icon || '/favicon.ico',
+      url,
+    };
+    // Prefer SW (works even when tab is hidden / phone screen off)
+    try {
+      const reg = swRegRef.current || (await navigator.serviceWorker?.getRegistration());
+      if (reg?.active) {
+        reg.active.postMessage({ type: 'SHOW_NOTIFICATION', payload });
+        return;
+      }
+      if (reg) {
+        await reg.showNotification(title, {
+          body: payload.body,
+          tag: payload.tag,
+          icon: payload.icon,
+          badge: '/favicon.ico',
+          data: { url },
+        });
+        return;
+      }
+    } catch {}
+    // Fallback to in-page Notification
+    const n = new Notification(title, { icon: '/favicon.ico', badge: '/favicon.ico', ...options });
+    n.onclick = () => { window.focus(); navigate(url); n.close(); };
+    setTimeout(() => n.close(), 6000);
+  }, [navigate]);
 
-      notification.onclick = () => {
-        window.focus();
-        notification.close();
-      };
-
-      // Auto close after 5 seconds
-      setTimeout(() => notification.close(), 5000);
-    }
-  }, []);
-
-  // Subscribe to appointment reminders
   useEffect(() => {
     if (!user?.id) return;
 
-    // Request permission on mount
     requestPermission();
 
-    // Subscribe to new notifications
     const channel = supabase
       .channel('push-notifications')
       .on('postgres_changes', {
@@ -56,20 +92,19 @@ export function usePushNotifications() {
         schema: 'public',
         table: 'notifications',
         filter: `user_id=eq.${user.id}`
-      }, (payload) => {
+      }, (payload: any) => {
+        const url = TYPE_TO_URL[payload.new.type] || '/notifications';
         showNotification(payload.new.title, {
           body: payload.new.message,
           tag: payload.new.id,
-        });
+          url,
+        } as any);
       })
       .subscribe();
 
-    // Check for upcoming appointments every minute
     const checkAppointments = async () => {
       const now = new Date();
-      const in15Min = new Date(now.getTime() + 15 * 60000);
       const in1Hour = new Date(now.getTime() + 60 * 60000);
-
       const { data: appointments } = await supabase
         .from('appointments')
         .select('*, profiles!appointments_doctor_id_fkey(first_name, last_name)')
@@ -78,26 +113,17 @@ export function usePushNotifications() {
         .gte('appointment_date', now.toISOString())
         .lte('appointment_date', in1Hour.toISOString());
 
-      appointments?.forEach((apt) => {
-        const aptDate = new Date(apt.appointment_date);
-        const diff = aptDate.getTime() - now.getTime();
-        const minutes = Math.floor(diff / 60000);
-
+      appointments?.forEach((apt: any) => {
+        const minutes = Math.floor((new Date(apt.appointment_date).getTime() - now.getTime()) / 60000);
+        const name = `Dr. ${apt.profiles?.first_name || ''} ${apt.profiles?.last_name || ''}`.trim();
         if (minutes <= 15 && minutes > 10) {
-          showNotification('Miadi Inakaribia!', {
-            body: `Miadi na Dr. ${apt.profiles?.first_name} ${apt.profiles?.last_name} baada ya dakika ${minutes}`,
-            tag: `apt-${apt.id}-15`,
-          });
+          showNotification('Miadi Inakaribia!', { body: `Miadi na ${name} baada ya dakika ${minutes}`, tag: `apt-${apt.id}-15`, url: '/appointments' } as any);
         } else if (minutes <= 5 && minutes > 0) {
-          showNotification('Miadi Sasa Hivi!', {
-            body: `Miadi na Dr. ${apt.profiles?.first_name} ${apt.profiles?.last_name} inaanza baada ya dakika ${minutes}`,
-            tag: `apt-${apt.id}-5`,
-          });
+          showNotification('Miadi Sasa Hivi!', { body: `Miadi na ${name} inaanza baada ya dakika ${minutes}`, tag: `apt-${apt.id}-5`, url: '/appointments' } as any);
         }
       });
     };
 
-    // Check immediately and then every minute
     checkAppointments();
     const interval = setInterval(checkAppointments, 60000);
 
