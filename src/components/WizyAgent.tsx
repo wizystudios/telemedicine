@@ -326,7 +326,24 @@ function ToolResultCard({
   onNavigate: (path: string) => void;
   onSend: (text: string) => void;
 }) {
-  if (!result || result.error) return null;
+  if (!result) return null;
+
+  // Generic error / network failure renderer (incl. tool === '__error__')
+  if (result.error && !result.needs_login && !result.needs_guest_flow) {
+    return (
+      <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/30 text-sm space-y-2">
+        <p className="font-semibold text-destructive flex items-center gap-1.5">
+          <AlertCircle className="h-4 w-4" /> Hitilafu
+        </p>
+        <p className="text-[12px] text-foreground/90">{result.error}</p>
+        {result.retry && (
+          <Button size="sm" variant="outline" className="h-7 text-[11px] w-full" onClick={() => onSend(result.retry)}>
+            Jaribu tena
+          </Button>
+        )}
+      </div>
+    );
+  }
 
   if (tool === 'search_doctors' && Array.isArray(result.doctors) && result.doctors.length > 0) {
     return (
