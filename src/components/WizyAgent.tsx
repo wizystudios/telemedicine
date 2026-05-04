@@ -136,10 +136,17 @@ export function WizyAgent() {
     setInput('');
     setLoading(true);
 
+    // 25s timeout safety
+    const ctrl = new AbortController();
+    const timeoutId = setTimeout(() => ctrl.abort(), 25000);
     try {
-      const { data, error } = await supabase.functions.invoke('wizy-agent', {
+      const invokePromise = supabase.functions.invoke('wizy-agent', {
         body: { messages: newMessages },
       });
+      const timeoutPromise = new Promise<never>((_, rej) =>
+        setTimeout(() => rej(new Error('TIMEOUT')), 25000)
+      );
+      const { data, error } = await Promise.race([invokePromise, timeoutPromise]) as any;
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
@@ -149,7 +156,6 @@ export function WizyAgent() {
         results: Array.isArray(data?.results) ? data.results : [],
       }]);
 
-      // Speak reply (Swahili TTS if available) — but skip auto-navigation (intrusive)
       if ('speechSynthesis' in window && data?.reply) {
         const utt = new SpeechSynthesisUtterance(data.reply);
         utt.lang = 'sw-TZ';
@@ -157,9 +163,21 @@ export function WizyAgent() {
         window.speechSynthesis.speak(utt);
       }
     } catch (e: any) {
-      toast({ title: 'Wizy', description: e.message || 'Hitilafu', variant: 'destructive' });
-      setMessages(prev => [...prev, { role: 'assistant', content: 'Samahani, kuna tatizo. Jaribu tena.' }]);
+      const isTimeout = e?.message === 'TIMEOUT';
+      const isNetwork = /network|fetch|failed/i.test(e?.message || '');
+      const errMsg = isTimeout
+        ? 'Imechukua muda mrefu sana. Tafadhali jaribu tena.'
+        : isNetwork
+          ? 'Mtandao ni mbovu. Angalia muunganisho wako kisha jaribu tena.'
+          : (e?.message || 'Hitilafu isiyojulikana.');
+      toast({ title: 'Wizy', description: errMsg, variant: 'destructive' });
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: `⚠️ ${errMsg}`,
+        results: [{ tool: '__error__', args: {}, result: { error: errMsg, retry: text } }],
+      }]);
     } finally {
+      clearTimeout(timeoutId);
       setLoading(false);
     }
   };
