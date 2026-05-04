@@ -41,13 +41,7 @@ export default function Notifications() {
 
   const handleClick = (n: any) => {
     markAsRead(n.id);
-    if (n.type === 'pending_action') navigate('/pending-actions');
-    else if (n.type === 'appointment') navigate('/appointments');
-    else if (n.type === 'message') navigate('/messages');
-    else if (n.type === 'pharmacy_order') navigate('/my-orders');
-    else if (n.type === 'lab_booking') navigate('/appointments');
-    else if (n.type === 'prescription') navigate('/prescriptions');
-    else if (n.type === 'patient_problem') navigate('/patient-problems');
+    navigate(urlForNotificationType(n.type));
   };
 
   const iconMap: Record<string, React.ReactNode> = {
