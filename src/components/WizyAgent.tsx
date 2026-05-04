@@ -458,13 +458,21 @@ function ToolResultCard({
         </div>
       );
     }
+    const reason = result.reason || 'not_found';
+    const hint = result.hint || 'Tafadhali jisajili kwanza.';
     return (
       <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-sm space-y-2">
         <p className="font-semibold text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
-          <UserX className="h-4 w-4" /> Account haijapatikana
+          <UserX className="h-4 w-4" />
+          {reason === 'invalid_format' ? 'Muundo si sahihi' : reason === 'empty' ? 'Hakuna contact' : 'Account haijapatikana'}
         </p>
-        <p className="text-[11px] text-muted-foreground">Hakuna mtumiaji aliyesajiliwa kwa "{result.contact}". Tafadhali jisajili kwanza.</p>
-        <Button size="sm" className="h-7 text-[11px] w-full" onClick={() => onNavigate('/auth')}>Jisajili / Ingia</Button>
+        <p className="text-[11px] text-muted-foreground">{hint}</p>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" className="h-7 text-[11px] flex-1" onClick={() => onSend('Jaribu contact nyingine')}>
+            Contact nyingine
+          </Button>
+          <Button size="sm" className="h-7 text-[11px] flex-1" onClick={() => onNavigate('/auth')}>Jisajili</Button>
+        </div>
       </div>
     );
   }
