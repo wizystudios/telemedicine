@@ -75,11 +75,21 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
     markAsRead(notification.id);
     
     // Navigate based on type
-    if (notification.type === 'appointment' || notification.type === 'appointment_request') {
+    if (notification.type === 'pending_action') {
       onOpenChange(false);
-      // Stay on chatbot, user can search for appointments
+      navigate('/pending-actions');
+    } else if (notification.type === 'appointment' || notification.type === 'appointment_request') {
+      onOpenChange(false);
+      navigate('/appointments');
     } else if (notification.type === 'message') {
       onOpenChange(false);
+      navigate('/messages');
+    } else if (notification.type === 'pharmacy_order') {
+      onOpenChange(false);
+      navigate('/my-orders');
+    } else if (notification.type === 'prescription') {
+      onOpenChange(false);
+      navigate('/prescriptions');
     }
   };
 
