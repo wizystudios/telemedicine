@@ -84,7 +84,7 @@ export default function PendingActions() {
       } else {
         throw new Error('Aina ya kitendo haijajulikana: ' + a.action_type);
       }
-      await supabase.from('pending_actions').update({ status: 'executed', executed_at: new Date().toISOString() }).eq('id', a.id);
+      await supabase.from('pending_actions').update({ status: 'executed' }).eq('id', a.id);
       toast.success('Imekamilika', { description: a.human_summary });
       load();
     } catch (e: any) {
