@@ -12,6 +12,7 @@ import {
   Check, X, ExternalLink, Trash2 
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { urlForNotificationType } from '@/lib/notificationRoutes';
 
 interface NotificationsDrawerProps {
   open: boolean;
