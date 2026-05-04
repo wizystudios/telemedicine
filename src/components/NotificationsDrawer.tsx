@@ -74,24 +74,8 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
 
   const handleNotificationClick = (notification: Notification) => {
     markAsRead(notification.id);
-    
-    // Navigate based on type
-    if (notification.type === 'pending_action') {
-      onOpenChange(false);
-      navigate('/pending-actions');
-    } else if (notification.type === 'appointment' || notification.type === 'appointment_request') {
-      onOpenChange(false);
-      navigate('/appointments');
-    } else if (notification.type === 'message') {
-      onOpenChange(false);
-      navigate('/messages');
-    } else if (notification.type === 'pharmacy_order') {
-      onOpenChange(false);
-      navigate('/my-orders');
-    } else if (notification.type === 'prescription') {
-      onOpenChange(false);
-      navigate('/prescriptions');
-    }
+    onOpenChange(false);
+    navigate(urlForNotificationType(notification.type));
   };
 
   const getIcon = (type: string | null) => {
