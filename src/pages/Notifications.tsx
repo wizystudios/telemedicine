@@ -7,6 +7,7 @@ import { Bell, MessageCircle, Calendar, Phone, CheckCheck, Trash2, Clock, AlertC
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { urlForNotificationType } from '@/lib/notificationRoutes';
 
 export default function Notifications() {
   const { user } = useAuth();
