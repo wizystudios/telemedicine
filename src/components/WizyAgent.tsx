@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Bot, Mic, MicOff, Send, X, Sparkles, Loader2, Stethoscope, Building2, Pill, TestTube, MapPin, Star, Phone, Calendar as CalIcon, ShoppingCart, ArrowRight } from 'lucide-react';
+import { Bot, Mic, MicOff, Send, X, Sparkles, Loader2, Stethoscope, Building2, Pill, TestTube, MapPin, Star, Phone, Calendar as CalIcon, ShoppingCart, ArrowRight, UserCheck, UserX, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
