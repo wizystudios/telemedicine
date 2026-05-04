@@ -3,16 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
-const TYPE_TO_URL: Record<string, string> = {
-  pending_action: '/pending-actions',
-  appointment: '/appointments',
-  appointment_request: '/appointments',
-  message: '/messages',
-  pharmacy_order: '/my-orders',
-  prescription: '/prescriptions',
-  patient_problem: '/patient-problems',
-  lab_booking: '/appointments',
-};
+import { urlForNotificationType } from '@/lib/notificationRoutes';
 
 export function usePushNotifications() {
   const { user } = useAuth();
