@@ -84,7 +84,7 @@ export function usePushNotifications() {
         table: 'notifications',
         filter: `user_id=eq.${user.id}`
       }, (payload: any) => {
-        const url = TYPE_TO_URL[payload.new.type] || '/notifications';
+        const url = urlForNotificationType(payload.new.type);
         showNotification(payload.new.title, {
           body: payload.new.message,
           tag: payload.new.id,
