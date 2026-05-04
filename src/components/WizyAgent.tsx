@@ -370,23 +370,108 @@ function ToolResultCard({
     );
   }
 
-  if (tool === 'search_medicines' && Array.isArray(result.medicines) && result.medicines.length > 0) {
+  if ((tool === 'search_medicines' || tool === 'browse_catalog') && Array.isArray(result.medicines)) {
+    if (result.medicines.length === 0) {
+      return (
+        <div className="p-3 rounded-xl bg-muted/50 border border-border text-xs space-y-2">
+          <p className="font-medium flex items-center gap-1"><AlertCircle className="h-3.5 w-3.5 text-amber-500" /> Hakuna matokeo</p>
+          <p className="text-muted-foreground">{result.suggestion || 'Jaribu jina la kibiashara au ingredient (mfano paracetamol kwa Panadol).'}</p>
+          <Button size="sm" variant="outline" className="h-7 text-[11px] w-full" onClick={() => onNavigate('/marketplace')}>
+            Vinjari soko lote <ArrowRight className="h-3 w-3 ml-1" />
+          </Button>
+        </div>
+      );
+    }
     return (
       <div className="space-y-1.5">
-        {result.medicines.slice(0, 5).map((m: any) => (
-          <div key={m.id} className="flex items-center gap-3 p-2.5 rounded-xl bg-card border border-border">
-            <div className="h-9 w-9 rounded-lg bg-green-500/10 flex items-center justify-center">
-              <Pill className="h-4 w-4 text-green-600" />
+        {result.medicines.slice(0, 5).map((m: any) => {
+          const pharmName = m.pharmacies?.name || m.pharmacy_name;
+          return (
+            <div key={m.id} className="flex items-center gap-3 p-2.5 rounded-xl bg-card border border-border">
+              <div className="h-9 w-9 rounded-lg bg-green-500/10 flex items-center justify-center">
+                <Pill className="h-4 w-4 text-green-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold truncate">{m.name}</p>
+                <p className="text-[11px] text-muted-foreground truncate">
+                  {pharmName} • {m.price ? `TSh ${Number(m.price).toLocaleString()}` : 'Bei kwa simu'}
+                  {m.in_stock === false && <span className="ml-1 text-destructive">• Haipo</span>}
+                </p>
+              </div>
+              <Button size="sm" variant="outline" className="h-7 px-2 text-[11px]" onClick={() => onSend(`Ongeza ${m.name} kwenye cart`)}>
+                <ShoppingCart className="h-3 w-3 mr-1" />Ongeza
+              </Button>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold truncate">{m.name}</p>
-              <p className="text-[11px] text-muted-foreground truncate">{m.pharmacies?.name} • {m.price ? `TSh ${m.price}` : 'Bei kwa simu'}</p>
-            </div>
-            <Button size="sm" variant="outline" className="h-7 px-2 text-[11px]" onClick={() => onSend(`Ongeza ${m.name} kwenye cart`)}>
-              <ShoppingCart className="h-3 w-3 mr-1" />Ongeza
-            </Button>
-          </div>
-        ))}
+          );
+        })}
+        <button onClick={() => onNavigate('/marketplace')} className="w-full text-[11px] text-primary hover:underline flex items-center justify-center gap-1 py-1">
+          Tazama dawa zote <ArrowRight className="h-3 w-3" />
+        </button>
+      </div>
+    );
+  }
+
+  if (tool === 'lookup_account') {
+    if (result.found) {
+      return (
+        <div className="p-3 rounded-xl bg-green-500/10 border border-green-500/30 text-sm space-y-1">
+          <p className="font-semibold text-green-700 dark:text-green-400 flex items-center gap-1.5">
+            <UserCheck className="h-4 w-4" /> Account imepatikana
+          </p>
+          <p className="text-[12px]">{result.user?.name || 'Mtumiaji'}</p>
+          <p className="text-[10px] text-muted-foreground truncate">{result.user?.email || result.user?.phone}</p>
+        </div>
+      );
+    }
+    return (
+      <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-sm space-y-2">
+        <p className="font-semibold text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
+          <UserX className="h-4 w-4" /> Account haijapatikana
+        </p>
+        <p className="text-[11px] text-muted-foreground">Hakuna mtumiaji aliyesajiliwa kwa "{result.contact}". Tafadhali jisajili kwanza.</p>
+        <Button size="sm" className="h-7 text-[11px] w-full" onClick={() => onNavigate('/auth')}>Jisajili / Ingia</Button>
+      </div>
+    );
+  }
+
+  if (tool === 'queue_pending_action' && result.success) {
+    return (
+      <div className="p-3 rounded-xl bg-primary/10 border border-primary/30 text-sm space-y-2">
+        <p className="font-semibold text-primary flex items-center gap-1.5">
+          <Clock className="h-4 w-4" /> Ombi limetumwa
+        </p>
+        <p className="text-[12px] text-foreground/90">{result.message || result.pending?.human_summary}</p>
+        <p className="text-[10px] text-muted-foreground">Mmiliki atapokea arifa simuni. Akikubali, kitendo kitatekelezwa moja kwa moja.</p>
+      </div>
+    );
+  }
+
+  if (tool === 'add_to_cart' && result.success) {
+    return (
+      <div className="p-3 rounded-xl bg-green-500/10 border border-green-500/30 text-sm space-y-2">
+        <p className="font-semibold text-green-700 dark:text-green-400 flex items-center gap-1.5">
+          <CheckCircle2 className="h-4 w-4" /> Imeongezwa kwenye cart
+        </p>
+        <p className="text-[12px]">{result.item?.name} × {result.item?.qty} — {result.item?.pharmacy}</p>
+        <Button size="sm" className="h-7 text-[11px] w-full" onClick={() => onNavigate('/cart')}>
+          <ShoppingCart className="h-3 w-3 mr-1" /> Nenda kwenye cart
+        </Button>
+      </div>
+    );
+  }
+
+  if (result.needs_guest_flow) {
+    return (
+      <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-sm space-y-2">
+        <p className="text-[12px] text-amber-700 dark:text-amber-400">Ili kuendelea kama guest, nipe email au namba yako ya simu — nitathibitisha account kisha nitakutumia ombi la kuthibitisha.</p>
+      </div>
+    );
+  }
+  if (result.needs_login) {
+    return (
+      <div className="p-3 rounded-xl bg-muted border border-border text-sm space-y-2">
+        <p className="text-[12px]">Ili kuendelea, tafadhali ingia kwanza.</p>
+        <Button size="sm" className="h-7 text-[11px]" onClick={() => onNavigate('/auth')}>Ingia</Button>
       </div>
     );
   }
