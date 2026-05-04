@@ -325,10 +325,22 @@ async function executeTool(name: string, args: any, supabase: any, adminClient: 
       }
 
       case "lookup_account": {
-        const { data, error } = await supabase.rpc("lookup_user_by_contact", { contact: args.contact });
+        const raw = String(args.contact || "").trim();
+        if (!raw) return { found: false, contact: raw, reason: "empty", hint: "Nipe email kamili au namba ya simu (mfano +2557XXXXXXXX)." };
+        const isEmail = raw.includes("@");
+        const looksLikePhone = /^\+?\d[\d\s-]{6,}$/.test(raw);
+        if (!isEmail && !looksLikePhone) {
+          return { found: false, contact: raw, reason: "invalid_format", hint: "Andika email kamili (mfano jina@mfano.com) au namba ya simu yenye nambari kamili." };
+        }
+        const { data, error } = await supabase.rpc("lookup_user_by_contact", { contact: raw });
         if (error) return { error: error.message };
         const u = (data || [])[0];
-        if (!u) return { found: false, contact: args.contact };
+        if (!u) return {
+          found: false,
+          contact: raw,
+          reason: "not_found",
+          hint: isEmail ? "Email hiyo haijasajiliwa. Jaribu email nyingine au jisajili." : "Namba hiyo haijasajiliwa. Jaribu namba nyingine au jisajili."
+        };
         return {
           found: true,
           user: { id: u.id, name: `${u.first_name || ""} ${u.last_name || ""}`.trim(), email: u.email, phone: u.phone },

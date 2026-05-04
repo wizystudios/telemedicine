@@ -133,10 +133,20 @@ export default function Auth() {
   return (
     <div className="h-screen overflow-hidden bg-background flex flex-col">
       {/* Header */}
-      <header className="p-4 safe-area-top h-14 flex items-center">
-        {mode !== 'select' && (
-          <button onClick={goBack} className="h-9 w-9 rounded-full border border-border flex items-center justify-center hover:bg-muted transition-colors">
-            <ChevronLeft className="h-4 w-4" />
+      <header className="p-4 safe-area-top h-14 flex items-center justify-between">
+        <button
+          onClick={() => (mode === 'select' ? navigate('/') : goBack())}
+          className="h-9 w-9 rounded-full border border-border flex items-center justify-center hover:bg-muted transition-colors"
+          aria-label="Rudi"
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </button>
+        {mode === 'select' && (
+          <button
+            onClick={() => navigate('/')}
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Endelea bila kuingia
           </button>
         )}
       </header>

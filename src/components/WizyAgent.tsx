@@ -136,10 +136,17 @@ export function WizyAgent() {
     setInput('');
     setLoading(true);
 
+    // 25s timeout safety
+    const ctrl = new AbortController();
+    const timeoutId = setTimeout(() => ctrl.abort(), 25000);
     try {
-      const { data, error } = await supabase.functions.invoke('wizy-agent', {
+      const invokePromise = supabase.functions.invoke('wizy-agent', {
         body: { messages: newMessages },
       });
+      const timeoutPromise = new Promise<never>((_, rej) =>
+        setTimeout(() => rej(new Error('TIMEOUT')), 25000)
+      );
+      const { data, error } = await Promise.race([invokePromise, timeoutPromise]) as any;
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
@@ -149,7 +156,6 @@ export function WizyAgent() {
         results: Array.isArray(data?.results) ? data.results : [],
       }]);
 
-      // Speak reply (Swahili TTS if available) — but skip auto-navigation (intrusive)
       if ('speechSynthesis' in window && data?.reply) {
         const utt = new SpeechSynthesisUtterance(data.reply);
         utt.lang = 'sw-TZ';
@@ -157,9 +163,21 @@ export function WizyAgent() {
         window.speechSynthesis.speak(utt);
       }
     } catch (e: any) {
-      toast({ title: 'Wizy', description: e.message || 'Hitilafu', variant: 'destructive' });
-      setMessages(prev => [...prev, { role: 'assistant', content: 'Samahani, kuna tatizo. Jaribu tena.' }]);
+      const isTimeout = e?.message === 'TIMEOUT';
+      const isNetwork = /network|fetch|failed/i.test(e?.message || '');
+      const errMsg = isTimeout
+        ? 'Imechukua muda mrefu sana. Tafadhali jaribu tena.'
+        : isNetwork
+          ? 'Mtandao ni mbovu. Angalia muunganisho wako kisha jaribu tena.'
+          : (e?.message || 'Hitilafu isiyojulikana.');
+      toast({ title: 'Wizy', description: errMsg, variant: 'destructive' });
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: `⚠️ ${errMsg}`,
+        results: [{ tool: '__error__', args: {}, result: { error: errMsg, retry: text } }],
+      }]);
     } finally {
+      clearTimeout(timeoutId);
       setLoading(false);
     }
   };
@@ -308,7 +326,24 @@ function ToolResultCard({
   onNavigate: (path: string) => void;
   onSend: (text: string) => void;
 }) {
-  if (!result || result.error) return null;
+  if (!result) return null;
+
+  // Generic error / network failure renderer (incl. tool === '__error__')
+  if (result.error && !result.needs_login && !result.needs_guest_flow) {
+    return (
+      <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/30 text-sm space-y-2">
+        <p className="font-semibold text-destructive flex items-center gap-1.5">
+          <AlertCircle className="h-4 w-4" /> Hitilafu
+        </p>
+        <p className="text-[12px] text-foreground/90">{result.error}</p>
+        {result.retry && (
+          <Button size="sm" variant="outline" className="h-7 text-[11px] w-full" onClick={() => onSend(result.retry)}>
+            Jaribu tena
+          </Button>
+        )}
+      </div>
+    );
+  }
 
   if (tool === 'search_doctors' && Array.isArray(result.doctors) && result.doctors.length > 0) {
     return (
@@ -423,13 +458,21 @@ function ToolResultCard({
         </div>
       );
     }
+    const reason = result.reason || 'not_found';
+    const hint = result.hint || 'Tafadhali jisajili kwanza.';
     return (
       <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-sm space-y-2">
         <p className="font-semibold text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
-          <UserX className="h-4 w-4" /> Account haijapatikana
+          <UserX className="h-4 w-4" />
+          {reason === 'invalid_format' ? 'Muundo si sahihi' : reason === 'empty' ? 'Hakuna contact' : 'Account haijapatikana'}
         </p>
-        <p className="text-[11px] text-muted-foreground">Hakuna mtumiaji aliyesajiliwa kwa "{result.contact}". Tafadhali jisajili kwanza.</p>
-        <Button size="sm" className="h-7 text-[11px] w-full" onClick={() => onNavigate('/auth')}>Jisajili / Ingia</Button>
+        <p className="text-[11px] text-muted-foreground">{hint}</p>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" className="h-7 text-[11px] flex-1" onClick={() => onSend('Jaribu contact nyingine')}>
+            Contact nyingine
+          </Button>
+          <Button size="sm" className="h-7 text-[11px] flex-1" onClick={() => onNavigate('/auth')}>Jisajili</Button>
+        </div>
       </div>
     );
   }
