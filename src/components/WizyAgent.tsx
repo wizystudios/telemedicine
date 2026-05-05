@@ -484,12 +484,27 @@ function ToolResultCard({
           {reason === 'invalid_format' ? 'Muundo si sahihi' : reason === 'empty' ? 'Hakuna contact' : 'Account haijapatikana'}
         </p>
         <p className="text-[11px] text-muted-foreground">{hint}</p>
-        <div className="flex gap-2">
+        <div className="grid grid-cols-3 gap-2">
+          <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={() => onSend(`Rudia lookup kwa ${result.contact || 'contact hii'}`)}>
+            Tuma tena
+          </Button>
           <Button size="sm" variant="outline" className="h-7 text-[11px] flex-1" onClick={() => onSend('Jaribu contact nyingine')}>
             Contact nyingine
           </Button>
           <Button size="sm" className="h-7 text-[11px] flex-1" onClick={() => onNavigate('/auth')}>Jisajili</Button>
         </div>
+      </div>
+    );
+  }
+
+  if (tool === 'direct_order_medicine' && result.success) {
+    return (
+      <div className="p-3 rounded-xl bg-green-500/10 border border-green-500/30 text-sm space-y-2">
+        <p className="font-semibold text-green-700 dark:text-green-400 flex items-center gap-1.5">
+          <CheckCircle2 className="h-4 w-4" /> Agizo limetumwa
+        </p>
+        <p className="text-[12px]">{result.order?.medicine_name} × {result.order?.quantity}</p>
+        <p className="text-[10px] text-muted-foreground">Utaona agizo hili kwenye akaunti yako ukiingia.</p>
       </div>
     );
   }
