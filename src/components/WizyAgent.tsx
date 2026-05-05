@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
+import wizyAvatar from '@/assets/wizy-avatar.png';
 
 interface ToolResult { tool: string; args: any; result: any }
 interface Msg {
@@ -24,6 +25,28 @@ declare global {
 
 const WAKE_WORDS = ['wizy', 'wize', 'wisey'];
 
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+async function invokeWizyWithBackoff(messages: Msg[]) {
+  let lastError: any;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const timeoutMs = 15000 + attempt * 5000;
+      const timeoutPromise = new Promise<never>((_, rej) =>
+        setTimeout(() => rej(new Error('TIMEOUT')), timeoutMs)
+      );
+      return await Promise.race([
+        supabase.functions.invoke('wizy-agent', { body: { messages } }),
+        timeoutPromise,
+      ]) as any;
+    } catch (e) {
+      lastError = e;
+      if (attempt < 2) await sleep(700 * Math.pow(2, attempt));
+    }
+  }
+  throw lastError;
+}
+
 export function WizyAgent() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -36,6 +59,7 @@ export function WizyAgent() {
   const recognitionRef = useRef<any>(null);
   const wakeRecognitionRef = useRef<any>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const voiceReplyRef = useRef(false);
 
   const hideOnRoutes = ['/auth', '/reset-password'];
   const hidden = hideOnRoutes.includes(location.pathname) ||
@@ -62,6 +86,7 @@ export function WizyAgent() {
     r.lang = 'sw-TZ';
     r.onresult = (e: any) => {
       const txt = e.results[0][0].transcript;
+      voiceReplyRef.current = true;
       setInput(txt);
       setListening(false);
       // Auto-send voice
@@ -136,17 +161,8 @@ export function WizyAgent() {
     setInput('');
     setLoading(true);
 
-    // 25s timeout safety
-    const ctrl = new AbortController();
-    const timeoutId = setTimeout(() => ctrl.abort(), 25000);
     try {
-      const invokePromise = supabase.functions.invoke('wizy-agent', {
-        body: { messages: newMessages },
-      });
-      const timeoutPromise = new Promise<never>((_, rej) =>
-        setTimeout(() => rej(new Error('TIMEOUT')), 25000)
-      );
-      const { data, error } = await Promise.race([invokePromise, timeoutPromise]) as any;
+      const { data, error } = await invokeWizyWithBackoff(newMessages);
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
@@ -156,19 +172,20 @@ export function WizyAgent() {
         results: Array.isArray(data?.results) ? data.results : [],
       }]);
 
-      if ('speechSynthesis' in window && data?.reply) {
+      if (voiceReplyRef.current && 'speechSynthesis' in window && data?.reply) {
         const utt = new SpeechSynthesisUtterance(data.reply);
         utt.lang = 'sw-TZ';
         utt.rate = 1;
         window.speechSynthesis.speak(utt);
+        voiceReplyRef.current = false;
       }
     } catch (e: any) {
       const isTimeout = e?.message === 'TIMEOUT';
       const isNetwork = /network|fetch|failed/i.test(e?.message || '');
       const errMsg = isTimeout
-        ? 'Imechukua muda mrefu sana. Tafadhali jaribu tena.'
+        ? 'Imechukua muda mrefu sana baada ya kujaribu mara 3. Tafadhali jaribu tena.'
         : isNetwork
-          ? 'Mtandao ni mbovu. Angalia muunganisho wako kisha jaribu tena.'
+          ? 'Mtandao ni mbovu baada ya kujaribu mara 3. Angalia muunganisho wako kisha jaribu tena.'
           : (e?.message || 'Hitilafu isiyojulikana.');
       toast({ title: 'Wizy', description: errMsg, variant: 'destructive' });
       setMessages(prev => [...prev, {
@@ -177,7 +194,6 @@ export function WizyAgent() {
         results: [{ tool: '__error__', args: {}, result: { error: errMsg, retry: text } }],
       }]);
     } finally {
-      clearTimeout(timeoutId);
       setLoading(false);
     }
   };
@@ -195,9 +211,7 @@ export function WizyAgent() {
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-border">
               <div className="flex items-center gap-2">
-                <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Sparkles className="h-4 w-4 text-primary" />
-                </div>
+                <img src={wizyAvatar} alt="Wizy" className="h-12 w-9 object-contain shrink-0" />
                 <div>
                   <h3 className="text-sm font-semibold">Wizy</h3>
                   <p className="text-[10px] text-muted-foreground">Msaidizi wako wa AI</p>
@@ -223,7 +237,7 @@ export function WizyAgent() {
             <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
               {messages.length === 0 && (
                 <div className="text-center text-xs text-muted-foreground py-6 space-y-3">
-                  <Bot className="h-10 w-10 mx-auto text-primary/50" />
+                  <img src={wizyAvatar} alt="Wizy" className="h-20 w-16 object-contain mx-auto" />
                   <p>Karibu! Niambie unataka nini.</p>
                   <div className="flex flex-wrap gap-1.5 justify-center">
                     {[
@@ -246,12 +260,15 @@ export function WizyAgent() {
               {messages.map((m, i) => (
                 <div key={i} className={`flex flex-col ${m.role === 'user' ? 'items-end' : 'items-start'} gap-2`}>
                   {m.content && (
-                    <div className={`max-w-[85%] rounded-2xl px-3.5 py-2 text-sm whitespace-pre-line ${
+                    <div className="flex items-end gap-2 max-w-[90%]">
+                      {m.role === 'assistant' && <img src={wizyAvatar} alt="Wizy" className="h-10 w-8 object-contain shrink-0" />}
+                    <div className={`rounded-2xl px-3.5 py-2 text-sm whitespace-pre-line ${
                       m.role === 'user'
                         ? 'bg-primary text-primary-foreground'
                         : 'bg-muted text-foreground'
                     }`}>
                       {m.content}
+                    </div>
                     </div>
                   )}
                   {m.role === 'assistant' && m.results && m.results.length > 0 && (
@@ -467,12 +484,27 @@ function ToolResultCard({
           {reason === 'invalid_format' ? 'Muundo si sahihi' : reason === 'empty' ? 'Hakuna contact' : 'Account haijapatikana'}
         </p>
         <p className="text-[11px] text-muted-foreground">{hint}</p>
-        <div className="flex gap-2">
+        <div className="grid grid-cols-3 gap-2">
+          <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={() => onSend(`Rudia lookup kwa ${result.contact || 'contact hii'}`)}>
+            Tuma tena
+          </Button>
           <Button size="sm" variant="outline" className="h-7 text-[11px] flex-1" onClick={() => onSend('Jaribu contact nyingine')}>
             Contact nyingine
           </Button>
           <Button size="sm" className="h-7 text-[11px] flex-1" onClick={() => onNavigate('/auth')}>Jisajili</Button>
         </div>
+      </div>
+    );
+  }
+
+  if (tool === 'direct_order_medicine' && result.success) {
+    return (
+      <div className="p-3 rounded-xl bg-green-500/10 border border-green-500/30 text-sm space-y-2">
+        <p className="font-semibold text-green-700 dark:text-green-400 flex items-center gap-1.5">
+          <CheckCircle2 className="h-4 w-4" /> Agizo limetumwa
+        </p>
+        <p className="text-[12px]">{result.order?.medicine_name} × {result.order?.quantity}</p>
+        <p className="text-[10px] text-muted-foreground">Utaona agizo hili kwenye akaunti yako ukiingia.</p>
       </div>
     );
   }

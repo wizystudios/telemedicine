@@ -3,6 +3,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Home, MessageCircle, Calendar, User, Bot } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
+import wizyAvatar from '@/assets/wizy-avatar.png';
 
 export function BottomNav() {
   const navigate = useNavigate();
@@ -48,11 +49,11 @@ export function BottomNav() {
                 className="relative -mt-5 flex flex-col items-center justify-center"
               >
                 <div className={cn(
-                  "h-13 w-13 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/25 transition-all duration-500",
+                  "flex items-center justify-center transition-all duration-500",
                   aiTapped && "scale-110 rotate-[360deg]",
-                  !aiTapped && "hover:scale-105 hover:shadow-primary/40"
-                )} style={{ height: '52px', width: '52px' }}>
-                  <Bot className="h-6 w-6 text-primary-foreground" />
+                  !aiTapped && "hover:scale-105"
+                )} style={{ height: '58px', width: '48px' }}>
+                  <img src={wizyAvatar} alt="Wizy" className="h-full w-full object-contain" />
                 </div>
                 <span className="text-[9px] font-bold text-primary mt-1">{item.label}</span>
               </button>

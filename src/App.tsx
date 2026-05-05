@@ -52,9 +52,10 @@ const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
+  const location = useLocation();
   
   if (loading) return <LoadingScreen />;
-  if (!user) return <Navigate to="/auth" replace />;
+  if (!user) return <Navigate to={`/auth?redirectTo=${encodeURIComponent(location.pathname + location.search)}`} replace />;
   
   return <>{children}</>;
 }
@@ -90,7 +91,7 @@ function AppContent() {
         <main className={`flex-1 min-w-0 ${isAuthRoute ? 'h-screen overflow-hidden' : isActiveChat ? '' : 'pb-14 md:pb-0'}`}>
           <Routes>
             <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Navigate to="/doctors-list" replace />} />
-            <Route path="/auth" element={user ? <Navigate to="/dashboard" replace /> : <Auth />} />
+            <Route path="/auth" element={user ? <Navigate to={new URLSearchParams(location.search).get('redirectTo') || '/dashboard'} replace /> : <Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/force-password-change" element={<ProtectedRoute><ForcePasswordChange /></ProtectedRoute>} />
 

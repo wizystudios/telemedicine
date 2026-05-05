@@ -30,6 +30,7 @@ export default function PendingActions() {
         .select('*')
         .eq('matched_user_id', user.id)
         .eq('status', 'awaiting_confirmation')
+        .eq('is_read', false)
         .order('created_at', { ascending: false });
       if (error) throw error;
       setItems(data || []);
@@ -84,11 +85,15 @@ export default function PendingActions() {
       } else {
         throw new Error('Aina ya kitendo haijajulikana: ' + a.action_type);
       }
-      await supabase.from('pending_actions').update({ status: 'executed' }).eq('id', a.id);
+      await supabase.from('pending_actions').update({ status: 'executed', is_read: true }).eq('id', a.id);
+      await supabase.from('notifications').update({ is_read: true }).eq('related_id', a.id);
+      setItems(prev => prev.filter(item => item.id !== a.id));
       toast.success('Imekamilika', { description: a.human_summary });
       load();
     } catch (e: any) {
-      await supabase.from('pending_actions').update({ status: 'failed', error: e.message }).eq('id', a.id);
+      await supabase.from('pending_actions').update({ status: 'failed', error: e.message, is_read: true }).eq('id', a.id);
+      await supabase.from('notifications').update({ is_read: true }).eq('related_id', a.id);
+      setItems(prev => prev.filter(item => item.id !== a.id));
       toast.error('Imeshindwa', { description: e.message });
       load();
     } finally {
@@ -99,8 +104,10 @@ export default function PendingActions() {
   const reject = async (id: string) => {
     setBusyId(id);
     try {
-      const { error } = await supabase.from('pending_actions').update({ status: 'rejected' }).eq('id', id);
+      const { error } = await supabase.from('pending_actions').update({ status: 'rejected', is_read: true }).eq('id', id);
       if (error) throw error;
+      await supabase.from('notifications').update({ is_read: true }).eq('related_id', id);
+      setItems(prev => prev.filter(item => item.id !== id));
       toast.success('Ombi limekataliwa');
       load();
     } catch (e: any) {

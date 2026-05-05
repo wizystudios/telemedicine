@@ -18,22 +18,39 @@ export default function DoctorsList() {
   const { data: doctors = [], isLoading, isFetching } = useQuery({
     queryKey: ['doctors', filters],
     queryFn: async () => {
-      let query = supabase
-        .from('profiles')
-        .select(`*, doctor_profiles(specialization:specialties(name), specialty_id, bio, experience_years, consultation_fee, education, languages), doctor_online_status(is_online, last_seen)`)
-        .eq('role', 'doctor');
+      const db = supabase as any;
+      let query = db
+        .from('doctor_profiles')
+        .select(`user_id, specialty_id, doctor_type, consultation_fee, specialization:specialties(name), profiles!doctor_profiles_user_id_fkey(id, first_name, last_name, avatar_url)`)
+        .eq('is_verified', true);
       if (filters.searchTerm) {
-        query = query.or(`first_name.ilike.%${filters.searchTerm}%,last_name.ilike.%${filters.searchTerm}%`);
+        query = query.or(`doctor_type.ilike.%${filters.searchTerm}%,bio.ilike.%${filters.searchTerm}%`);
       }
-      const { data } = await query;
-      let filtered = data?.map(d => ({
-        ...d,
-        specialization: d.doctor_profiles?.[0]?.specialization?.name || 'Daktari',
-        specialty_id: d.doctor_profiles?.[0]?.specialty_id,
-        consultation_fee: d.doctor_profiles?.[0]?.consultation_fee,
-        isOnline: d.doctor_online_status?.[0]?.is_online || false
+      const { data, error } = await query;
+      if (error) throw error;
+      const rows = (data || []) as any[];
+      const ids = rows.map(d => d.user_id).filter(Boolean);
+      const { data: onlineRows } = user && ids.length
+        ? await db.from('doctor_online_status').select('user_id, is_online').in('user_id', ids)
+        : { data: [] as any[] };
+      const onlineMap = new Map((onlineRows || []).map((r: any) => [r.user_id, !!r.is_online]));
+      let filtered = rows.map(d => ({
+        id: d.user_id,
+        first_name: d.profiles?.first_name || '',
+        last_name: d.profiles?.last_name || '',
+        avatar_url: d.profiles?.avatar_url,
+        specialization: d.specialization?.name || d.doctor_type || 'Daktari',
+        specialty_id: d.specialty_id,
+        consultation_fee: d.consultation_fee || 0,
+        isOnline: Boolean(onlineMap.get(d.user_id))
       })) || [];
 
+      if (filters.searchTerm) {
+        const term = filters.searchTerm.toLowerCase();
+        filtered = filtered.filter(d =>
+          `${d.first_name} ${d.last_name} ${d.specialization}`.toLowerCase().includes(term)
+        );
+      }
       if (filters.specialty) filtered = filtered.filter(d => d.specialty_id === filters.specialty);
       if (filters.minPrice !== undefined && filters.maxPrice !== undefined) {
         filtered = filtered.filter(d => d.consultation_fee >= filters.minPrice! && d.consultation_fee <= filters.maxPrice!);
@@ -41,7 +58,6 @@ export default function DoctorsList() {
       if (filters.isAvailable) filtered = filtered.filter(d => d.isOnline);
       return filtered;
     },
-    enabled: !!user,
     placeholderData: (prev) => prev,
   });
 

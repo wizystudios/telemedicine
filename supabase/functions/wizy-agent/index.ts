@@ -29,10 +29,10 @@ Guest AKIOMBA kitendo (kuagiza dawa, kuweka miadi, kutuma ujumbe, ku-post tatizo
 1. Mwambie: "Naweza kufanya hivyo kwa niaba yako. Tafadhali nipe email AU namba yako ya simu uliyotumia kujisajili."
 2. Akikupa, tumia lookup_account.
 3. Kama account haipo: "Sijakupata. Tafadhali jisajili kwanza kupitia 'Mimi'."
-4. Kama account ipo: tumia queue_pending_action({ contact, action_type, payload, human_summary }) — payload lazima iwe na ID zilizotatuliwa (mfano medicine_id+pharmacy_id+quantity tayari) zilizopatikana kupitia search_medicines kabla.
-5. Mwambie guest: "Nimetuma ombi kwenye akaunti yako. Utapata arifa kwenye simu yako — ukikubali, nitatekeleza."
+4. Kama ni KUAGIZA DAWA na account ipo: tumia direct_order_medicine mara moja bila pending confirmation.
+5. Kama ni miadi/ujumbe/tatizo: tumia queue_pending_action({ contact, action_type, payload, human_summary }).
 
-KAMWE: Usimuulize guest password. Usitekeleze kitendo bila confirmation flow ya pending_actions.`;
+KAMWE: Usimuulize guest password. Kwa dawa tumia direct_order_medicine; kwa vitendo vingine tumia pending_actions.`;
 
 const TOOLS = [
   {
@@ -145,6 +145,26 @@ const TOOLS = [
           human_summary: { type: "string", description: "Maelezo mafupi: 'Nunua Panadol x2 kutoka Famasi X'" },
         },
         required: ["contact", "action_type", "payload", "human_summary"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "direct_order_medicine",
+      description: "Agiza dawa moja kwa moja kwa guest aliyethibitishwa kwa email/simu. Tumia baada ya search_medicines na lookup_account kufanikiwa.",
+      parameters: {
+        type: "object",
+        properties: {
+          contact: { type: "string" },
+          medicine_id: { type: "string" },
+          pharmacy_id: { type: "string" },
+          medicine_name: { type: "string" },
+          quantity: { type: "number", default: 1 },
+          notes: { type: "string" },
+          patient_phone: { type: "string" },
+        },
+        required: ["contact", "medicine_id", "pharmacy_id", "medicine_name"],
       },
     },
   },
@@ -371,6 +391,20 @@ async function executeTool(name: string, args: any, supabase: any, adminClient: 
           pending: data,
           message: `Nimetuma ombi kwa ${u.first_name || "mmiliki"}. Atapata arifa simuni — akikubali, nitatekeleza.`,
         };
+      }
+
+      case "direct_order_medicine": {
+        const { data, error } = await supabase.rpc("wizy_create_pharmacy_order_for_contact", {
+          p_contact: args.contact,
+          p_pharmacy_id: args.pharmacy_id,
+          p_medicine_id: args.medicine_id,
+          p_medicine_name: args.medicine_name,
+          p_quantity: args.quantity || 1,
+          p_notes: args.notes || null,
+          p_patient_phone: args.patient_phone || args.contact,
+        });
+        if (error) return { error: error.message };
+        return { success: true, order: (data || [])[0], navigate: "/my-orders" };
       }
 
       case "list_my_messages": {
