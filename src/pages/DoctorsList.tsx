@@ -18,7 +18,8 @@ export default function DoctorsList() {
   const { data: doctors = [], isLoading, isFetching } = useQuery({
     queryKey: ['doctors', filters],
     queryFn: async () => {
-      let query = supabase
+      const db = supabase as any;
+      let query = db
         .from('doctor_profiles')
         .select(`user_id, specialty_id, doctor_type, consultation_fee, specialization:specialties(name), profiles!doctor_profiles_user_id_fkey(id, first_name, last_name, avatar_url)`)
         .eq('is_verified', true);
@@ -30,7 +31,7 @@ export default function DoctorsList() {
       const rows = (data || []) as any[];
       const ids = rows.map(d => d.user_id).filter(Boolean);
       const { data: onlineRows } = user && ids.length
-        ? await supabase.from('doctor_online_status').select('user_id, is_online').in('user_id', ids)
+        ? await db.from('doctor_online_status').select('user_id, is_online').in('user_id', ids)
         : { data: [] as any[] };
       const onlineMap = new Map((onlineRows || []).map((r: any) => [r.user_id, !!r.is_online]));
       let filtered = rows.map(d => ({
