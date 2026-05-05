@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
+import wizyAvatar from '@/assets/wizy-avatar.png';
 
 interface ToolResult { tool: string; args: any; result: any }
 interface Msg {
@@ -36,6 +37,7 @@ export function WizyAgent() {
   const recognitionRef = useRef<any>(null);
   const wakeRecognitionRef = useRef<any>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const voiceReplyRef = useRef(false);
 
   const hideOnRoutes = ['/auth', '/reset-password'];
   const hidden = hideOnRoutes.includes(location.pathname) ||
@@ -62,6 +64,7 @@ export function WizyAgent() {
     r.lang = 'sw-TZ';
     r.onresult = (e: any) => {
       const txt = e.results[0][0].transcript;
+      voiceReplyRef.current = true;
       setInput(txt);
       setListening(false);
       // Auto-send voice
