@@ -1592,6 +1592,7 @@ export type Database = {
           expires_at: string
           human_summary: string
           id: string
+          is_read: boolean
           matched_user_id: string | null
           payload: Json
           result_id: string | null
@@ -1607,6 +1608,7 @@ export type Database = {
           expires_at?: string
           human_summary: string
           id?: string
+          is_read?: boolean
           matched_user_id?: string | null
           payload?: Json
           result_id?: string | null
@@ -1622,6 +1624,7 @@ export type Database = {
           expires_at?: string
           human_summary?: string
           id?: string
+          is_read?: boolean
           matched_user_id?: string | null
           payload?: Json
           result_id?: string | null
@@ -2511,6 +2514,27 @@ export type Database = {
       update_doctor_online_status: {
         Args: { is_online_param: boolean; status_message_param?: string }
         Returns: undefined
+      }
+      wizy_create_pharmacy_order_for_contact: {
+        Args: {
+          p_contact: string
+          p_delivery_address?: string
+          p_fulfillment_type?: string
+          p_medicine_id: string
+          p_medicine_name: string
+          p_notes?: string
+          p_patient_phone?: string
+          p_pharmacy_id: string
+          p_pickup_time?: string
+          p_quantity?: number
+        }
+        Returns: {
+          medicine_name: string
+          order_id: string
+          patient_id: string
+          quantity: number
+          total_price: number
+        }[]
       }
     }
     Enums: {
