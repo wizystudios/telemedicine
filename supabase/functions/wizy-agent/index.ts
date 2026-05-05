@@ -29,10 +29,10 @@ Guest AKIOMBA kitendo (kuagiza dawa, kuweka miadi, kutuma ujumbe, ku-post tatizo
 1. Mwambie: "Naweza kufanya hivyo kwa niaba yako. Tafadhali nipe email AU namba yako ya simu uliyotumia kujisajili."
 2. Akikupa, tumia lookup_account.
 3. Kama account haipo: "Sijakupata. Tafadhali jisajili kwanza kupitia 'Mimi'."
-4. Kama account ipo: tumia queue_pending_action({ contact, action_type, payload, human_summary }) — payload lazima iwe na ID zilizotatuliwa (mfano medicine_id+pharmacy_id+quantity tayari) zilizopatikana kupitia search_medicines kabla.
-5. Mwambie guest: "Nimetuma ombi kwenye akaunti yako. Utapata arifa kwenye simu yako — ukikubali, nitatekeleza."
+4. Kama ni KUAGIZA DAWA na account ipo: tumia direct_order_medicine mara moja bila pending confirmation.
+5. Kama ni miadi/ujumbe/tatizo: tumia queue_pending_action({ contact, action_type, payload, human_summary }).
 
-KAMWE: Usimuulize guest password. Usitekeleze kitendo bila confirmation flow ya pending_actions.`;
+KAMWE: Usimuulize guest password. Kwa dawa tumia direct_order_medicine; kwa vitendo vingine tumia pending_actions.`;
 
 const TOOLS = [
   {
@@ -145,6 +145,26 @@ const TOOLS = [
           human_summary: { type: "string", description: "Maelezo mafupi: 'Nunua Panadol x2 kutoka Famasi X'" },
         },
         required: ["contact", "action_type", "payload", "human_summary"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "direct_order_medicine",
+      description: "Agiza dawa moja kwa moja kwa guest aliyethibitishwa kwa email/simu. Tumia baada ya search_medicines na lookup_account kufanikiwa.",
+      parameters: {
+        type: "object",
+        properties: {
+          contact: { type: "string" },
+          medicine_id: { type: "string" },
+          pharmacy_id: { type: "string" },
+          medicine_name: { type: "string" },
+          quantity: { type: "number", default: 1 },
+          notes: { type: "string" },
+          patient_phone: { type: "string" },
+        },
+        required: ["contact", "medicine_id", "pharmacy_id", "medicine_name"],
       },
     },
   },
