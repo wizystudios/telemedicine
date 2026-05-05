@@ -25,6 +25,28 @@ declare global {
 
 const WAKE_WORDS = ['wizy', 'wize', 'wisey'];
 
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+async function invokeWizyWithBackoff(messages: Msg[]) {
+  let lastError: any;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const timeoutMs = 15000 + attempt * 5000;
+      const timeoutPromise = new Promise<never>((_, rej) =>
+        setTimeout(() => rej(new Error('TIMEOUT')), timeoutMs)
+      );
+      return await Promise.race([
+        supabase.functions.invoke('wizy-agent', { body: { messages } }),
+        timeoutPromise,
+      ]) as any;
+    } catch (e) {
+      lastError = e;
+      if (attempt < 2) await sleep(700 * Math.pow(2, attempt));
+    }
+  }
+  throw lastError;
+}
+
 export function WizyAgent() {
   const navigate = useNavigate();
   const location = useLocation();
