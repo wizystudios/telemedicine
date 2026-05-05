@@ -393,6 +393,20 @@ async function executeTool(name: string, args: any, supabase: any, adminClient: 
         };
       }
 
+      case "direct_order_medicine": {
+        const { data, error } = await supabase.rpc("wizy_create_pharmacy_order_for_contact", {
+          p_contact: args.contact,
+          p_pharmacy_id: args.pharmacy_id,
+          p_medicine_id: args.medicine_id,
+          p_medicine_name: args.medicine_name,
+          p_quantity: args.quantity || 1,
+          p_notes: args.notes || null,
+          p_patient_phone: args.patient_phone || args.contact,
+        });
+        if (error) return { error: error.message };
+        return { success: true, order: (data || [])[0], navigate: "/my-orders" };
+      }
+
       case "list_my_messages": {
         if (!userId) return { error: "Tafadhali ingia kwanza", needs_login: true };
         const { data } = await supabase
