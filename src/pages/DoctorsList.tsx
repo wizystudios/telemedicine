@@ -42,7 +42,7 @@ export default function DoctorsList() {
         specialization: d.specialization?.name || d.doctor_type || 'Daktari',
         specialty_id: d.specialty_id,
         consultation_fee: d.consultation_fee || 0,
-        isOnline: onlineMap.get(d.user_id) || false
+        isOnline: Boolean(onlineMap.get(d.user_id))
       })) || [];
 
       if (filters.searchTerm) {
