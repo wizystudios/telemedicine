@@ -161,17 +161,8 @@ export function WizyAgent() {
     setInput('');
     setLoading(true);
 
-    // 25s timeout safety
-    const ctrl = new AbortController();
-    const timeoutId = setTimeout(() => ctrl.abort(), 25000);
     try {
-      const invokePromise = supabase.functions.invoke('wizy-agent', {
-        body: { messages: newMessages },
-      });
-      const timeoutPromise = new Promise<never>((_, rej) =>
-        setTimeout(() => rej(new Error('TIMEOUT')), 25000)
-      );
-      const { data, error } = await Promise.race([invokePromise, timeoutPromise]) as any;
+      const { data, error } = await invokeWizyWithBackoff(newMessages);
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
@@ -181,11 +172,12 @@ export function WizyAgent() {
         results: Array.isArray(data?.results) ? data.results : [],
       }]);
 
-      if ('speechSynthesis' in window && data?.reply) {
+      if (voiceReplyRef.current && 'speechSynthesis' in window && data?.reply) {
         const utt = new SpeechSynthesisUtterance(data.reply);
         utt.lang = 'sw-TZ';
         utt.rate = 1;
         window.speechSynthesis.speak(utt);
+        voiceReplyRef.current = false;
       }
     } catch (e: any) {
       const isTimeout = e?.message === 'TIMEOUT';
@@ -202,7 +194,6 @@ export function WizyAgent() {
         results: [{ tool: '__error__', args: {}, result: { error: errMsg, retry: text } }],
       }]);
     } finally {
-      clearTimeout(timeoutId);
       setLoading(false);
     }
   };
