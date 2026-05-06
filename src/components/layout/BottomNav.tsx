@@ -62,16 +62,22 @@ export function BottomNav() {
             );
           }
           
+          const showBadge = item.label === 'Ujumbe' && unreadCount > 0;
           return (
             <button
               key={item.path}
               onClick={() => navigate(item.path)}
               className={cn(
-                "flex flex-col items-center justify-center gap-0.5 py-2 px-3 transition-colors min-w-0",
+                "relative flex flex-col items-center justify-center gap-0.5 py-2 px-3 transition-colors min-w-0",
                 isActive ? "text-primary" : "text-muted-foreground"
               )}
             >
               <Icon className={cn("h-5 w-5 transition-all", isActive && "stroke-[2.5px]")} />
+              {showBadge && (
+                <span className="absolute top-1 right-2 h-3.5 min-w-[14px] px-1 rounded-full bg-destructive text-destructive-foreground text-[8px] font-bold flex items-center justify-center">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
               <span className={cn("text-[10px] leading-tight", isActive ? "font-semibold" : "font-medium")}>{item.label}</span>
             </button>
           );
