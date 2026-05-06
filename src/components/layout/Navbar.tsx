@@ -107,8 +107,14 @@ export function Navbar({ onToggleSidebar }: NavbarProps) {
             size="icon"
             className="h-8 w-8 relative"
             onClick={() => navigate('/notifications')}
+            aria-label="Arifa"
           >
             <Bell className="h-4 w-4" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 h-4 min-w-[16px] px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
           </Button>
           
           <DropdownMenu>
