@@ -224,7 +224,15 @@ export default function Messages() {
       {/* Input */}
       <div className="border-t p-2 flex gap-2 shrink-0">
         <input type="file" ref={fileInputRef} className="hidden" multiple accept="image/*,.pdf,.doc,.docx"
-          onChange={(e) => { if (e.target.files) setSelectedFiles(prev => [...prev, ...Array.from(e.target.files!)]); }} />
+          onChange={(e) => {
+            if (!e.target.files) return;
+            const files = Array.from(e.target.files);
+            const ok = window.confirm(
+              'Idhini: Unakubali kushiriki nyaraka/picha hii? Inaweza kuwa na taarifa nyeti za afya (rekodi, dawa, vipimo).'
+            );
+            if (!ok) { e.target.value = ''; return; }
+            setSelectedFiles(prev => [...prev, ...files]);
+          }} />
         <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => fileInputRef.current?.click()}>
           <Paperclip className="h-3.5 w-3.5" />
         </Button>

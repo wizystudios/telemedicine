@@ -6,16 +6,19 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import {
   Stethoscope, Building2, Pill, FlaskConical, Clock,
-  ChevronRight, Search, MapPin
+  ChevronRight, MapPin, Bell
 } from 'lucide-react';
 import { AdBanner } from '@/components/AdBanner';
 import { HealthTipCard } from '@/components/HealthTipCard';
+import { UniversalSearch } from '@/components/UniversalSearch';
+import { useUnreadNotifications } from '@/hooks/useUnreadNotifications';
 
 export default function PatientHome() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [upcomingAppointments, setUpcomingAppointments] = useState<any[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [latestNotif, setLatestNotif] = useState<any | null>(null);
+  const { count: unreadCount } = useUnreadNotifications();
 
   useEffect(() => {
     if (!user) return;
@@ -28,46 +31,32 @@ export default function PatientHome() {
       .order('appointment_date', { ascending: true })
       .limit(2)
       .then(({ data }) => setUpcomingAppointments(data || []));
-  }, [user]);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    const q = searchQuery.trim();
-    if (!q) { navigate('/doctors-list'); return; }
-    // Heuristic universal search: route to the right page based on keywords
-    const lower = q.toLowerCase();
-    if (/(hospitali|hospital)/.test(lower)) navigate(`/nearby?type=hospitals&q=${encodeURIComponent(q)}`);
-    else if (/(famasi|pharmacy|dawa)/.test(lower)) navigate(`/nearby?type=pharmacies&q=${encodeURIComponent(q)}`);
-    else if (/(maabara|lab)/.test(lower)) navigate(`/nearby?type=laboratories&q=${encodeURIComponent(q)}`);
-    else if (/(polyclinic)/.test(lower)) navigate(`/nearby?type=polyclinics&q=${encodeURIComponent(q)}`);
-    else navigate(`/doctors-list?q=${encodeURIComponent(q)}`);
-  };
+    supabase
+      .from('notifications')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('is_read', false)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .then(({ data }) => setLatestNotif(data?.[0] || null));
+  }, [user, unreadCount]);
 
   const services = [
     { icon: Stethoscope, label: 'Madaktari', path: '/doctors-list' },
-    { icon: Building2, label: 'Hospitali', path: '/nearby' },
-    { icon: Pill, label: 'Famasi', path: '/nearby' },
-    { icon: FlaskConical, label: 'Maabara', path: '/nearby' },
+    { icon: Building2, label: 'Hospitali', path: '/nearby?type=hospitals' },
+    { icon: Pill, label: 'Famasi', path: '/marketplace' },
+    { icon: FlaskConical, label: 'Maabara', path: '/nearby?type=laboratories' },
   ];
 
   return (
     <div className="max-w-lg mx-auto px-4 pt-4 pb-24 space-y-4">
-      {/* Search */}
-      <form onSubmit={handleSearch} className="relative">
-        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Tafuta daktari, hospitali, dawa..."
-          className="w-full h-11 pl-10 pr-4 rounded-2xl bg-card border border-border text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-        />
-      </form>
+      <UniversalSearch placeholder="Tafuta daktari, hospitali, dawa..." global />
 
       <AdBanner page="home" />
       <HealthTipCard />
 
-      {/* Services — minimal: icon + label, no background */}
+      {/* Services */}
       <div className="grid grid-cols-4 gap-2">
         {services.map((s) => (
           <button
@@ -122,17 +111,39 @@ export default function PatientHome() {
         </div>
       )}
 
-      {/* Nearby Facilities — minimal */}
-      <button
-        onClick={() => navigate('/nearby')}
-        className="w-full flex items-center gap-3 py-2"
-      >
+      {/* Nearby */}
+      <button onClick={() => navigate('/nearby')} className="w-full flex items-center gap-3 py-2">
         <MapPin className="h-5 w-5 text-foreground" strokeWidth={1.6} />
         <div className="text-left flex-1">
           <p className="text-sm font-medium">Vituo Karibu Nawe</p>
         </div>
         <ChevronRight className="h-4 w-4 text-muted-foreground" />
       </button>
+
+      {/* Notifications quick-access (replaces previous gap) */}
+      <button
+        onClick={() => navigate('/notifications')}
+        className="w-full rounded-2xl border border-border bg-card p-3 flex items-center gap-3 hover:bg-muted/40 transition-colors"
+      >
+        <div className="relative h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+          <Bell className="h-4 w-4 text-primary" />
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 h-4 min-w-[16px] px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
+        </div>
+        <div className="flex-1 min-w-0 text-left">
+          <p className="text-sm font-semibold">Arifa zako</p>
+          <p className="text-[11px] text-muted-foreground truncate">
+            {latestNotif ? latestNotif.title : 'Hakuna arifa mpya'}
+          </p>
+        </div>
+        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+      </button>
+
+      {/* Sponsored / Wizy promo strip */}
+      <AdBanner page="home-secondary" />
     </div>
   );
 }
