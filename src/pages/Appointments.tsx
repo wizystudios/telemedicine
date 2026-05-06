@@ -25,6 +25,7 @@ export default function Appointments() {
         .from('appointments')
         .select(`*, doctor:profiles!appointments_doctor_id_fkey(first_name, last_name, avatar_url), patient:profiles!appointments_patient_id_fkey(first_name, last_name, avatar_url)`)
         .or(`patient_id.eq.${user.id},doctor_id.eq.${user.id}`)
+        .neq('consultation_type', 'chat')  // hide auto-created chat conversations from miadi list
         .order('appointment_date', { ascending: true });
       if (error) return [];
       return data || [];
