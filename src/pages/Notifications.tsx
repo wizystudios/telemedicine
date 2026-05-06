@@ -1,18 +1,19 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Bell, MessageCircle, Calendar, Phone, CheckCheck, Trash2, Clock, AlertCircle } from 'lucide-react';
+import { Bell, MessageCircle, Calendar, Phone, CheckCheck, Clock, AlertCircle, Sparkles, Pill } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { urlForNotificationType } from '@/lib/notificationRoutes';
+import { UniversalSearch } from '@/components/UniversalSearch';
 
 export default function Notifications() {
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [search, setSearch] = useState('');
 
   const { data: notifications = [], refetch } = useQuery({
     queryKey: ['notifications', user?.id],
@@ -22,10 +23,10 @@ export default function Notifications() {
         .select('*')
         .eq('user_id', user?.id)
         .order('created_at', { ascending: false })
-        .limit(50);
+        .limit(100);
       return data || [];
     },
-    enabled: !!user?.id
+    enabled: !!user?.id,
   });
 
   const markAsRead = async (id: string) => {
@@ -39,25 +40,48 @@ export default function Notifications() {
     toast({ title: 'Arifa zote zimesomwa' });
   };
 
-  const handleClick = (n: any) => {
-    markAsRead(n.id);
-    navigate(urlForNotificationType(n.type));
+  // Deep-link with id when present (e.g. open the exact appointment)
+  const targetFor = async (n: any) => {
+    const base = urlForNotificationType(n.type);
+    const id = n.related_id || n.appointment_id;
+    if (!id) return base;
+    if (n.type === 'appointment' || n.type === 'appointment_request') return `/appointments?focus=${id}`;
+    if (n.type === 'message') return `/messages`;
+    if (n.type === 'pharmacy_order') return `/my-orders?focus=${id}`;
+    if (n.type === 'pending_action') return `/pending-actions`;
+    return base;
+  };
+
+  const handleClick = async (n: any) => {
+    await markAsRead(n.id);
+    const url = await targetFor(n);
+    navigate(url);
   };
 
   const iconMap: Record<string, React.ReactNode> = {
-    message: <MessageCircle className="h-4 w-4 text-primary" />,
-    appointment: <Calendar className="h-4 w-4 text-primary" />,
-    call: <Phone className="h-4 w-4 text-primary" />,
-    pharmacy_order: <Clock className="h-4 w-4 text-primary" />,
-    lab_booking: <Clock className="h-4 w-4 text-primary" />,
-    patient_problem: <AlertCircle className="h-4 w-4 text-destructive" />,
+    message: <MessageCircle className="h-4 w-4" />,
+    appointment: <Calendar className="h-4 w-4" />,
+    appointment_request: <Calendar className="h-4 w-4" />,
+    call: <Phone className="h-4 w-4" />,
+    pharmacy_order: <Pill className="h-4 w-4" />,
+    lab_booking: <Clock className="h-4 w-4" />,
+    patient_problem: <AlertCircle className="h-4 w-4" />,
+    pending_action: <Sparkles className="h-4 w-4" />,
   };
 
-  const unread = notifications.filter(n => !n.is_read).length;
+  const filtered = useMemo(() => {
+    if (!search.trim()) return notifications;
+    const q = search.toLowerCase();
+    return notifications.filter((n: any) =>
+      `${n.title} ${n.message} ${n.type || ''}`.toLowerCase().includes(q)
+    );
+  }, [notifications, search]);
+
+  const unread = notifications.filter((n: any) => !n.is_read).length;
 
   return (
-    <div className="max-w-lg mx-auto px-4 pt-4 pb-20">
-      <div className="flex items-center justify-between mb-4">
+    <div className="max-w-lg mx-auto px-4 pt-4 pb-20 space-y-3">
+      <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <h1 className="text-lg font-bold">Arifa</h1>
           {unread > 0 && (
@@ -73,36 +97,51 @@ export default function Notifications() {
         )}
       </div>
 
-      <div className="space-y-1">
-        {notifications.map((n) => (
-          <button
-            key={n.id}
-            onClick={() => handleClick(n)}
-            className={`w-full text-left flex items-start gap-3 p-3 rounded-xl transition-colors ${
-              !n.is_read ? 'bg-primary/5' : 'hover:bg-muted/50'
-            }`}
-          >
-            <div className="mt-0.5 shrink-0">
-              {iconMap[n.type] || <Bell className="h-4 w-4 text-muted-foreground" />}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">
-                {n.title}
-                {!n.is_read && <span className="ml-2 inline-block h-1.5 w-1.5 rounded-full bg-primary" />}
-              </p>
-              <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{n.message}</p>
-              <p className="text-[10px] text-muted-foreground mt-1">
-                {format(new Date(n.created_at), 'dd MMM, HH:mm')}
-              </p>
-            </div>
-          </button>
-        ))}
+      <UniversalSearch
+        placeholder="Tafuta arifa au popote..."
+        onLocalFilter={setSearch}
+        global={true}
+      />
+
+      <div className="space-y-1.5">
+        {filtered.map((n: any) => {
+          const unreadItem = !n.is_read;
+          return (
+            <button
+              key={n.id}
+              onClick={() => handleClick(n)}
+              className={`w-full text-left flex items-start gap-3 p-3 rounded-2xl transition-colors border ${
+                unreadItem
+                  ? 'bg-primary/10 border-primary/30 shadow-sm'
+                  : 'bg-card border-border hover:bg-muted/40'
+              }`}
+            >
+              <div className={`mt-0.5 shrink-0 h-8 w-8 rounded-full flex items-center justify-center ${
+                unreadItem ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+              }`}>
+                {iconMap[n.type] || <Bell className="h-4 w-4" />}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className={`text-sm truncate ${unreadItem ? 'font-bold text-foreground' : 'font-medium text-muted-foreground'}`}>
+                  {n.title}
+                </p>
+                <p className={`text-xs line-clamp-2 mt-0.5 ${unreadItem ? 'text-foreground/80' : 'text-muted-foreground'}`}>
+                  {n.message}
+                </p>
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  {format(new Date(n.created_at), 'dd MMM, HH:mm')}
+                </p>
+              </div>
+              {unreadItem && <span className="h-2 w-2 rounded-full bg-primary mt-2 shrink-0" />}
+            </button>
+          );
+        })}
       </div>
 
-      {notifications.length === 0 && (
+      {filtered.length === 0 && (
         <div className="text-center py-16">
           <Bell className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
-          <p className="text-sm text-muted-foreground">Hakuna arifa bado</p>
+          <p className="text-sm text-muted-foreground">{search ? 'Hakuna arifa zinazolingana' : 'Hakuna arifa bado'}</p>
         </div>
       )}
     </div>
