@@ -4,6 +4,7 @@ import { Home, MessageCircle, Calendar, User, Bot } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import wizyAvatar from '@/assets/wizy-avatar.png';
+import { useUnreadNotifications } from '@/hooks/useUnreadNotifications';
 
 export function BottomNav() {
   const navigate = useNavigate();
