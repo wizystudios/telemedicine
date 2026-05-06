@@ -11,6 +11,7 @@ export function BottomNav() {
   const location = useLocation();
   const { user } = useAuth();
   const [aiTapped, setAiTapped] = useState(false);
+  const { count: unreadCount } = useUnreadNotifications();
 
   if (location.pathname === '/auth') return null;
 
