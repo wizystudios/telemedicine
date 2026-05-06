@@ -17,6 +17,7 @@ import { HeartPulse, LogOut, Settings, User, Activity, Bell, Menu } from 'lucide
 import { ThemeToggle } from '@/components/auth/ThemeToggle';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useUnreadNotifications } from '@/hooks/useUnreadNotifications';
 
 interface NavbarProps {
   onToggleSidebar?: () => void;
