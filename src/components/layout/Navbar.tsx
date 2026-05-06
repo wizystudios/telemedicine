@@ -30,6 +30,7 @@ export function Navbar({ onToggleSidebar }: NavbarProps) {
   const navigate = useNavigate();
   const [isOnline, setIsOnline] = useState(false);
   const [userRole, setUserRole] = useState<string>('patient');
+  const { count: unreadCount } = useUnreadNotifications();
 
   useEffect(() => {
     if (!user) return;
