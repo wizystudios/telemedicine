@@ -42,6 +42,22 @@ export function UniversalSearch({ placeholder = 'Tafuta...', onLocalFilter, init
     return () => document.removeEventListener('mousedown', onDoc);
   }, []);
 
+  // Cross-page keyword shortcuts so a search like "miadi" or "ujumbe" never returns "nothing"
+  const KEYWORD_PAGES: { keys: string[]; title: string; subtitle: string; href: string }[] = [
+    { keys: ['miadi', 'appointment', 'booking'], title: 'Fungua Miadi', subtitle: 'Orodha ya miadi yako', href: '/appointments' },
+    { keys: ['ujumbe', 'message', 'chat', 'mazungumzo'], title: 'Fungua Ujumbe', subtitle: 'Mazungumzo yako yote', href: '/messages' },
+    { keys: ['arifa', 'notification', 'taarifa'], title: 'Fungua Arifa', subtitle: 'Arifa zako zote', href: '/notifications' },
+    { keys: ['daktari', 'doctor', 'madaktari'], title: 'Madaktari', subtitle: 'Tafuta na vinjari madaktari', href: '/doctors-list' },
+    { keys: ['dawa', 'medicine', 'soko', 'famasi'], title: 'Soko la Dawa', subtitle: 'Vinjari dawa zote', href: '/marketplace' },
+    { keys: ['hospital', 'hospitali'], title: 'Hospitali', subtitle: 'Tazama hospitali za karibu', href: '/nearby?type=hospitals' },
+    { keys: ['maabara', 'lab'], title: 'Maabara', subtitle: 'Tazama maabara', href: '/nearby?type=laboratories' },
+    { keys: ['cart', 'kikapu'], title: 'Kikapu', subtitle: 'Bidhaa zako za ununuzi', href: '/cart' },
+    { keys: ['agizo', 'order', 'maagizo'], title: 'Maagizo Yangu', subtitle: 'Hali ya maagizo ya dawa', href: '/my-orders' },
+    { keys: ['rekodi', 'record', 'records'], title: 'Rekodi za Afya', subtitle: 'Historia yako ya matibabu', href: '/medical-records' },
+    { keys: ['wizy', 'msaidizi', 'ai'], title: 'Wizy', subtitle: 'Msaidizi wako wa AI', href: '#wizy' },
+    { keys: ['mimi', 'profile', 'wasifu'], title: 'Mimi', subtitle: 'Akaunti na mipangilio', href: '/profile' },
+  ];
+
   const runSearch = async (q: string) => {
     if (!q || q.length < 2 || !global) { setSuggestions([]); return; }
     setLoading(true);
@@ -74,7 +90,15 @@ export function UniversalSearch({ placeholder = 'Tafuta...', onLocalFilter, init
       (phars.data || []).forEach((p: any) => out.push({ type: 'pharmacy', id: p.id, title: p.name, subtitle: 'Famasi', href: `/pharmacy-profile/${p.id}` }));
       (hosps.data || []).forEach((h: any) => out.push({ type: 'hospital', id: h.id, title: h.name, subtitle: 'Hospitali', href: `/hospital-profile/${h.id}` }));
       (labs.data || []).forEach((l: any) => out.push({ type: 'lab', id: l.id, title: l.name, subtitle: 'Maabara', href: `/laboratory-profile/${l.id}` }));
-      setSuggestions(out.slice(0, 10));
+
+      // Always append matching keyword-pages (so "miadi", "ujumbe", "wizy" never return "nothing")
+      const ql = norm(q);
+      KEYWORD_PAGES.forEach((kp) => {
+        if (kp.keys.some(k => k.includes(ql) || ql.includes(k))) {
+          out.push({ type: 'doctor' as any, id: `kw-${kp.href}`, title: kp.title, subtitle: kp.subtitle, href: kp.href });
+        }
+      });
+      setSuggestions(out.slice(0, 12));
     } finally {
       setLoading(false);
     }
@@ -126,7 +150,11 @@ export function UniversalSearch({ placeholder = 'Tafuta...', onLocalFilter, init
           {suggestions.map(s => (
             <button
               key={`${s.type}-${s.id}`}
-              onClick={() => { setOpen(false); navigate(s.href); }}
+              onClick={() => {
+                setOpen(false);
+                if (s.href === '#wizy') { window.dispatchEvent(new Event('wizy:open')); return; }
+                navigate(s.href);
+              }}
               className="w-full text-left px-3 py-2 hover:bg-muted/60 flex items-center justify-between gap-2 border-b border-border/40 last:border-b-0"
             >
               <div className="min-w-0">

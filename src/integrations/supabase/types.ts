@@ -2536,6 +2536,38 @@ export type Database = {
           total_price: number
         }[]
       }
+      wizy_list_my_orders: {
+        Args: { _limit?: number; _user_id: string }
+        Returns: {
+          created_at: string
+          id: string
+          medicine_name: string
+          pharmacy_name: string
+          quantity: number
+          status: string
+          total_price: number
+        }[]
+      }
+      wizy_recent_chats: {
+        Args: { _limit?: number; _user_id: string }
+        Returns: {
+          last_at: string
+          last_message: string
+          other_id: string
+          other_name: string
+          unread_count: number
+        }[]
+      }
+      wizy_unread_summary: {
+        Args: { _user_id: string }
+        Returns: {
+          total_unread: number
+          unread_appointments: number
+          unread_messages: number
+          unread_orders: number
+          unread_other: number
+        }[]
+      }
     }
     Enums: {
       app_role:
