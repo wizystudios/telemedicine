@@ -394,23 +394,24 @@ export default function PharmacyOwnerDashboard() {
                             {new Date(order.created_at).toLocaleString('sw-TZ')}
                           </p>
                         </div>
-                        {order.order_code && (
-                          <div className="shrink-0 bg-white p-1 rounded border">
-                            <QRCodeSVG value={order.order_code} size={56} />
-                          </div>
-                        )}
-                      </div>
-                        <Badge variant={
-                          order.status === 'pending' ? 'secondary' : 
-                          order.status === 'confirmed' ? 'default' :
-                          order.status === 'ready' ? 'default' :
-                          order.status === 'completed' ? 'outline' : 'destructive'
-                        }>
-                          {order.status === 'pending' ? 'Inasubiri' :
-                           order.status === 'confirmed' ? 'Imekubaliwa' :
-                           order.status === 'ready' ? 'Tayari' :
-                           order.status === 'completed' ? 'Imekamilika' : 'Imeghairiwa'}
-                        </Badge>
+                        <div className="flex flex-col items-end gap-2 shrink-0">
+                          <Badge variant={
+                            order.status === 'pending' ? 'secondary' : 
+                            order.status === 'confirmed' ? 'default' :
+                            order.status === 'ready' ? 'default' :
+                            order.status === 'completed' ? 'outline' : 'destructive'
+                          }>
+                            {order.status === 'pending' ? 'Inasubiri' :
+                             order.status === 'confirmed' ? 'Imekubaliwa' :
+                             order.status === 'ready' ? 'Tayari' :
+                             order.status === 'completed' ? 'Imekamilika' : 'Imeghairiwa'}
+                          </Badge>
+                          {order.order_code && (
+                            <div className="bg-white p-1 rounded border">
+                              <QRCodeSVG value={order.order_code} size={56} />
+                            </div>
+                          )}
+                        </div>
                       </div>
                       {order.status === 'pending' && (
                         <div className="flex gap-2 mt-2">
