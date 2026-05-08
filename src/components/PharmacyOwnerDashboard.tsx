@@ -440,19 +440,24 @@ export default function PharmacyOwnerDashboard() {
                         </Button>
                       )}
                       {order.status === 'ready' && order.fulfillment_type === 'delivery' && (
-                        <Button size="sm" className="h-7 text-xs w-full mt-2" onClick={() => assignDelivery(order.id)}>
+                        <Button size="sm" className="h-7 text-xs w-full mt-2" onClick={() => openDeliveryDialog(order.id)}>
                           Tuma kwa Mtoaji
                         </Button>
                       )}
                       {order.status === 'ready' && order.fulfillment_type !== 'delivery' && (
-                        <Button size="sm" variant="outline" className="h-7 text-xs w-full mt-2" onClick={() => updateOrderStatus(order.id, 'completed')}>
-                          Mteja Amechukua
+                        <Button size="sm" variant="outline" className="h-7 text-xs w-full mt-2" onClick={() => setScannerOpen(true)}>
+                          <ScanLine className="h-3 w-3 mr-1" /> Skani QR ya Kuchukua
                         </Button>
                       )}
                       {order.status === 'dispatched' && (
-                        <Button size="sm" variant="outline" className="h-7 text-xs w-full mt-2" onClick={() => updateOrderStatus(order.id, 'completed')}>
-                          Imefikishwa
-                        </Button>
+                        <p className="text-[10px] text-muted-foreground mt-2 text-center italic">
+                          Inasubiri mteja athibitishe amepokea
+                        </p>
+                      )}
+                      {order.status === 'picked_up' && (
+                        <p className="text-[10px] text-muted-foreground mt-2 text-center italic">
+                          Inasubiri mteja athibitishe amepokea kukamilisha agizo
+                        </p>
                       )}
                     </div>
                   ))}
