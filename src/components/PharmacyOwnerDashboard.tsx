@@ -22,6 +22,8 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { LogoUpload } from '@/components/LogoUpload';
 import OrgStaffManager from '@/components/OrgStaffManager';
 import { QRCodeSVG } from 'qrcode.react';
+import PharmacyPickupScanner from '@/components/PharmacyPickupScanner';
+import { ScanLine } from 'lucide-react';
 
 export default function PharmacyOwnerDashboard() {
   const { user } = useAuth();
