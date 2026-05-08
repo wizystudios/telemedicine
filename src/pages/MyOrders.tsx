@@ -188,7 +188,7 @@ export default function MyOrders() {
                 <Badge variant={o.status === 'cancelled' ? 'destructive' : o.status === 'completed' ? 'default' : 'secondary'} className="text-[10px]">
                   {STATUS_LABEL[o.status] || o.status}
                 </Badge>
-                {o.order_code && o.fulfillment_type === 'pickup' && o.status !== 'cancelled' && o.status !== 'completed' && (
+                {o.order_code && o.fulfillment_type === 'pickup' && !['cancelled','completed'].includes(o.status) && (
                   <div className="bg-white p-1 rounded border">
                     <QRCodeSVG value={o.order_code} size={64} />
                   </div>
