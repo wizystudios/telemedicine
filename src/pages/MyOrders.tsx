@@ -96,10 +96,10 @@ export default function MyOrders() {
       );
     }
     const currentIdx = STATUS_FLOW.findIndex(s => s.key === o.status);
-    // For pickup, skip "dispatched" step
+    // For pickup, skip "dispatched"; for delivery, skip "picked_up" (delivery uses dispatched->completed)
     const flow = o.fulfillment_type === 'pickup'
       ? STATUS_FLOW.filter(s => s.key !== 'dispatched')
-      : STATUS_FLOW;
+      : STATUS_FLOW.filter(s => s.key !== 'picked_up');
     return (
       <div className="flex items-center justify-between mt-2">
         {flow.map((s, i) => {
