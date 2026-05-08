@@ -219,17 +219,47 @@ export default function MyOrders() {
 
             {/* Delivery person info (when assigned) */}
             {o.fulfillment_type === 'delivery' && o.delivery_person_name && (
-              <div className="rounded-xl bg-primary/10 border border-primary/20 p-2.5 space-y-1.5 text-xs">
+              <div className="rounded-xl bg-primary/10 border border-primary/20 p-2.5 space-y-2 text-xs">
                 <div className="flex items-center gap-2 font-medium text-primary">
                   <User className="h-3.5 w-3.5" /> Mtoaji wa Huduma
                 </div>
-                <p className="pl-5">{o.delivery_person_name}</p>
+                <p className="pl-5 font-medium">{o.delivery_person_name}</p>
                 {o.delivery_person_phone && (
-                  <a href={`tel:${o.delivery_person_phone}`} className="pl-5 flex items-center gap-1 text-primary font-medium">
-                    <Phone className="h-3 w-3" /> {o.delivery_person_phone}
-                  </a>
+                  <div className="pl-5 flex gap-2">
+                    <a href={`tel:${o.delivery_person_phone}`} className="flex-1">
+                      <Button size="sm" variant="default" className="h-8 w-full text-[11px]">
+                        <Phone className="h-3 w-3 mr-1" /> Piga {o.delivery_person_phone}
+                      </Button>
+                    </a>
+                    <a href={`sms:${o.delivery_person_phone}`} className="flex-1">
+                      <Button size="sm" variant="outline" className="h-8 w-full text-[11px]">
+                        <MessageCircle className="h-3 w-3 mr-1" /> SMS
+                      </Button>
+                    </a>
+                  </div>
                 )}
               </div>
+            )}
+
+            {/* Receipt confirmation – required to complete order */}
+            {(o.status === 'picked_up' || (o.status === 'dispatched' && o.fulfillment_type === 'delivery')) && (
+              <div className="rounded-xl border-2 border-primary bg-primary/5 p-3 space-y-2">
+                <p className="text-xs font-semibold text-primary">
+                  Umepokea dawa na umelipa?
+                </p>
+                <p className="text-[11px] text-muted-foreground">
+                  Bonyeza kuthibitisha umepokea {o.medicine_name}. Bila kuthibitisha, agizo halitakamilika.
+                </p>
+                <Button size="sm" className="w-full h-9" onClick={() => confirmReceipt(o)}>
+                  <CheckCircle2 className="h-4 w-4 mr-1" /> Ndiyo, Nimepokea na Nimelipa
+                </Button>
+              </div>
+            )}
+
+            {o.status === 'completed' && o.patient_confirmed_at && (
+              <p className="text-[11px] text-green-600 flex items-center gap-1">
+                <CheckCircle2 className="h-3 w-3" /> Ulithibitisha {new Date(o.patient_confirmed_at).toLocaleString('sw-TZ')}
+              </p>
             )}
 
             {/* Pharmacy contact */}
