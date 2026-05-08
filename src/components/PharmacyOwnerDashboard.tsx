@@ -21,6 +21,7 @@ import { toast } from '@/hooks/use-toast';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { LogoUpload } from '@/components/LogoUpload';
 import OrgStaffManager from '@/components/OrgStaffManager';
+import { QRCodeSVG } from 'qrcode.react';
 
 export default function PharmacyOwnerDashboard() {
   const { user } = useAuth();
@@ -369,32 +370,48 @@ export default function PharmacyOwnerDashboard() {
                 <div className="space-y-3">
                   {orders.map((order) => (
                     <div key={order.id} className="p-3 rounded-lg border bg-card">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <p className="font-medium text-sm">{order.medicine_name}</p>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="font-medium text-sm">{order.medicine_name}</p>
+                            {order.order_code && (
+                              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-primary/10 text-primary">
+                                {order.order_code}
+                              </span>
+                            )}
+                          </div>
                           <p className="text-xs text-muted-foreground">
-                            Mgonjwa: {order.patient?.first_name} {order.patient?.last_name}
-                            {order.patient?.phone && ` • ${order.patient.phone}`}
+                            Mteja: {order.patient?.first_name || '—'} {order.patient?.last_name || ''}
+                            {(order.patient_phone || order.patient?.phone) && ` • ${order.patient_phone || order.patient?.phone}`}
                           </p>
                           <p className="text-xs text-muted-foreground">
                             Idadi: {order.quantity} {order.total_price ? `• Tsh ${Number(order.total_price).toLocaleString()}` : ''}
+                            {order.fulfillment_type && ` • ${order.fulfillment_type === 'delivery' ? 'Kuletewa' : 'Kuchukua'}`}
                           </p>
+                          {order.delivery_address && <p className="text-xs text-muted-foreground">📍 {order.delivery_address}</p>}
                           {order.notes && <p className="text-xs mt-1">Maelezo: {order.notes}</p>}
                           <p className="text-[10px] text-muted-foreground mt-1">
-                            {new Date(order.created_at).toLocaleDateString('sw-TZ')}
+                            {new Date(order.created_at).toLocaleString('sw-TZ')}
                           </p>
                         </div>
-                        <Badge variant={
-                          order.status === 'pending' ? 'secondary' : 
-                          order.status === 'confirmed' ? 'default' :
-                          order.status === 'ready' ? 'default' :
-                          order.status === 'completed' ? 'outline' : 'destructive'
-                        }>
-                          {order.status === 'pending' ? 'Inasubiri' :
-                           order.status === 'confirmed' ? 'Imekubaliwa' :
-                           order.status === 'ready' ? 'Tayari' :
-                           order.status === 'completed' ? 'Imekamilika' : 'Imeghairiwa'}
-                        </Badge>
+                        <div className="flex flex-col items-end gap-2 shrink-0">
+                          <Badge variant={
+                            order.status === 'pending' ? 'secondary' : 
+                            order.status === 'confirmed' ? 'default' :
+                            order.status === 'ready' ? 'default' :
+                            order.status === 'completed' ? 'outline' : 'destructive'
+                          }>
+                            {order.status === 'pending' ? 'Inasubiri' :
+                             order.status === 'confirmed' ? 'Imekubaliwa' :
+                             order.status === 'ready' ? 'Tayari' :
+                             order.status === 'completed' ? 'Imekamilika' : 'Imeghairiwa'}
+                          </Badge>
+                          {order.order_code && (
+                            <div className="bg-white p-1 rounded border">
+                              <QRCodeSVG value={order.order_code} size={56} />
+                            </div>
+                          )}
+                        </div>
                       </div>
                       {order.status === 'pending' && (
                         <div className="flex gap-2 mt-2">
