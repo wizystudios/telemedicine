@@ -36,6 +36,8 @@ export default function PharmacyOwnerDashboard() {
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isAddingContent, setIsAddingContent] = useState(false);
   const [contents, setContents] = useState<any[]>([]);
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [deliveryDialog, setDeliveryDialog] = useState<{ orderId: string; name: string; phone: string } | null>(null);
   
   // Medicine form with full details
   const [form, setForm] = useState({ 
