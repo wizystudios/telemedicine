@@ -156,14 +156,21 @@ export default function PharmacyOwnerDashboard() {
     }
   };
 
-  const assignDelivery = async (orderId: string) => {
-    const name = prompt('Jina la mtoaji wa huduma:');
-    if (!name) return;
-    const phone = prompt('Simu ya mtoaji wa huduma:') || '';
-    await updateOrderStatus(orderId, 'dispatched', {
-      delivery_person_name: name,
-      delivery_person_phone: phone,
+  const openDeliveryDialog = (orderId: string) => {
+    setDeliveryDialog({ orderId, name: '', phone: '' });
+  };
+
+  const submitDelivery = async () => {
+    if (!deliveryDialog) return;
+    if (!deliveryDialog.name.trim() || !deliveryDialog.phone.trim()) {
+      toast({ title: 'Kosa', description: 'Jina na simu vinahitajika', variant: 'destructive' });
+      return;
+    }
+    await updateOrderStatus(deliveryDialog.orderId, 'dispatched', {
+      delivery_person_name: deliveryDialog.name.trim(),
+      delivery_person_phone: deliveryDialog.phone.trim(),
     });
+    setDeliveryDialog(null);
   };
 
   const handleAdd = async () => {
