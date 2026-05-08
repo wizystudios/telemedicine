@@ -1828,6 +1828,7 @@ export type Database = {
           medicine_id: string | null
           medicine_name: string
           notes: string | null
+          order_code: string | null
           patient_id: string
           patient_phone: string | null
           pharmacy_id: string
@@ -1852,6 +1853,7 @@ export type Database = {
           medicine_id?: string | null
           medicine_name: string
           notes?: string | null
+          order_code?: string | null
           patient_id: string
           patient_phone?: string | null
           pharmacy_id: string
@@ -1876,6 +1878,7 @@ export type Database = {
           medicine_id?: string | null
           medicine_name?: string
           notes?: string | null
+          order_code?: string | null
           patient_id?: string
           patient_phone?: string | null
           pharmacy_id?: string
