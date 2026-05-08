@@ -1829,9 +1829,11 @@ export type Database = {
           medicine_name: string
           notes: string | null
           order_code: string | null
+          patient_confirmed_at: string | null
           patient_id: string
           patient_phone: string | null
           pharmacy_id: string
+          picked_up_at: string | null
           pickup_time: string | null
           prescription_url: string | null
           quantity: number
@@ -1854,9 +1856,11 @@ export type Database = {
           medicine_name: string
           notes?: string | null
           order_code?: string | null
+          patient_confirmed_at?: string | null
           patient_id: string
           patient_phone?: string | null
           pharmacy_id: string
+          picked_up_at?: string | null
           pickup_time?: string | null
           prescription_url?: string | null
           quantity?: number
@@ -1879,9 +1883,11 @@ export type Database = {
           medicine_name?: string
           notes?: string | null
           order_code?: string | null
+          patient_confirmed_at?: string | null
           patient_id?: string
           patient_phone?: string | null
           pharmacy_id?: string
+          picked_up_at?: string | null
           pickup_time?: string | null
           prescription_url?: string | null
           quantity?: number
@@ -2511,6 +2517,58 @@ export type Database = {
           last_name: string
           phone: string
         }[]
+      }
+      pharmacy_lookup_orders: {
+        Args: { _pharmacy_id: string; _q: string }
+        Returns: {
+          created_at: string
+          fulfillment_type: string
+          id: string
+          medicine_name: string
+          order_code: string
+          patient_first_name: string
+          patient_last_name: string
+          patient_phone: string
+          quantity: number
+          status: string
+          total_price: number
+        }[]
+      }
+      pharmacy_mark_picked_up: {
+        Args: { _order_code: string; _pharmacy_id: string }
+        Returns: {
+          completed_at: string | null
+          confirmed_at: string | null
+          created_at: string
+          delivery_address: string | null
+          delivery_person_name: string | null
+          delivery_person_phone: string | null
+          dispatched_at: string | null
+          fulfillment_type: string
+          id: string
+          medicine_id: string | null
+          medicine_name: string
+          notes: string | null
+          order_code: string | null
+          patient_confirmed_at: string | null
+          patient_id: string
+          patient_phone: string | null
+          pharmacy_id: string
+          picked_up_at: string | null
+          pickup_time: string | null
+          prescription_url: string | null
+          quantity: number
+          ready_at: string | null
+          status: string
+          total_price: number | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "pharmacy_orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }

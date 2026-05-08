@@ -4,8 +4,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Package, Phone, MapPin, Truck, Clock, CheckCircle2, XCircle, User } from 'lucide-react';
+import { ArrowLeft, Package, Phone, MapPin, Truck, Clock, CheckCircle2, XCircle, User, MessageCircle, HandCoins } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
+import { toast } from '@/hooks/use-toast';
 
 interface Order {
   id: string;
@@ -24,6 +25,8 @@ interface Order {
   confirmed_at: string | null;
   ready_at: string | null;
   dispatched_at: string | null;
+  picked_up_at: string | null;
+  patient_confirmed_at: string | null;
   completed_at: string | null;
   pharmacies?: { name: string; phone: string | null; address: string } | null;
 }
@@ -33,6 +36,7 @@ const STATUS_FLOW = [
   { key: 'confirmed', label: 'Imekubaliwa', icon: CheckCircle2 },
   { key: 'ready', label: 'Iko Tayari', icon: Package },
   { key: 'dispatched', label: 'Imetumwa', icon: Truck },
+  { key: 'picked_up', label: 'Imechukuliwa', icon: HandCoins },
   { key: 'completed', label: 'Imekamilika', icon: CheckCircle2 },
 ];
 
@@ -41,6 +45,7 @@ const STATUS_LABEL: Record<string, string> = {
   confirmed: 'Imekubaliwa',
   ready: 'Iko Tayari',
   dispatched: 'Inaletwa',
+  picked_up: 'Imechukuliwa',
   completed: 'Imekamilika',
   cancelled: 'Imeghairiwa',
 };
@@ -91,10 +96,10 @@ export default function MyOrders() {
       );
     }
     const currentIdx = STATUS_FLOW.findIndex(s => s.key === o.status);
-    // For pickup, skip "dispatched" step
+    // For pickup, skip "dispatched"; for delivery, skip "picked_up" (delivery uses dispatched->completed)
     const flow = o.fulfillment_type === 'pickup'
       ? STATUS_FLOW.filter(s => s.key !== 'dispatched')
-      : STATUS_FLOW;
+      : STATUS_FLOW.filter(s => s.key !== 'picked_up');
     return (
       <div className="flex items-center justify-between mt-2">
         {flow.map((s, i) => {
@@ -118,6 +123,23 @@ export default function MyOrders() {
         })}
       </div>
     );
+  };
+
+  const confirmReceipt = async (o: Order) => {
+    if (!confirm('Thibitisha umepokea dawa na umelipa? Hii itakamilisha agizo.')) return;
+    const { error } = await supabase
+      .from('pharmacy_orders')
+      .update({
+        status: 'completed',
+        patient_confirmed_at: new Date().toISOString(),
+        completed_at: new Date().toISOString(),
+      })
+      .eq('id', o.id);
+    if (error) {
+      toast({ title: 'Hitilafu', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Asante!', description: 'Agizo limekamilika' });
+    }
   };
 
   return (
@@ -166,7 +188,7 @@ export default function MyOrders() {
                 <Badge variant={o.status === 'cancelled' ? 'destructive' : o.status === 'completed' ? 'default' : 'secondary'} className="text-[10px]">
                   {STATUS_LABEL[o.status] || o.status}
                 </Badge>
-                {o.order_code && o.fulfillment_type === 'pickup' && o.status !== 'cancelled' && o.status !== 'completed' && (
+                {o.order_code && o.fulfillment_type === 'pickup' && !['cancelled','completed'].includes(o.status) && (
                   <div className="bg-white p-1 rounded border">
                     <QRCodeSVG value={o.order_code} size={64} />
                   </div>
@@ -197,17 +219,47 @@ export default function MyOrders() {
 
             {/* Delivery person info (when assigned) */}
             {o.fulfillment_type === 'delivery' && o.delivery_person_name && (
-              <div className="rounded-xl bg-primary/10 border border-primary/20 p-2.5 space-y-1.5 text-xs">
+              <div className="rounded-xl bg-primary/10 border border-primary/20 p-2.5 space-y-2 text-xs">
                 <div className="flex items-center gap-2 font-medium text-primary">
                   <User className="h-3.5 w-3.5" /> Mtoaji wa Huduma
                 </div>
-                <p className="pl-5">{o.delivery_person_name}</p>
+                <p className="pl-5 font-medium">{o.delivery_person_name}</p>
                 {o.delivery_person_phone && (
-                  <a href={`tel:${o.delivery_person_phone}`} className="pl-5 flex items-center gap-1 text-primary font-medium">
-                    <Phone className="h-3 w-3" /> {o.delivery_person_phone}
-                  </a>
+                  <div className="pl-5 flex gap-2">
+                    <a href={`tel:${o.delivery_person_phone}`} className="flex-1">
+                      <Button size="sm" variant="default" className="h-8 w-full text-[11px]">
+                        <Phone className="h-3 w-3 mr-1" /> Piga {o.delivery_person_phone}
+                      </Button>
+                    </a>
+                    <a href={`sms:${o.delivery_person_phone}`} className="flex-1">
+                      <Button size="sm" variant="outline" className="h-8 w-full text-[11px]">
+                        <MessageCircle className="h-3 w-3 mr-1" /> SMS
+                      </Button>
+                    </a>
+                  </div>
                 )}
               </div>
+            )}
+
+            {/* Receipt confirmation – required to complete order */}
+            {(o.status === 'picked_up' || (o.status === 'dispatched' && o.fulfillment_type === 'delivery')) && (
+              <div className="rounded-xl border-2 border-primary bg-primary/5 p-3 space-y-2">
+                <p className="text-xs font-semibold text-primary">
+                  Umepokea dawa na umelipa?
+                </p>
+                <p className="text-[11px] text-muted-foreground">
+                  Bonyeza kuthibitisha umepokea {o.medicine_name}. Bila kuthibitisha, agizo halitakamilika.
+                </p>
+                <Button size="sm" className="w-full h-9" onClick={() => confirmReceipt(o)}>
+                  <CheckCircle2 className="h-4 w-4 mr-1" /> Ndiyo, Nimepokea na Nimelipa
+                </Button>
+              </div>
+            )}
+
+            {o.status === 'completed' && o.patient_confirmed_at && (
+              <p className="text-[11px] text-green-600 flex items-center gap-1">
+                <CheckCircle2 className="h-3 w-3" /> Ulithibitisha {new Date(o.patient_confirmed_at).toLocaleString('sw-TZ')}
+              </p>
             )}
 
             {/* Pharmacy contact */}

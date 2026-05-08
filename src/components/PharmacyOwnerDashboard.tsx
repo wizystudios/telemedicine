@@ -22,6 +22,8 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { LogoUpload } from '@/components/LogoUpload';
 import OrgStaffManager from '@/components/OrgStaffManager';
 import { QRCodeSVG } from 'qrcode.react';
+import PharmacyPickupScanner from '@/components/PharmacyPickupScanner';
+import { ScanLine } from 'lucide-react';
 
 export default function PharmacyOwnerDashboard() {
   const { user } = useAuth();
@@ -34,6 +36,8 @@ export default function PharmacyOwnerDashboard() {
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isAddingContent, setIsAddingContent] = useState(false);
   const [contents, setContents] = useState<any[]>([]);
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [deliveryDialog, setDeliveryDialog] = useState<{ orderId: string; name: string; phone: string } | null>(null);
   
   // Medicine form with full details
   const [form, setForm] = useState({ 
@@ -152,14 +156,21 @@ export default function PharmacyOwnerDashboard() {
     }
   };
 
-  const assignDelivery = async (orderId: string) => {
-    const name = prompt('Jina la mtoaji wa huduma:');
-    if (!name) return;
-    const phone = prompt('Simu ya mtoaji wa huduma:') || '';
-    await updateOrderStatus(orderId, 'dispatched', {
-      delivery_person_name: name,
-      delivery_person_phone: phone,
+  const openDeliveryDialog = (orderId: string) => {
+    setDeliveryDialog({ orderId, name: '', phone: '' });
+  };
+
+  const submitDelivery = async () => {
+    if (!deliveryDialog) return;
+    if (!deliveryDialog.name.trim() || !deliveryDialog.phone.trim()) {
+      toast({ title: 'Kosa', description: 'Jina na simu vinahitajika', variant: 'destructive' });
+      return;
+    }
+    await updateOrderStatus(deliveryDialog.orderId, 'dispatched', {
+      delivery_person_name: deliveryDialog.name.trim(),
+      delivery_person_phone: deliveryDialog.phone.trim(),
     });
+    setDeliveryDialog(null);
   };
 
   const handleAdd = async () => {
@@ -358,6 +369,9 @@ export default function PharmacyOwnerDashboard() {
         </TabsList>
 
         <TabsContent value="orders" className="space-y-4">
+          <Button size="sm" className="w-full h-9" onClick={() => setScannerOpen(true)}>
+            <ScanLine className="h-4 w-4 mr-2" /> Skani / Tafuta agizo la kuchukua
+          </Button>
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm flex items-center gap-2">
@@ -429,19 +443,24 @@ export default function PharmacyOwnerDashboard() {
                         </Button>
                       )}
                       {order.status === 'ready' && order.fulfillment_type === 'delivery' && (
-                        <Button size="sm" className="h-7 text-xs w-full mt-2" onClick={() => assignDelivery(order.id)}>
+                        <Button size="sm" className="h-7 text-xs w-full mt-2" onClick={() => openDeliveryDialog(order.id)}>
                           Tuma kwa Mtoaji
                         </Button>
                       )}
                       {order.status === 'ready' && order.fulfillment_type !== 'delivery' && (
-                        <Button size="sm" variant="outline" className="h-7 text-xs w-full mt-2" onClick={() => updateOrderStatus(order.id, 'completed')}>
-                          Mteja Amechukua
+                        <Button size="sm" variant="outline" className="h-7 text-xs w-full mt-2" onClick={() => setScannerOpen(true)}>
+                          <ScanLine className="h-3 w-3 mr-1" /> Skani QR ya Kuchukua
                         </Button>
                       )}
                       {order.status === 'dispatched' && (
-                        <Button size="sm" variant="outline" className="h-7 text-xs w-full mt-2" onClick={() => updateOrderStatus(order.id, 'completed')}>
-                          Imefikishwa
-                        </Button>
+                        <p className="text-[10px] text-muted-foreground mt-2 text-center italic">
+                          Inasubiri mteja athibitishe amepokea
+                        </p>
+                      )}
+                      {order.status === 'picked_up' && (
+                        <p className="text-[10px] text-muted-foreground mt-2 text-center italic">
+                          Inasubiri mteja athibitishe amepokea kukamilisha agizo
+                        </p>
                       )}
                     </div>
                   ))}
@@ -785,6 +804,46 @@ export default function PharmacyOwnerDashboard() {
               <Label className="text-xs">Huduma za Dharura 24/7</Label>
             </div>
             <Button onClick={handleUpdateProfile} className="w-full">Hifadhi Mabadiliko</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <PharmacyPickupScanner
+        pharmacyId={pharmacy.id}
+        open={scannerOpen}
+        onOpenChange={setScannerOpen}
+        onUpdated={fetchData}
+      />
+
+      <Dialog open={!!deliveryDialog} onOpenChange={(o) => !o && setDeliveryDialog(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-base">Taarifa za Mtoaji wa Huduma</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <Label className="text-xs">Jina kamili *</Label>
+              <Input
+                value={deliveryDialog?.name || ''}
+                onChange={(e) => setDeliveryDialog(d => d ? { ...d, name: e.target.value } : d)}
+                placeholder="John Mtoaji"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Namba ya simu *</Label>
+              <Input
+                value={deliveryDialog?.phone || ''}
+                onChange={(e) => setDeliveryDialog(d => d ? { ...d, phone: e.target.value } : d)}
+                placeholder="+255..."
+              />
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Mteja ataona jina na simu hii mara moja na anaweza kupiga au kutuma ujumbe.
+            </p>
+            <div className="flex gap-2">
+              <Button variant="outline" className="flex-1" onClick={() => setDeliveryDialog(null)}>Ghairi</Button>
+              <Button className="flex-1" onClick={submitDelivery}>Tuma</Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
