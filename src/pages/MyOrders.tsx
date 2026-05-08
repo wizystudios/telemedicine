@@ -4,8 +4,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Package, Phone, MapPin, Truck, Clock, CheckCircle2, XCircle, User } from 'lucide-react';
+import { ArrowLeft, Package, Phone, MapPin, Truck, Clock, CheckCircle2, XCircle, User, MessageCircle, HandCoins } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
+import { toast } from '@/hooks/use-toast';
 
 interface Order {
   id: string;
@@ -24,6 +25,8 @@ interface Order {
   confirmed_at: string | null;
   ready_at: string | null;
   dispatched_at: string | null;
+  picked_up_at: string | null;
+  patient_confirmed_at: string | null;
   completed_at: string | null;
   pharmacies?: { name: string; phone: string | null; address: string } | null;
 }
@@ -33,6 +36,7 @@ const STATUS_FLOW = [
   { key: 'confirmed', label: 'Imekubaliwa', icon: CheckCircle2 },
   { key: 'ready', label: 'Iko Tayari', icon: Package },
   { key: 'dispatched', label: 'Imetumwa', icon: Truck },
+  { key: 'picked_up', label: 'Imechukuliwa', icon: HandCoins },
   { key: 'completed', label: 'Imekamilika', icon: CheckCircle2 },
 ];
 
@@ -41,6 +45,7 @@ const STATUS_LABEL: Record<string, string> = {
   confirmed: 'Imekubaliwa',
   ready: 'Iko Tayari',
   dispatched: 'Inaletwa',
+  picked_up: 'Imechukuliwa',
   completed: 'Imekamilika',
   cancelled: 'Imeghairiwa',
 };
