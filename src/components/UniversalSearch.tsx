@@ -92,7 +92,6 @@ export function UniversalSearch({ placeholder = 'Tafuta...', onLocalFilter, init
       (labs.data || []).forEach((l: any) => out.push({ type: 'lab', id: l.id, title: l.name, subtitle: 'Maabara', href: `/laboratory-profile/${l.id}` }));
 
       // Always append matching keyword-pages (so "miadi", "ujumbe", "wizy" never return "nothing")
-      const ql = norm(q);
       KEYWORD_PAGES.forEach((kp) => {
         if (kp.keys.some(k => k.includes(ql) || ql.includes(k))) {
           out.push({ type: 'doctor' as any, id: `kw-${kp.href}`, title: kp.title, subtitle: kp.subtitle, href: kp.href });
