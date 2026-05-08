@@ -5,9 +5,11 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Package, Phone, MapPin, Truck, Clock, CheckCircle2, XCircle, User } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 
 interface Order {
   id: string;
+  order_code?: string | null;
   medicine_name: string;
   quantity: number;
   total_price: number | null;
