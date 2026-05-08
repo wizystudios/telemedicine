@@ -369,6 +369,9 @@ export default function PharmacyOwnerDashboard() {
         </TabsList>
 
         <TabsContent value="orders" className="space-y-4">
+          <Button size="sm" className="w-full h-9" onClick={() => setScannerOpen(true)}>
+            <ScanLine className="h-4 w-4 mr-2" /> Skani / Tafuta agizo la kuchukua
+          </Button>
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm flex items-center gap-2">
