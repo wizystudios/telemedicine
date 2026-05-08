@@ -150,13 +150,28 @@ export default function MyOrders() {
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold truncate">{o.medicine_name} × {o.quantity}</p>
                 <p className="text-xs text-muted-foreground">{o.pharmacies?.name || 'Famasi'}</p>
+                {o.order_code && (
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-primary/10 text-primary font-semibold">
+                      {o.order_code}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground">Namba ya agizo</span>
+                  </div>
+                )}
                 {o.total_price ? (
                   <p className="text-sm font-bold text-primary mt-1">TSh {o.total_price.toLocaleString()}</p>
                 ) : null}
               </div>
-              <Badge variant={o.status === 'cancelled' ? 'destructive' : o.status === 'completed' ? 'default' : 'secondary'} className="text-[10px] shrink-0">
-                {STATUS_LABEL[o.status] || o.status}
-              </Badge>
+              <div className="flex flex-col items-end gap-2 shrink-0">
+                <Badge variant={o.status === 'cancelled' ? 'destructive' : o.status === 'completed' ? 'default' : 'secondary'} className="text-[10px]">
+                  {STATUS_LABEL[o.status] || o.status}
+                </Badge>
+                {o.order_code && o.fulfillment_type === 'pickup' && o.status !== 'cancelled' && o.status !== 'completed' && (
+                  <div className="bg-white p-1 rounded border">
+                    <QRCodeSVG value={o.order_code} size={64} />
+                  </div>
+                )}
+              </div>
             </div>
 
             {renderTimeline(o)}
