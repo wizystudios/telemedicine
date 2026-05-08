@@ -807,6 +807,46 @@ export default function PharmacyOwnerDashboard() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <PharmacyPickupScanner
+        pharmacyId={pharmacy.id}
+        open={scannerOpen}
+        onOpenChange={setScannerOpen}
+        onUpdated={fetchData}
+      />
+
+      <Dialog open={!!deliveryDialog} onOpenChange={(o) => !o && setDeliveryDialog(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-base">Taarifa za Mtoaji wa Huduma</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <Label className="text-xs">Jina kamili *</Label>
+              <Input
+                value={deliveryDialog?.name || ''}
+                onChange={(e) => setDeliveryDialog(d => d ? { ...d, name: e.target.value } : d)}
+                placeholder="John Mtoaji"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Namba ya simu *</Label>
+              <Input
+                value={deliveryDialog?.phone || ''}
+                onChange={(e) => setDeliveryDialog(d => d ? { ...d, phone: e.target.value } : d)}
+                placeholder="+255..."
+              />
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Mteja ataona jina na simu hii mara moja na anaweza kupiga au kutuma ujumbe.
+            </p>
+            <div className="flex gap-2">
+              <Button variant="outline" className="flex-1" onClick={() => setDeliveryDialog(null)}>Ghairi</Button>
+              <Button className="flex-1" onClick={submitDelivery}>Tuma</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
