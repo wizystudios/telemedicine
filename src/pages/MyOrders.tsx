@@ -125,6 +125,23 @@ export default function MyOrders() {
     );
   };
 
+  const confirmReceipt = async (o: Order) => {
+    if (!confirm('Thibitisha umepokea dawa na umelipa? Hii itakamilisha agizo.')) return;
+    const { error } = await supabase
+      .from('pharmacy_orders')
+      .update({
+        status: 'completed',
+        patient_confirmed_at: new Date().toISOString(),
+        completed_at: new Date().toISOString(),
+      })
+      .eq('id', o.id);
+    if (error) {
+      toast({ title: 'Hitilafu', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Asante!', description: 'Agizo limekamilika' });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background pb-24">
       <div className="mx-auto max-w-2xl px-3 pt-3 space-y-3">
