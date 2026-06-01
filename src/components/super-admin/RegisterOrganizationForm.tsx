@@ -22,6 +22,12 @@ export default function RegisterOrganizationForm() {
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string>('');
 
+  // Compliance docs (BRELA / TIN / license) — MANDATORY
+  const [brelaNumber, setBrelaNumber] = useState('');
+  const [tinNumber, setTinNumber] = useState('');
+  const [licenseFile, setLicenseFile] = useState<File | null>(null);
+  const licenseInputRef = useRef<HTMLInputElement>(null);
+
   // Organization details
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -29,8 +35,8 @@ export default function RegisterOrganizationForm() {
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [website, setWebsite] = useState('');
-  const [autoApprove, setAutoApprove] = useState(true);
-  
+  const [autoApprove, setAutoApprove] = useState(false);
+
   // Location
   const [latitude, setLatitude] = useState('');
   const [longitude, setLongitude] = useState('');
