@@ -312,6 +312,9 @@ export default function RegisterOrganizationForm() {
     setLogoPreview('');
     setLatitude('');
     setLongitude('');
+    setBrelaNumber('');
+    setTinNumber('');
+    setLicenseFile(null);
   };
 
   return (
