@@ -147,11 +147,17 @@ export default function RegisterOrganizationForm() {
       toast({ title: 'Nenosiri dhaifu', description: pwError, variant: 'destructive' });
       return;
     }
+    if (!brelaNumber.trim()) {
+      toast({ title: 'Namba ya BRELA inahitajika', variant: 'destructive' });
+      return;
+    }
+    if (!licenseFile) {
+      toast({ title: 'Hati ya leseni inahitajika', description: 'Pakia hati ya leseni ya BRELA / TIN', variant: 'destructive' });
+      return;
+    }
     setIsSubmitting(true);
 
     try {
-      // 1. Create owner account
-      // Determine role from org type
       let role = '';
       switch (orgType) {
         case 'hospital': role = 'hospital_owner'; break;
@@ -163,80 +169,66 @@ export default function RegisterOrganizationForm() {
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: ownerEmail,
         password: ownerPassword,
-        options: {
-          data: {
-            first_name: ownerFirstName,
-            last_name: ownerLastName,
-            role: role,
-          },
-        },
+        options: { data: { first_name: ownerFirstName, last_name: ownerLastName, role } },
       });
 
       if (authError) throw authError;
       if (!authData.user) throw new Error('User creation failed');
 
-      // Upload logo
       const logoUrl = await uploadLogo(authData.user.id);
 
-      // 2. Assign role in user_roles table
+      // Upload license document to private bucket
+      const ext = licenseFile.name.split('.').pop();
+      const licensePath = `${authData.user.id}/license-${Date.now()}.${ext}`;
+      const { error: licErr } = await supabase.storage
+        .from('org-documents')
+        .upload(licensePath, licenseFile, { upsert: true });
+      if (licErr) throw licErr;
 
       const { error: roleError } = await supabase
         .from('user_roles')
-        .insert([{ user_id: authData.user.id, role: role } as any]);
-
+        .insert([{ user_id: authData.user.id, role } as any]);
       if (roleError) throw roleError;
 
-      // 3. Create organization record
-      const baseOrgData = {
+      const approval = autoApprove ? 'approved' : 'pending_admin';
+      const baseOrgData: any = {
         owner_id: authData.user.id,
-        name,
-        description,
-        address,
-        phone,
-        email,
+        name, description, address, phone, email,
         is_verified: autoApprove,
+        brela_number: brelaNumber,
+        tin_number: tinNumber || null,
+        license_document_url: licensePath,
+        org_approval_status: approval,
       };
 
       if (orgType === 'hospital') {
-        const { error: orgError } = await supabase
-          .from('hospitals')
-          .insert([{ ...baseOrgData, website: website || null, logo_url: logoUrl }]);
-        if (orgError) throw orgError;
+        const { error } = await supabase.from('hospitals').insert([{ ...baseOrgData, website: website || null, logo_url: logoUrl }]);
+        if (error) throw error;
       } else if (orgType === 'polyclinic') {
-        const { error: orgError } = await supabase
-          .from('polyclinics')
-          .insert([{ ...baseOrgData, logo_url: logoUrl }]);
-        if (orgError) throw orgError;
+        const { error } = await supabase.from('polyclinics').insert([{ ...baseOrgData, logo_url: logoUrl }]);
+        if (error) throw error;
       } else if (orgType === 'pharmacy') {
-        const { error: orgError } = await supabase
-          .from('pharmacies')
-          .insert([{ 
-            ...baseOrgData, 
-            location_lat: latitude ? parseFloat(latitude) : null,
-            location_lng: longitude ? parseFloat(longitude) : null,
-            logo_url: logoUrl
-          }]);
-        if (orgError) throw orgError;
+        const { error } = await supabase.from('pharmacies').insert([{
+          ...baseOrgData,
+          location_lat: latitude ? parseFloat(latitude) : null,
+          location_lng: longitude ? parseFloat(longitude) : null,
+          logo_url: logoUrl,
+        }]);
+        if (error) throw error;
       } else if (orgType === 'lab') {
-        const { error: orgError } = await supabase
-          .from('laboratories')
-          .insert([{ ...baseOrgData, logo_url: logoUrl }]);
-        if (orgError) throw orgError;
+        const { error } = await supabase.from('laboratories').insert([{ ...baseOrgData, logo_url: logoUrl }]);
+        if (error) throw error;
       }
 
       toast({
         title: 'Imefanikiwa!',
-        description: `${orgType} imesajiliwa. Mmiliki atapata barua pepe ya uthibitisho.`,
+        description: autoApprove ? `${orgType} imesajiliwa na kuidhinishwa.` : `${orgType} imesajiliwa. Inasubiri uthibitisho.`,
       });
 
       resetForm();
     } catch (error: any) {
       console.error('Error registering organization:', error);
-      toast({
-        title: 'Kosa',
-        description: error.message || 'Imeshindwa kusajili shirika',
-        variant: 'destructive',
-      });
+      toast({ title: 'Kosa', description: error.message || 'Imeshindwa kusajili shirika', variant: 'destructive' });
     } finally {
       setIsSubmitting(false);
     }
