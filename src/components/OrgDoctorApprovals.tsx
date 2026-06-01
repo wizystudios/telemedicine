@@ -20,10 +20,10 @@ export default function OrgDoctorApprovals({ orgType, orgId }: Props) {
   const load = useCallback(async () => {
     setLoading(true);
     const col = orgType === 'hospital' ? 'hospital_id' : 'polyclinic_id';
-    const { data } = await supabase
-      .from('doctor_profiles')
+    const { data } = await (supabase
+      .from('doctor_profiles') as any)
       .select('id, user_id, license_number, bio, experience_years, specialty_id, org_approval_status, specialties(name)')
-      .eq(col as any, orgId)
+      .eq(col, orgId)
       .eq('org_approval_status', 'pending_org');
 
     if (!data) { setPending([]); setLoading(false); return; }
