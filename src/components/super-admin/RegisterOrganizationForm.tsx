@@ -537,7 +537,56 @@ export default function RegisterOrganizationForm() {
                   </div>
                 </div>
 
-                {/* Owner Credentials */}
+                {/* BRELA / TIN / License — MANDATORY */}
+                <div className="border-t pt-4 space-y-3">
+                  <h3 className="text-sm font-medium flex items-center gap-2">
+                    <FileSpreadsheet className="w-3 h-3" />
+                    Hati za Uthibitisho (BRELA / TIN)
+                  </h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label className="text-xs">Namba ya BRELA *</Label>
+                      <Input
+                        value={brelaNumber}
+                        onChange={(e) => setBrelaNumber(e.target.value)}
+                        placeholder="BRELA-..."
+                        className="h-9"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">TIN (hiari)</Label>
+                      <Input
+                        value={tinNumber}
+                        onChange={(e) => setTinNumber(e.target.value)}
+                        placeholder="123-456-789"
+                        className="h-9"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-xs">Hati ya Leseni *</Label>
+                    <input
+                      ref={licenseInputRef}
+                      type="file"
+                      accept=".pdf,image/*"
+                      className="hidden"
+                      onChange={(e) => setLicenseFile(e.target.files?.[0] || null)}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="w-full rounded-2xl"
+                      onClick={() => licenseInputRef.current?.click()}
+                    >
+                      <Upload className="h-3 w-3 mr-1" />
+                      {licenseFile ? licenseFile.name : 'Pakia hati (PDF / Picha)'}
+                    </Button>
+                    <p className="text-[10px] text-muted-foreground mt-1">Lazima — itahakikiwa na admin</p>
+                  </div>
+                </div>
+
                 <div className="border-t pt-4 space-y-3">
                   <h3 className="text-sm font-medium flex items-center gap-2">
                     <User className="w-3 h-3" />
