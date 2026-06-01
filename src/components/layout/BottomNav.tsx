@@ -1,17 +1,91 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { Home, MessageCircle, Calendar, User, Bot } from 'lucide-react';
+import { Home, MessageCircle, Calendar, User, Bot, Stethoscope, Pill, FlaskConical, Users as UsersIcon, Building2, Bell, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import wizyAvatar from '@/assets/wizy-avatar.png';
 import { useUnreadNotifications } from '@/hooks/useUnreadNotifications';
+import { supabase } from '@/integrations/supabase/client';
+
+type Item = { icon: any; label: string; path: string; isCenter?: boolean };
+
+function itemsForRole(role: string | null): Item[] {
+  const center = { icon: Bot, label: 'Wizy', path: '#wizy', isCenter: true };
+  switch (role) {
+    case 'doctor':
+      return [
+        { icon: Home, label: 'Nyumbani', path: '/dashboard' },
+        { icon: UsersIcon, label: 'Wagonjwa', path: '/patients' },
+        center,
+        { icon: MessageCircle, label: 'Ujumbe', path: '/messages' },
+        { icon: User, label: 'Mimi', path: '/profile' },
+      ];
+    case 'hospital_owner':
+    case 'polyclinic_owner':
+      return [
+        { icon: Home, label: 'Dashibodi', path: '/dashboard' },
+        { icon: Stethoscope, label: 'Madaktari', path: '/dashboard?tab=doctors' },
+        center,
+        { icon: Bell, label: 'Arifa', path: '/notifications' },
+        { icon: Settings, label: 'Mipangilio', path: '/profile' },
+      ];
+    case 'pharmacy_owner':
+      return [
+        { icon: Home, label: 'Dashibodi', path: '/dashboard' },
+        { icon: Pill, label: 'Maagizo', path: '/dashboard?tab=orders' },
+        center,
+        { icon: Bell, label: 'Arifa', path: '/notifications' },
+        { icon: Settings, label: 'Mipangilio', path: '/profile' },
+      ];
+    case 'lab_owner':
+      return [
+        { icon: Home, label: 'Dashibodi', path: '/dashboard' },
+        { icon: FlaskConical, label: 'Vipimo', path: '/dashboard?tab=bookings' },
+        center,
+        { icon: Bell, label: 'Arifa', path: '/notifications' },
+        { icon: Settings, label: 'Mipangilio', path: '/profile' },
+      ];
+    case 'super_admin':
+      return [
+        { icon: Home, label: 'Dashibodi', path: '/dashboard' },
+        { icon: UsersIcon, label: 'Watumiaji', path: '/dashboard?tab=users' },
+        center,
+        { icon: Building2, label: 'Mashirika', path: '/dashboard?tab=orgs' },
+        { icon: User, label: 'Mimi', path: '/profile' },
+      ];
+    case 'patient':
+      return [
+        { icon: Home, label: 'Nyumbani', path: '/dashboard' },
+        { icon: Calendar, label: 'Miadi', path: '/appointments' },
+        center,
+        { icon: MessageCircle, label: 'Ujumbe', path: '/messages' },
+        { icon: User, label: 'Mimi', path: '/profile' },
+      ];
+    default:
+      return [
+        { icon: Home, label: 'Tafuta', path: '/doctors-list' },
+        { icon: Calendar, label: 'Soko', path: '/marketplace' },
+        center,
+        { icon: User, label: 'Ingia', path: '/auth' },
+      ];
+  }
+}
 
 export function BottomNav() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
   const [aiTapped, setAiTapped] = useState(false);
+  const [role, setRole] = useState<string | null>(null);
   const { count: unreadCount } = useUnreadNotifications();
+
+  useEffect(() => {
+    if (!user) { setRole(null); return; }
+    (async () => {
+      const { data } = await supabase.from('user_roles').select('role').eq('user_id', user.id).maybeSingle();
+      setRole((data?.role as any) || user.user_metadata?.role || 'patient');
+    })();
+  }, [user]);
 
   if (location.pathname === '/auth') return null;
 
@@ -21,27 +95,14 @@ export function BottomNav() {
     setTimeout(() => setAiTapped(false), 500);
   };
 
-  const navItems = user
-    ? [
-        { icon: Home, label: 'Nyumbani', path: '/dashboard' },
-        { icon: Calendar, label: 'Miadi', path: '/appointments' },
-        { icon: Bot, label: 'Wizy', path: '#wizy', isCenter: true },
-        { icon: MessageCircle, label: 'Ujumbe', path: '/messages' },
-        { icon: User, label: 'Mimi', path: '/profile' },
-      ]
-    : [
-        { icon: Home, label: 'Tafuta', path: '/doctors-list' },
-        { icon: Calendar, label: 'Soko', path: '/marketplace' },
-        { icon: Bot, label: 'Wizy', path: '#wizy', isCenter: true },
-        { icon: User, label: 'Ingia', path: '/auth' },
-      ];
+  const navItems = itemsForRole(user ? role : null);
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 w-full md:hidden z-50 safe-area-bottom bg-transparent">
       <div className="flex justify-around items-end h-16 px-1">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = location.pathname === item.path;
+          const isActive = location.pathname === item.path.split('?')[0];
 
           if (item.isCenter) {
             return (
@@ -61,8 +122,8 @@ export function BottomNav() {
               </button>
             );
           }
-          
-          const showBadge = item.label === 'Ujumbe' && unreadCount > 0;
+
+          const showBadge = (item.label === 'Ujumbe' || item.label === 'Arifa') && unreadCount > 0;
           return (
             <button
               key={item.path}

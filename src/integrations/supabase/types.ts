@@ -595,6 +595,7 @@ export type Database = {
       }
       doctor_profiles: {
         Row: {
+          admin_approved_at: string | null
           bio: string | null
           consultation_fee: number | null
           created_at: string | null
@@ -609,6 +610,9 @@ export type Database = {
           is_verified: boolean | null
           languages: string[] | null
           license_number: string
+          org_approval_reason: string | null
+          org_approval_status: string
+          org_approved_at: string | null
           polyclinic_id: string | null
           polyclinic_name: string | null
           rating: number | null
@@ -618,6 +622,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          admin_approved_at?: string | null
           bio?: string | null
           consultation_fee?: number | null
           created_at?: string | null
@@ -632,6 +637,9 @@ export type Database = {
           is_verified?: boolean | null
           languages?: string[] | null
           license_number: string
+          org_approval_reason?: string | null
+          org_approval_status?: string
+          org_approved_at?: string | null
           polyclinic_id?: string | null
           polyclinic_name?: string | null
           rating?: number | null
@@ -641,6 +649,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          admin_approved_at?: string | null
           bio?: string | null
           consultation_fee?: number | null
           created_at?: string | null
@@ -655,6 +664,9 @@ export type Database = {
           is_verified?: boolean | null
           languages?: string[] | null
           license_number?: string
+          org_approval_reason?: string | null
+          org_approval_status?: string
+          org_approved_at?: string | null
           polyclinic_id?: string | null
           polyclinic_name?: string | null
           rating?: number | null
@@ -821,6 +833,7 @@ export type Database = {
           address: string
           ambulance_available_24h: boolean | null
           ambulance_phone: string | null
+          brela_number: string | null
           created_at: string
           description: string | null
           email: string | null
@@ -828,13 +841,17 @@ export type Database = {
           id: string
           is_promoted: boolean | null
           is_verified: boolean | null
+          license_document_url: string | null
           logo_url: string | null
           name: string
+          org_approval_status: string
+          org_rejection_reason: string | null
           owner_id: string
           phone: string | null
           promotion_expires_at: string | null
           rating: number | null
           services: string[] | null
+          tin_number: string | null
           total_reviews: number | null
           updated_at: string
           website: string | null
@@ -843,6 +860,7 @@ export type Database = {
           address: string
           ambulance_available_24h?: boolean | null
           ambulance_phone?: string | null
+          brela_number?: string | null
           created_at?: string
           description?: string | null
           email?: string | null
@@ -850,13 +868,17 @@ export type Database = {
           id?: string
           is_promoted?: boolean | null
           is_verified?: boolean | null
+          license_document_url?: string | null
           logo_url?: string | null
           name: string
+          org_approval_status?: string
+          org_rejection_reason?: string | null
           owner_id: string
           phone?: string | null
           promotion_expires_at?: string | null
           rating?: number | null
           services?: string[] | null
+          tin_number?: string | null
           total_reviews?: number | null
           updated_at?: string
           website?: string | null
@@ -865,6 +887,7 @@ export type Database = {
           address?: string
           ambulance_available_24h?: boolean | null
           ambulance_phone?: string | null
+          brela_number?: string | null
           created_at?: string
           description?: string | null
           email?: string | null
@@ -872,13 +895,17 @@ export type Database = {
           id?: string
           is_promoted?: boolean | null
           is_verified?: boolean | null
+          license_document_url?: string | null
           logo_url?: string | null
           name?: string
+          org_approval_status?: string
+          org_rejection_reason?: string | null
           owner_id?: string
           phone?: string | null
           promotion_expires_at?: string | null
           rating?: number | null
           services?: string[] | null
+          tin_number?: string | null
           total_reviews?: number | null
           updated_at?: string
           website?: string | null
@@ -1064,6 +1091,7 @@ export type Database = {
       laboratories: {
         Row: {
           address: string
+          brela_number: string | null
           created_at: string
           description: string | null
           email: string | null
@@ -1072,21 +1100,26 @@ export type Database = {
           id: string
           is_promoted: boolean | null
           is_verified: boolean | null
+          license_document_url: string | null
           logo_url: string | null
           name: string
           opening_hours: Json | null
+          org_approval_status: string
+          org_rejection_reason: string | null
           owner_id: string
           phone: string | null
           po_box: string | null
           promotion_expires_at: string | null
           rating: number | null
           test_types: string[] | null
+          tin_number: string | null
           total_reviews: number | null
           updated_at: string
           website: string | null
         }
         Insert: {
           address: string
+          brela_number?: string | null
           created_at?: string
           description?: string | null
           email?: string | null
@@ -1095,21 +1128,26 @@ export type Database = {
           id?: string
           is_promoted?: boolean | null
           is_verified?: boolean | null
+          license_document_url?: string | null
           logo_url?: string | null
           name: string
           opening_hours?: Json | null
+          org_approval_status?: string
+          org_rejection_reason?: string | null
           owner_id: string
           phone?: string | null
           po_box?: string | null
           promotion_expires_at?: string | null
           rating?: number | null
           test_types?: string[] | null
+          tin_number?: string | null
           total_reviews?: number | null
           updated_at?: string
           website?: string | null
         }
         Update: {
           address?: string
+          brela_number?: string | null
           created_at?: string
           description?: string | null
           email?: string | null
@@ -1118,15 +1156,19 @@ export type Database = {
           id?: string
           is_promoted?: boolean | null
           is_verified?: boolean | null
+          license_document_url?: string | null
           logo_url?: string | null
           name?: string
           opening_hours?: Json | null
+          org_approval_status?: string
+          org_rejection_reason?: string | null
           owner_id?: string
           phone?: string | null
           po_box?: string | null
           promotion_expires_at?: string | null
           rating?: number | null
           test_types?: string[] | null
+          tin_number?: string | null
           total_reviews?: number | null
           updated_at?: string
           website?: string | null
@@ -1636,6 +1678,7 @@ export type Database = {
       pharmacies: {
         Row: {
           address: string
+          brela_number: string | null
           created_at: string
           description: string | null
           email: string | null
@@ -1644,12 +1687,15 @@ export type Database = {
           id: string
           is_promoted: boolean | null
           is_verified: boolean | null
+          license_document_url: string | null
           location_lat: number | null
           location_lng: number | null
           logo_url: string | null
           medications_available: string[] | null
           name: string
           opening_hours: Json | null
+          org_approval_status: string
+          org_rejection_reason: string | null
           owner_id: string
           phone: string | null
           po_box: string | null
@@ -1657,11 +1703,13 @@ export type Database = {
           quote_of_day: string | null
           rating: number | null
           services: string[] | null
+          tin_number: string | null
           total_reviews: number | null
           updated_at: string
         }
         Insert: {
           address: string
+          brela_number?: string | null
           created_at?: string
           description?: string | null
           email?: string | null
@@ -1670,12 +1718,15 @@ export type Database = {
           id?: string
           is_promoted?: boolean | null
           is_verified?: boolean | null
+          license_document_url?: string | null
           location_lat?: number | null
           location_lng?: number | null
           logo_url?: string | null
           medications_available?: string[] | null
           name: string
           opening_hours?: Json | null
+          org_approval_status?: string
+          org_rejection_reason?: string | null
           owner_id: string
           phone?: string | null
           po_box?: string | null
@@ -1683,11 +1734,13 @@ export type Database = {
           quote_of_day?: string | null
           rating?: number | null
           services?: string[] | null
+          tin_number?: string | null
           total_reviews?: number | null
           updated_at?: string
         }
         Update: {
           address?: string
+          brela_number?: string | null
           created_at?: string
           description?: string | null
           email?: string | null
@@ -1696,12 +1749,15 @@ export type Database = {
           id?: string
           is_promoted?: boolean | null
           is_verified?: boolean | null
+          license_document_url?: string | null
           location_lat?: number | null
           location_lng?: number | null
           logo_url?: string | null
           medications_available?: string[] | null
           name?: string
           opening_hours?: Json | null
+          org_approval_status?: string
+          org_rejection_reason?: string | null
           owner_id?: string
           phone?: string | null
           po_box?: string | null
@@ -1709,6 +1765,7 @@ export type Database = {
           quote_of_day?: string | null
           rating?: number | null
           services?: string[] | null
+          tin_number?: string | null
           total_reviews?: number | null
           updated_at?: string
         }
@@ -2003,55 +2060,70 @@ export type Database = {
       polyclinics: {
         Row: {
           address: string
+          brela_number: string | null
           created_at: string
           description: string | null
           email: string | null
           id: string
           is_promoted: boolean | null
           is_verified: boolean | null
+          license_document_url: string | null
           logo_url: string | null
           name: string
+          org_approval_status: string
+          org_rejection_reason: string | null
           owner_id: string
           phone: string | null
           promotion_expires_at: string | null
           rating: number | null
           services: string[] | null
+          tin_number: string | null
           total_reviews: number | null
           updated_at: string
         }
         Insert: {
           address: string
+          brela_number?: string | null
           created_at?: string
           description?: string | null
           email?: string | null
           id?: string
           is_promoted?: boolean | null
           is_verified?: boolean | null
+          license_document_url?: string | null
           logo_url?: string | null
           name: string
+          org_approval_status?: string
+          org_rejection_reason?: string | null
           owner_id: string
           phone?: string | null
           promotion_expires_at?: string | null
           rating?: number | null
           services?: string[] | null
+          tin_number?: string | null
           total_reviews?: number | null
           updated_at?: string
         }
         Update: {
           address?: string
+          brela_number?: string | null
           created_at?: string
           description?: string | null
           email?: string | null
           id?: string
           is_promoted?: boolean | null
           is_verified?: boolean | null
+          license_document_url?: string | null
           logo_url?: string | null
           name?: string
+          org_approval_status?: string
+          org_rejection_reason?: string | null
           owner_id?: string
           phone?: string | null
           promotion_expires_at?: string | null
           rating?: number | null
           services?: string[] | null
+          tin_number?: string | null
           total_reviews?: number | null
           updated_at?: string
         }
@@ -2161,6 +2233,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      profile_visits: {
+        Row: {
+          entity_id: string
+          entity_type: string
+          id: string
+          visited_at: string
+          visitor_id: string | null
+        }
+        Insert: {
+          entity_id: string
+          entity_type: string
+          id?: string
+          visited_at?: string
+          visitor_id?: string | null
+        }
+        Update: {
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          visited_at?: string
+          visitor_id?: string | null
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -2443,6 +2539,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_approve_doctor: {
+        Args: { p_approve: boolean; p_doctor_id: string; p_reason?: string }
+        Returns: undefined
+      }
       check_username_available: {
         Args: { username_to_check: string }
         Returns: boolean
@@ -2518,6 +2618,14 @@ export type Database = {
           phone: string
         }[]
       }
+      org_approve_doctor: {
+        Args: { p_approve: boolean; p_doctor_id: string; p_reason?: string }
+        Returns: undefined
+      }
+      org_dashboard_stats: {
+        Args: { p_org_id: string; p_org_type: string }
+        Returns: Json
+      }
       pharmacy_lookup_orders: {
         Args: { _pharmacy_id: string; _q: string }
         Returns: {
@@ -2569,6 +2677,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      record_profile_visit: {
+        Args: { p_entity_id: string; p_entity_type: string }
+        Returns: undefined
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }

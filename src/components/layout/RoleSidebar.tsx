@@ -31,17 +31,20 @@ const roleLabels: Record<string, string> = {
 };
 
 function getNavItems(role: string) {
-  const common = [
+  // Patient-only: Miadi + Ujumbe
+  // Org owners: dashboard-centric, no patient features
+  const homeAlerts = [
     { icon: Home, label: 'Nyumbani', path: '/dashboard' },
-    { icon: Calendar, label: 'Miadi', path: '/appointments' },
-    { icon: MessageCircle, label: 'Ujumbe', path: '/messages' },
     { icon: Bell, label: 'Arifa', path: '/notifications' },
   ];
 
   switch (role) {
     case 'patient':
       return [
-        ...common,
+        { icon: Home, label: 'Nyumbani', path: '/dashboard' },
+        { icon: Calendar, label: 'Miadi', path: '/appointments' },
+        { icon: MessageCircle, label: 'Ujumbe', path: '/messages' },
+        { icon: Bell, label: 'Arifa', path: '/notifications' },
         { icon: Bot, label: 'AI Msaidizi', path: '/chatbot' },
         { icon: Stethoscope, label: 'Madaktari', path: '/doctors-list' },
         { icon: FileText, label: 'Dawa', path: '/prescriptions' },
@@ -50,56 +53,61 @@ function getNavItems(role: string) {
       ];
     case 'doctor':
       return [
-        ...common,
+        { icon: Home, label: 'Nyumbani', path: '/dashboard' },
+        { icon: Calendar, label: 'Miadi', path: '/appointments' },
+        { icon: MessageCircle, label: 'Ujumbe', path: '/messages' },
+        { icon: Bell, label: 'Arifa', path: '/notifications' },
         { icon: Users, label: 'Wagonjwa', path: '/patients' },
         { icon: FileText, label: 'Dawa', path: '/prescriptions' },
-        { icon: Activity, label: 'Maudhui', path: '/dashboard' },
         { icon: User, label: 'Profile', path: '/profile' },
       ];
     case 'hospital_owner':
       return [
-        ...common,
-        { icon: Stethoscope, label: 'Madaktari', path: '/dashboard' },
-        { icon: Package, label: 'Huduma', path: '/dashboard' },
-        { icon: Activity, label: 'Maudhui', path: '/dashboard' },
-        { icon: Settings, label: 'Mipangilio', path: '/profile' },
-      ];
-    case 'pharmacy_owner':
-      return [
-        ...common,
-        { icon: Pill, label: 'Dawa', path: '/dashboard' },
-        { icon: Package, label: 'Maagizo', path: '/dashboard' },
-        { icon: Activity, label: 'Maudhui', path: '/dashboard' },
-        { icon: Settings, label: 'Mipangilio', path: '/profile' },
-      ];
-    case 'lab_owner':
-      return [
-        ...common,
-        { icon: FlaskConical, label: 'Vipimo', path: '/dashboard' },
-        { icon: Package, label: 'Maombi', path: '/dashboard' },
-        { icon: Activity, label: 'Maudhui', path: '/dashboard' },
+        ...homeAlerts,
+        { icon: Stethoscope, label: 'Madaktari', path: '/dashboard?tab=doctors' },
+        { icon: Package, label: 'Huduma', path: '/dashboard?tab=services' },
+        { icon: Activity, label: 'Maudhui', path: '/dashboard?tab=content' },
         { icon: Settings, label: 'Mipangilio', path: '/profile' },
       ];
     case 'polyclinic_owner':
       return [
-        ...common,
-        { icon: Stethoscope, label: 'Madaktari', path: '/dashboard' },
-        { icon: Package, label: 'Huduma', path: '/dashboard' },
+        ...homeAlerts,
+        { icon: Stethoscope, label: 'Madaktari', path: '/dashboard?tab=doctors' },
+        { icon: Package, label: 'Huduma', path: '/dashboard?tab=services' },
+        { icon: Settings, label: 'Mipangilio', path: '/profile' },
+      ];
+    case 'pharmacy_owner':
+      return [
+        ...homeAlerts,
+        { icon: Pill, label: 'Dawa', path: '/dashboard?tab=medicines' },
+        { icon: Package, label: 'Maagizo', path: '/dashboard?tab=orders' },
+        { icon: Activity, label: 'Maudhui', path: '/dashboard?tab=content' },
+        { icon: Settings, label: 'Mipangilio', path: '/profile' },
+      ];
+    case 'lab_owner':
+      return [
+        ...homeAlerts,
+        { icon: FlaskConical, label: 'Vipimo', path: '/dashboard?tab=services' },
+        { icon: Package, label: 'Maombi', path: '/dashboard?tab=bookings' },
+        { icon: Activity, label: 'Maudhui', path: '/dashboard?tab=content' },
         { icon: Settings, label: 'Mipangilio', path: '/profile' },
       ];
     case 'super_admin':
       return [
         { icon: Home, label: 'Dashboard', path: '/dashboard' },
-        { icon: Users, label: 'Watumiaji', path: '/dashboard' },
-        { icon: Stethoscope, label: 'Madaktari', path: '/dashboard' },
-        { icon: Building2, label: 'Hospitali', path: '/dashboard' },
-        { icon: Pill, label: 'Famasi', path: '/dashboard' },
-        { icon: FlaskConical, label: 'Maabara', path: '/dashboard' },
-        { icon: Shield, label: 'Usalama', path: '/dashboard' },
+        { icon: Users, label: 'Watumiaji', path: '/dashboard?tab=users' },
+        { icon: Stethoscope, label: 'Madaktari', path: '/dashboard?tab=doctors' },
+        { icon: Building2, label: 'Hospitali', path: '/dashboard?tab=hospitals' },
+        { icon: Pill, label: 'Famasi', path: '/dashboard?tab=pharmacies' },
+        { icon: FlaskConical, label: 'Maabara', path: '/dashboard?tab=labs' },
+        { icon: Shield, label: 'Idhini', path: '/dashboard?tab=approvals' },
         { icon: Settings, label: 'Mipangilio', path: '/profile' },
       ];
     default:
-      return common;
+      return [
+        { icon: Home, label: 'Nyumbani', path: '/dashboard' },
+        { icon: Bell, label: 'Arifa', path: '/notifications' },
+      ];
   }
 }
 
