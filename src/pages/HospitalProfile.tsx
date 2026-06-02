@@ -15,6 +15,7 @@ import { ReviewsSection } from '@/components/ReviewsSection';
 
 export default function HospitalProfile() {
   const { hospitalId } = useParams();
+  useRecordVisit('hospital', hospitalId);
   const navigate = useNavigate();
 
   const { data: hospital, isLoading } = useQuery({
