@@ -14,6 +14,7 @@ import { InsuranceDisplay } from '@/components/InsuranceSelector';
 
 export default function PolyclinicProfile() {
   const { polyclinicId } = useParams();
+  useRecordVisit('polyclinic', polyclinicId);
   const navigate = useNavigate();
 
   const { data: polyclinic, isLoading } = useQuery({
