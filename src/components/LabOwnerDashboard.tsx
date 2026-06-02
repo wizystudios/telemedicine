@@ -330,6 +330,8 @@ export default function LabOwnerDashboard() {
         </Button>
       </div>
 
+      <OrgStatsBanner orgType="laboratory" orgId={lab.id} />
+
       <Tabs defaultValue="bookings" className="space-y-4">
         <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="bookings">Vipimo</TabsTrigger>
