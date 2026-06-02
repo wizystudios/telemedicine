@@ -2626,6 +2626,7 @@ export type Database = {
         Args: { p_org_id: string; p_org_type: string }
         Returns: Json
       }
+      owns_institution_logo: { Args: { _name: string }; Returns: boolean }
       pharmacy_lookup_orders: {
         Args: { _pharmacy_id: string; _q: string }
         Returns: {
