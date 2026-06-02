@@ -177,7 +177,7 @@ export default function SuperAdminDashboard() {
     };
 
     return (
-      <Card key={row.id} className="group hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 border-border/40 overflow-hidden">
+      <Card key={row.id} className="group rounded-3xl hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 border-border/40 overflow-hidden">
         <CardContent className="p-0">
           <div className="flex items-center gap-4 p-5">
             <Avatar className="h-14 w-14 ring-2 ring-border/50 shadow-sm">
