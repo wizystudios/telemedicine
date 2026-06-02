@@ -297,7 +297,7 @@ export default function SuperAdminDashboard() {
     const TypeIcon = TABLES.find(t => t.name === type)?.icon || Building;
 
     return (
-      <Card key={row.id} className="group hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 border-border/40 overflow-hidden">
+      <Card key={row.id} className="group rounded-3xl hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 border-border/40 overflow-hidden">
         <CardContent className="p-0">
           <div className="flex items-center gap-4 p-5">
             <div className="relative">
