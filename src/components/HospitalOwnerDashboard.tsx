@@ -654,6 +654,11 @@ export default function HospitalOwnerDashboard() {
           </Card>
         </TabsContent>
 
+        {/* Approvals Tab */}
+        <TabsContent value="approvals" className="space-y-4">
+          <OrgDoctorApprovals orgType="hospital" orgId={hospital.id} />
+        </TabsContent>
+
         {/* Services Tab */}
         <TabsContent value="services" className="space-y-4">
           <Card>
