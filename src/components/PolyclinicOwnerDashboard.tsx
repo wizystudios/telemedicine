@@ -367,11 +367,15 @@ export default function PolyclinicOwnerDashboard() {
         </Button>
       </div>
 
+      {/* Real-time analytics banner */}
+      <OrgStatsBanner orgType="polyclinic" orgId={polyclinic.id} />
+
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="overview" className="text-xs">Muhtasari</TabsTrigger>
           <TabsTrigger value="doctors" className="text-xs">Madaktari</TabsTrigger>
+          <TabsTrigger value="approvals" className="text-xs">Idhini</TabsTrigger>
           <TabsTrigger value="services" className="text-xs">Huduma</TabsTrigger>
           <TabsTrigger value="content" className="text-xs">Maudhui</TabsTrigger>
           <TabsTrigger value="staff" className="text-xs">Wafanyakazi</TabsTrigger>
