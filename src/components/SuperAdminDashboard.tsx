@@ -613,18 +613,21 @@ export default function SuperAdminDashboard() {
       {/* Main tabs */}
       <div className="px-4">
         <Tabs defaultValue="database" className="space-y-5">
-          <TabsList className="w-full h-auto bg-muted/30 p-1.5 rounded-2xl grid grid-cols-4 gap-1">
-            <TabsTrigger value="database" className="text-xs data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
-              <Activity className="h-3.5 w-3.5 mr-1.5" />Data
+          <TabsList className="w-full h-auto bg-muted/30 p-1.5 rounded-2xl grid grid-cols-5 gap-1">
+            <TabsTrigger value="database" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
+              <Activity className="h-3.5 w-3.5 mr-1" />Data
             </TabsTrigger>
-            <TabsTrigger value="register-user" className="text-xs data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
-              <UserPlus className="h-3.5 w-3.5 mr-1.5" />Mtumiaji
+            <TabsTrigger value="approvals" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
+              <ShieldCheck className="h-3.5 w-3.5 mr-1" />Idhini
             </TabsTrigger>
-            <TabsTrigger value="register-org" className="text-xs data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
-              <Building className="h-3.5 w-3.5 mr-1.5" />Shirika
+            <TabsTrigger value="register-user" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
+              <UserPlus className="h-3.5 w-3.5 mr-1" />Mtumiaji
             </TabsTrigger>
-            <TabsTrigger value="register-doctor" className="text-xs data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
-              <Stethoscope className="h-3.5 w-3.5 mr-1.5" />Daktari
+            <TabsTrigger value="register-org" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
+              <Building className="h-3.5 w-3.5 mr-1" />Shirika
+            </TabsTrigger>
+            <TabsTrigger value="register-doctor" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
+              <Stethoscope className="h-3.5 w-3.5 mr-1" />Daktari
             </TabsTrigger>
           </TabsList>
 
