@@ -12,11 +12,12 @@ import {
   Shield, Users, Building, Pill, TestTube, Activity, Trash2,
   Eye, RefreshCw, Star, Phone, MapPin, Clock, CheckCircle2,
   Stethoscope, CalendarCheck, UserPlus, Building2, Mail, Globe,
-  Award, TrendingUp, Hash,
+  Award, TrendingUp, Hash, ShieldCheck,
 } from 'lucide-react';
 import RegisterOrganizationForm from '@/components/super-admin/RegisterOrganizationForm';
 import RegisterDoctorForm from '@/components/super-admin/RegisterDoctorForm';
 import RegisterUserForm from '@/components/super-admin/RegisterUserForm';
+import AdminDoctorApprovals from '@/components/super-admin/AdminDoctorApprovals';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 type AppRole = 'patient' | 'doctor' | 'hospital_owner' | 'pharmacy_owner' | 'lab_owner' | 'admin' | 'super_admin' | 'polyclinic_owner';
