@@ -24,6 +24,7 @@ import { ReviewsSection } from '@/components/ReviewsSection';
 
 export default function DoctorProfile() {
   const { doctorId } = useParams();
+  useRecordVisit('doctor', doctorId);
   const navigate = useNavigate();
 
   const { data: doctor, isLoading } = useQuery({
