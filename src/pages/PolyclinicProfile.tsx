@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
+import { useRecordVisit } from '@/hooks/useRecordVisit';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -13,6 +14,7 @@ import { InsuranceDisplay } from '@/components/InsuranceSelector';
 
 export default function PolyclinicProfile() {
   const { polyclinicId } = useParams();
+  useRecordVisit('polyclinic', polyclinicId);
   const navigate = useNavigate();
 
   const { data: polyclinic, isLoading } = useQuery({

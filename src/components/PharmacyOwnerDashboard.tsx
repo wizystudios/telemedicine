@@ -21,6 +21,7 @@ import { toast } from '@/hooks/use-toast';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { LogoUpload } from '@/components/LogoUpload';
 import OrgStaffManager from '@/components/OrgStaffManager';
+import OrgStatsBanner from '@/components/OrgStatsBanner';
 import { QRCodeSVG } from 'qrcode.react';
 import PharmacyPickupScanner from '@/components/PharmacyPickupScanner';
 import { ScanLine } from 'lucide-react';
@@ -358,6 +359,8 @@ export default function PharmacyOwnerDashboard() {
           <span className="text-[10px]">Miadi</span>
         </Button>
       </div>
+
+      <OrgStatsBanner orgType="pharmacy" orgId={pharmacy.id} />
 
       <Tabs defaultValue="orders" className="space-y-4">
         <TabsList className="grid w-full grid-cols-5">

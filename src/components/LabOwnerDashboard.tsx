@@ -20,6 +20,7 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 import { LogoUpload } from '@/components/LogoUpload';
 import OrgStaffManager from '@/components/OrgStaffManager';
+import OrgStatsBanner from '@/components/OrgStatsBanner';
 
 export default function LabOwnerDashboard() {
   const { user } = useAuth();
@@ -328,6 +329,8 @@ export default function LabOwnerDashboard() {
           <span className="text-[10px]">Miadi</span>
         </Button>
       </div>
+
+      <OrgStatsBanner orgType="laboratory" orgId={lab.id} />
 
       <Tabs defaultValue="bookings" className="space-y-4">
         <TabsList className="grid w-full grid-cols-5">

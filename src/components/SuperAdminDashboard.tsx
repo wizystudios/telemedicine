@@ -12,11 +12,12 @@ import {
   Shield, Users, Building, Pill, TestTube, Activity, Trash2,
   Eye, RefreshCw, Star, Phone, MapPin, Clock, CheckCircle2,
   Stethoscope, CalendarCheck, UserPlus, Building2, Mail, Globe,
-  Award, TrendingUp, Hash,
+  Award, TrendingUp, Hash, ShieldCheck,
 } from 'lucide-react';
 import RegisterOrganizationForm from '@/components/super-admin/RegisterOrganizationForm';
 import RegisterDoctorForm from '@/components/super-admin/RegisterDoctorForm';
 import RegisterUserForm from '@/components/super-admin/RegisterUserForm';
+import AdminDoctorApprovals from '@/components/super-admin/AdminDoctorApprovals';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 type AppRole = 'patient' | 'doctor' | 'hospital_owner' | 'pharmacy_owner' | 'lab_owner' | 'admin' | 'super_admin' | 'polyclinic_owner';
@@ -176,7 +177,7 @@ export default function SuperAdminDashboard() {
     };
 
     return (
-      <Card key={row.id} className="group hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 border-border/40 overflow-hidden">
+      <Card key={row.id} className="group rounded-3xl hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 border-border/40 overflow-hidden">
         <CardContent className="p-0">
           <div className="flex items-center gap-4 p-5">
             <Avatar className="h-14 w-14 ring-2 ring-border/50 shadow-sm">
@@ -228,7 +229,7 @@ export default function SuperAdminDashboard() {
   const renderDoctorCard = (row: any) => {
     const profile = row.profiles;
     return (
-      <Card key={row.id} className="group hover:shadow-lg hover:shadow-emerald-500/5 transition-all duration-300 border-border/40 overflow-hidden">
+      <Card key={row.id} className="group rounded-3xl hover:shadow-lg hover:shadow-emerald-500/5 transition-all duration-300 border-border/40 overflow-hidden">
         <CardContent className="p-0">
           <div className="flex items-center gap-4 p-5">
             <div className="relative">
@@ -296,7 +297,7 @@ export default function SuperAdminDashboard() {
     const TypeIcon = TABLES.find(t => t.name === type)?.icon || Building;
 
     return (
-      <Card key={row.id} className="group hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 border-border/40 overflow-hidden">
+      <Card key={row.id} className="group rounded-3xl hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 border-border/40 overflow-hidden">
         <CardContent className="p-0">
           <div className="flex items-center gap-4 p-5">
             <div className="relative">
@@ -369,7 +370,7 @@ export default function SuperAdminDashboard() {
     const sc = statusConfig[row.status] || statusConfig.pending;
 
     return (
-      <Card key={row.id} className="group hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 border-border/40 overflow-hidden">
+      <Card key={row.id} className="group rounded-3xl hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 border-border/40 overflow-hidden">
         <CardContent className="p-0">
           <div className="p-5">
             <div className="flex items-start justify-between mb-3">
@@ -410,7 +411,7 @@ export default function SuperAdminDashboard() {
   };
 
   const renderGenericCard = (row: any) => (
-    <Card key={row.id} className="group hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 border-border/40 overflow-hidden">
+    <Card key={row.id} className="group rounded-3xl hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 border-border/40 overflow-hidden">
       <CardContent className="p-0">
         <div className="flex items-center gap-4 p-5">
           <div className={`h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center`}>
@@ -612,18 +613,21 @@ export default function SuperAdminDashboard() {
       {/* Main tabs */}
       <div className="px-4">
         <Tabs defaultValue="database" className="space-y-5">
-          <TabsList className="w-full h-auto bg-muted/30 p-1.5 rounded-2xl grid grid-cols-4 gap-1">
-            <TabsTrigger value="database" className="text-xs data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
-              <Activity className="h-3.5 w-3.5 mr-1.5" />Data
+          <TabsList className="w-full h-auto bg-muted/30 p-1.5 rounded-2xl grid grid-cols-5 gap-1">
+            <TabsTrigger value="database" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
+              <Activity className="h-3.5 w-3.5 mr-1" />Data
             </TabsTrigger>
-            <TabsTrigger value="register-user" className="text-xs data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
-              <UserPlus className="h-3.5 w-3.5 mr-1.5" />Mtumiaji
+            <TabsTrigger value="approvals" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
+              <ShieldCheck className="h-3.5 w-3.5 mr-1" />Idhini
             </TabsTrigger>
-            <TabsTrigger value="register-org" className="text-xs data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
-              <Building className="h-3.5 w-3.5 mr-1.5" />Shirika
+            <TabsTrigger value="register-user" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
+              <UserPlus className="h-3.5 w-3.5 mr-1" />Mtumiaji
             </TabsTrigger>
-            <TabsTrigger value="register-doctor" className="text-xs data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
-              <Stethoscope className="h-3.5 w-3.5 mr-1.5" />Daktari
+            <TabsTrigger value="register-org" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
+              <Building className="h-3.5 w-3.5 mr-1" />Shirika
+            </TabsTrigger>
+            <TabsTrigger value="register-doctor" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
+              <Stethoscope className="h-3.5 w-3.5 mr-1" />Daktari
             </TabsTrigger>
           </TabsList>
 
@@ -675,6 +679,7 @@ export default function SuperAdminDashboard() {
             {renderCards()}
           </TabsContent>
 
+          <TabsContent value="approvals" className="mt-2"><AdminDoctorApprovals /></TabsContent>
           <TabsContent value="register-user"><RegisterUserForm /></TabsContent>
           <TabsContent value="register-org"><RegisterOrganizationForm /></TabsContent>
           <TabsContent value="register-doctor"><RegisterDoctorForm /></TabsContent>

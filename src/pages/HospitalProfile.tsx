@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
+import { useRecordVisit } from '@/hooks/useRecordVisit';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -14,6 +15,7 @@ import { ReviewsSection } from '@/components/ReviewsSection';
 
 export default function HospitalProfile() {
   const { hospitalId } = useParams();
+  useRecordVisit('hospital', hospitalId);
   const navigate = useNavigate();
 
   const { data: hospital, isLoading } = useQuery({
