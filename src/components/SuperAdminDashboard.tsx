@@ -679,6 +679,7 @@ export default function SuperAdminDashboard() {
             {renderCards()}
           </TabsContent>
 
+          <TabsContent value="approvals" className="mt-2"><AdminDoctorApprovals /></TabsContent>
           <TabsContent value="register-user"><RegisterUserForm /></TabsContent>
           <TabsContent value="register-org"><RegisterOrganizationForm /></TabsContent>
           <TabsContent value="register-doctor"><RegisterDoctorForm /></TabsContent>
