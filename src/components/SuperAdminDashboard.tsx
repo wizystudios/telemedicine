@@ -411,7 +411,7 @@ export default function SuperAdminDashboard() {
   };
 
   const renderGenericCard = (row: any) => (
-    <Card key={row.id} className="group hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 border-border/40 overflow-hidden">
+    <Card key={row.id} className="group rounded-3xl hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 border-border/40 overflow-hidden">
       <CardContent className="p-0">
         <div className="flex items-center gap-4 p-5">
           <div className={`h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center`}>
