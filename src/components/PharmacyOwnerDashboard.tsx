@@ -359,6 +359,8 @@ export default function PharmacyOwnerDashboard() {
         </Button>
       </div>
 
+      <OrgStatsBanner orgType="pharmacy" orgId={pharmacy.id} />
+
       <Tabs defaultValue="orders" className="space-y-4">
         <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="orders">Maagizo</TabsTrigger>
