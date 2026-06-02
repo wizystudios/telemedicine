@@ -26,6 +26,8 @@ import { ContentUploadSection } from '@/components/ContentUploadSection';
 import { DoctorImageUpload } from '@/components/DoctorImageUpload';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import OrgStaffManager from '@/components/OrgStaffManager';
+import OrgStatsBanner from '@/components/OrgStatsBanner';
+import OrgDoctorApprovals from '@/components/OrgDoctorApprovals';
 
 const DAYS = ['Jumapili', 'Jumatatu', 'Jumanne', 'Jumatano', 'Alhamisi', 'Ijumaa', 'Jumamosi'];
 
