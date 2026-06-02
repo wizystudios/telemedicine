@@ -557,6 +557,11 @@ export default function PolyclinicOwnerDashboard() {
           </Card>
         </TabsContent>
 
+        {/* Approvals Tab */}
+        <TabsContent value="approvals" className="space-y-4">
+          <OrgDoctorApprovals orgType="polyclinic" orgId={polyclinic.id} />
+        </TabsContent>
+
         {/* Services Tab */}
         <TabsContent value="services" className="space-y-4">
           <Card>
