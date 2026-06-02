@@ -459,11 +459,15 @@ export default function HospitalOwnerDashboard() {
         </Button>
       </div>
 
+      {/* Real-time analytics banner */}
+      <OrgStatsBanner orgType="hospital" orgId={hospital.id} />
+
       {/* Tabs for different sections */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="overview" className="text-xs">Muhtasari</TabsTrigger>
           <TabsTrigger value="doctors" className="text-xs">Madaktari</TabsTrigger>
+          <TabsTrigger value="approvals" className="text-xs">Idhini</TabsTrigger>
           <TabsTrigger value="services" className="text-xs">Huduma</TabsTrigger>
           <TabsTrigger value="content" className="text-xs">Maudhui</TabsTrigger>
           <TabsTrigger value="ambulance" className="text-xs">Ambulance</TabsTrigger>
