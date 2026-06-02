@@ -370,7 +370,7 @@ export default function SuperAdminDashboard() {
     const sc = statusConfig[row.status] || statusConfig.pending;
 
     return (
-      <Card key={row.id} className="group hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 border-border/40 overflow-hidden">
+      <Card key={row.id} className="group rounded-3xl hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 border-border/40 overflow-hidden">
         <CardContent className="p-0">
           <div className="p-5">
             <div className="flex items-start justify-between mb-3">
