@@ -23,6 +23,8 @@ import { SettingsDrawer } from '@/components/SettingsDrawer';
 import { ContentUploadSection } from '@/components/ContentUploadSection';
 import { DoctorImageUpload } from '@/components/DoctorImageUpload';
 import OrgStaffManager from '@/components/OrgStaffManager';
+import OrgStatsBanner from '@/components/OrgStatsBanner';
+import OrgDoctorApprovals from '@/components/OrgDoctorApprovals';
 
 const DAYS = ['Jumapili', 'Jumatatu', 'Jumanne', 'Jumatano', 'Alhamisi', 'Ijumaa', 'Jumamosi'];
 
