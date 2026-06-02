@@ -15,6 +15,7 @@ import { InsuranceDisplay } from '@/components/InsuranceSelector';
 
 export default function PharmacyProfile() {
   const { pharmacyId } = useParams();
+  useRecordVisit('pharmacy', pharmacyId);
   const navigate = useNavigate();
   const { addToCart, totalCount } = useCart();
 
