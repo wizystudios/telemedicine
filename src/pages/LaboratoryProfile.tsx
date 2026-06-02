@@ -14,6 +14,7 @@ import { InsuranceDisplay } from '@/components/InsuranceSelector';
 
 export default function LaboratoryProfile() {
   const { labId } = useParams();
+  useRecordVisit('laboratory', labId);
   const navigate = useNavigate();
 
   const { data: laboratory, isLoading } = useQuery({
