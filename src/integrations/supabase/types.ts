@@ -2576,6 +2576,21 @@ export type Database = {
         }[]
       }
       get_current_user_role: { Args: never; Returns: string }
+      get_my_profile: {
+        Args: never
+        Returns: {
+          avatar_url: string
+          country: string
+          country_code: string
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          phone: string
+          role: Database["public"]["Enums"]["user_role"]
+          username: string
+        }[]
+      }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
@@ -2618,6 +2633,7 @@ export type Database = {
           phone: string
         }[]
       }
+      lookup_user_id_by_email: { Args: { _email: string }; Returns: string }
       org_approve_doctor: {
         Args: { p_approve: boolean; p_doctor_id: string; p_reason?: string }
         Returns: undefined
