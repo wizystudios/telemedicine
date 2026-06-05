@@ -70,13 +70,14 @@ export default function OrgStaffManager({ orgType, orgId }: OrgStaffManagerProps
     if (!email.trim() || !user) return;
     setAdding(true);
     try {
-      // Find user by email in profiles
-      const { data: prof } = await supabase
-        .from('profiles').select('id').eq('email', email.trim().toLowerCase()).maybeSingle();
-      if (!prof) {
+      // Find user by email via SECURITY DEFINER RPC (email column is not directly readable)
+      const { data: foundId } = await (supabase as any)
+        .rpc('lookup_user_id_by_email', { _email: email.trim().toLowerCase() });
+      if (!foundId) {
         toast({ title: 'Mtumiaji hapatikani', description: 'Hakuna account na barua pepe hii.', variant: 'destructive' });
         setAdding(false); return;
       }
+      const prof = { id: foundId as string };
       const { error } = await supabase.from('org_staff').insert({
         org_type: orgType,
         org_id: orgId,

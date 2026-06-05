@@ -51,10 +51,10 @@ export default function Profile() {
     (async () => {
       const { data: ur } = await supabase
         .from('user_roles').select('role').eq('user_id', user.id).maybeSingle();
-      if (ur?.role) { setRole(ur.role); return; }
-      const { data: p } = await supabase
-        .from('profiles').select('role, first_name, last_name, phone, avatar_url').eq('id', user.id).maybeSingle();
-      if (p?.role) setRole(p.role);
+      if (ur?.role) { setRole(ur.role); }
+      const { data: rows } = await (supabase as any).rpc('get_my_profile');
+      const p = Array.isArray(rows) ? rows[0] : rows;
+      if (p?.role && !ur?.role) setRole(p.role);
       if (p) setProfile(prev => ({
         first_name: p.first_name || prev.first_name,
         last_name: p.last_name || prev.last_name,
