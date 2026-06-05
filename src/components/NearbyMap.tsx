@@ -43,16 +43,17 @@ export function NearbyMap() {
   const fetchNearbyPlaces = async () => {
     setIsLoading(true);
     try {
+      const db = supabase as any;
       const cols = 'id, name, address, phone, rating, is_verified, latitude, longitude';
       const [hospitalsRes, pharmaciesRes, labsRes] = await Promise.all([
-        supabase.from('hospitals').select(cols).eq('is_verified', true).limit(50),
-        supabase.from('pharmacies').select(cols).eq('is_verified', true).limit(50),
-        supabase.from('laboratories').select(cols).eq('is_verified', true).limit(50),
+        db.from('hospitals').select(cols).eq('is_verified', true).limit(50),
+        db.from('pharmacies').select(cols).eq('is_verified', true).limit(50),
+        db.from('laboratories').select(cols).eq('is_verified', true).limit(50),
       ]);
 
-      setHospitals((hospitalsRes.data || []).map(h => ({ ...h, type: 'hospital' as const })));
-      setPharmacies((pharmaciesRes.data || []).map(p => ({ ...p, type: 'pharmacy' as const })));
-      setLaboratories((labsRes.data || []).map(l => ({ ...l, type: 'laboratory' as const })));
+      setHospitals(((hospitalsRes.data as any[]) || []).map((h: any) => ({ ...h, type: 'hospital' as const })));
+      setPharmacies(((pharmaciesRes.data as any[]) || []).map((p: any) => ({ ...p, type: 'pharmacy' as const })));
+      setLaboratories(((labsRes.data as any[]) || []).map((l: any) => ({ ...l, type: 'laboratory' as const })));
     } catch (error) {
       console.error('Error fetching nearby places:', error);
     } finally {
