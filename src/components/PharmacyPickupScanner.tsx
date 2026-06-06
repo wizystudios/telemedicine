@@ -36,6 +36,7 @@ export default function PharmacyPickupScanner({ pharmacyId, open, onOpenChange, 
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(false);
   const [scanning, setScanning] = useState(false);
+  const [success, setSuccess] = useState<{ code: string } | null>(null);
   const scannerRef = useRef<Html5Qrcode | null>(null);
 
   // Search lookup
