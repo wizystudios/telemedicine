@@ -196,6 +196,11 @@ export default function PharmacyPickupScanner({ pharmacyId, open, onOpenChange, 
           <X className="h-3.5 w-3.5 mr-1" /> Funga
         </Button>
       </DialogContent>
+      <SuccessOverlay
+        open={!!success}
+        title="Imekamilika!"
+        subtitle={success ? `Agizo ${success.code} limechukuliwa` : 'Done'}
+      />
     </Dialog>
   );
 }
