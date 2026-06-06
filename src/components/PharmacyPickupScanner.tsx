@@ -111,9 +111,12 @@ export default function PharmacyPickupScanner({ pharmacyId, open, onOpenChange, 
       // re-start scanner if still in scan mode
       if (mode === 'scan') startScanner();
     } else {
-      toast({ title: 'Imefanikiwa ✅', description: `Agizo ${code} limewekwa kuwa "limechukuliwa"` });
+      setSuccess({ code });
       onUpdated?.();
-      onOpenChange(false);
+      setTimeout(() => {
+        setSuccess(null);
+        onOpenChange(false);
+      }, 1800);
     }
   };
 
