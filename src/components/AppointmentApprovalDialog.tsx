@@ -32,6 +32,7 @@ export function AppointmentApprovalDialog({
   const [rejectionReason, setRejectionReason] = useState('');
   const [suggestedDate, setSuggestedDate] = useState('');
   const [suggestedTime, setSuggestedTime] = useState('');
+  const [successInfo, setSuccessInfo] = useState<{ approved: boolean } | null>(null);
 
   const updateAppointmentMutation = useMutation({
     mutationFn: async ({ status, reason, suggestedDateTime }: {
