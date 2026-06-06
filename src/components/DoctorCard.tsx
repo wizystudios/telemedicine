@@ -1,6 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { BadgeCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface DoctorCardProps {
@@ -13,9 +14,10 @@ interface DoctorCardProps {
   };
   isOnline?: boolean;
   hasPatientProblem?: boolean;
+  isVerified?: boolean;
 }
 
-export function DoctorCard({ doctor, isOnline = false, hasPatientProblem = false }: DoctorCardProps) {
+export function DoctorCard({ doctor, isOnline = false, hasPatientProblem = false, isVerified = false }: DoctorCardProps) {
   const navigate = useNavigate();
   const name = `Dk. ${doctor.first_name || ''} ${doctor.last_name || ''}`.trim();
 
@@ -38,12 +40,16 @@ export function DoctorCard({ doctor, isOnline = false, hasPatientProblem = false
         </div>
 
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <p className="truncate text-sm font-medium text-foreground">{name}</p>
+            {isVerified && (
+              <BadgeCheck className="h-4 w-4 shrink-0 text-primary fill-primary/15" aria-label="Imethibitishwa na admin" />
+            )}
             {isOnline && <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">Sasa</Badge>}
           </div>
           <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
             {doctor.specialization || 'Daktari'}
+            {!isVerified && <span className="ml-1 text-amber-600 dark:text-amber-400">• Haijathibitishwa</span>}
           </p>
         </div>
       </div>
