@@ -70,7 +70,7 @@ export default function DoctorsList() {
         <>
           <div className="grid grid-cols-1 gap-2">
             {filtered.map((doctor) => (
-              <DoctorCard key={doctor.id} doctor={doctor} isOnline={doctor.isOnline} />
+              <DoctorCard key={doctor.id} doctor={doctor} isOnline={doctor.isOnline} isVerified={doctor.isVerified} />
             ))}
           </div>
           {filtered.length === 0 && (
