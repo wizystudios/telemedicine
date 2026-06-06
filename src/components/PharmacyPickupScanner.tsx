@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, ScanLine, Search, Check, Phone, X } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { SuccessOverlay } from '@/components/SuccessOverlay';
 
 interface Props {
   pharmacyId: string;
