@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, ScanLine, Search, Check, Phone, X } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { SuccessOverlay } from '@/components/SuccessOverlay';
 
 interface Props {
   pharmacyId: string;
@@ -35,6 +36,7 @@ export default function PharmacyPickupScanner({ pharmacyId, open, onOpenChange, 
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(false);
   const [scanning, setScanning] = useState(false);
+  const [success, setSuccess] = useState<{ code: string } | null>(null);
   const scannerRef = useRef<Html5Qrcode | null>(null);
 
   // Search lookup
@@ -109,9 +111,12 @@ export default function PharmacyPickupScanner({ pharmacyId, open, onOpenChange, 
       // re-start scanner if still in scan mode
       if (mode === 'scan') startScanner();
     } else {
-      toast({ title: 'Imefanikiwa ✅', description: `Agizo ${code} limewekwa kuwa "limechukuliwa"` });
+      setSuccess({ code });
       onUpdated?.();
-      onOpenChange(false);
+      setTimeout(() => {
+        setSuccess(null);
+        onOpenChange(false);
+      }, 1800);
     }
   };
 
@@ -191,6 +196,11 @@ export default function PharmacyPickupScanner({ pharmacyId, open, onOpenChange, 
           <X className="h-3.5 w-3.5 mr-1" /> Funga
         </Button>
       </DialogContent>
+      <SuccessOverlay
+        open={!!success}
+        title="Imekamilika!"
+        subtitle={success ? `Agizo ${success.code} limechukuliwa` : 'Done'}
+      />
     </Dialog>
   );
 }
