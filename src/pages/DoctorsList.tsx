@@ -19,8 +19,7 @@ export default function DoctorsList() {
       const db = supabase as any;
       const { data, error } = await db
         .from('doctor_profiles')
-        .select(`user_id, specialty_id, doctor_type, consultation_fee, specialization:specialties(name), profiles!doctor_profiles_user_id_fkey(id, first_name, last_name, avatar_url)`)
-        .eq('is_verified', true);
+        .select(`user_id, specialty_id, doctor_type, consultation_fee, is_verified, org_approval_status, specialization:specialties(name), profiles!doctor_profiles_user_id_fkey(id, first_name, last_name, avatar_url)`);
       if (error) throw error;
       const rows = (data || []) as any[];
       const ids = rows.map(d => d.user_id).filter(Boolean);
@@ -35,7 +34,8 @@ export default function DoctorsList() {
         avatar_url: d.profiles?.avatar_url,
         specialization: d.specialization?.name || d.doctor_type || 'Daktari',
         consultation_fee: d.consultation_fee || 0,
-        isOnline: Boolean(onlineMap.get(d.user_id))
+        isOnline: Boolean(onlineMap.get(d.user_id)),
+        isVerified: Boolean(d.is_verified) && d.org_approval_status === 'approved',
       }));
     },
   });
