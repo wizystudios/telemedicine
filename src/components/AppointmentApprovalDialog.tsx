@@ -72,13 +72,13 @@ export function AppointmentApprovalDialog({
         console.error('Failed to create notification:', notificationError);
       }
     },
-    onSuccess: () => {
+    onSuccess: (_d, vars) => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
-      toast({
-        title: 'Miadi Imesasishwa',
-        description: 'Mwenye miadi atapokea ujumbe',
-      });
-      onClose();
+      setSuccessInfo({ approved: vars.status === 'approved' });
+      setTimeout(() => {
+        setSuccessInfo(null);
+        onClose();
+      }, 1800);
     },
     onError: (error: any) => {
       toast({
