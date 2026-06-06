@@ -177,6 +177,11 @@ export function AppointmentApprovalDialog({
           </div>
         </div>
       </DialogContent>
+      <SuccessOverlay
+        open={!!successInfo}
+        title={successInfo?.approved ? 'Imekubaliwa!' : 'Imekataliwa'}
+        subtitle={successInfo?.approved ? 'Miadi imeidhinishwa — Done' : 'Mwenye miadi atapokea ujumbe'}
+      />
     </Dialog>
   );
 }
