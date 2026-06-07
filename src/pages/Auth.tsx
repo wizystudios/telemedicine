@@ -180,6 +180,9 @@ export default function Auth() {
             >
               Jisajili <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
+            <p className="text-[11px] text-center text-muted-foreground leading-relaxed pt-2">
+              Kwa kuendelea unakubali <a href="/terms" className="text-primary underline">Masharti</a> na <a href="/privacy" className="text-primary underline">Sera ya Faragha</a>.
+            </p>
           </div>
         )}
 

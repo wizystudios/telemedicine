@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ProfileImageUpload } from '@/components/ProfileImageUpload';
-import { Moon, Sun, Globe, LogOut, LayoutDashboard, KeyRound, ShoppingBag, FileText, Pill, Package } from 'lucide-react';
+import { Moon, Sun, Globe, LogOut, LayoutDashboard, KeyRound, ShoppingBag, FileText, Pill, Package, ShieldCheck, ScrollText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 
@@ -236,6 +236,17 @@ export default function Profile() {
             </SelectContent>
           </Select>
         </div>
+
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-1 mt-6">Kisheria</p>
+        <button onClick={() => navigate('/privacy')} className="flex items-center gap-3 p-3 rounded-xl w-full text-left hover:bg-muted/50 transition-colors">
+          <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm flex-1">Sera ya Faragha</span>
+        </button>
+        <button onClick={() => navigate('/terms')} className="flex items-center gap-3 p-3 rounded-xl w-full text-left hover:bg-muted/50 transition-colors">
+          <ScrollText className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm flex-1">Masharti ya Matumizi</span>
+        </button>
+
 
         <button 
           onClick={handleSignOut}
