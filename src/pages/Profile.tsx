@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ProfileImageUpload } from '@/components/ProfileImageUpload';
-import { Moon, Sun, Globe, LogOut, LayoutDashboard, KeyRound, ShoppingBag, FileText, Pill, Package } from 'lucide-react';
+import { Moon, Sun, Globe, LogOut, LayoutDashboard, KeyRound, ShoppingBag, FileText, Pill, Package, ShieldCheck, ScrollText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 
