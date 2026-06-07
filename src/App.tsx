@@ -45,6 +45,8 @@ import Cart from "./pages/Cart";
 import Marketplace from "./pages/Marketplace";
 import MyOrders from "./pages/MyOrders";
 import PendingActions from "./pages/PendingActions";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
 import { WizyAgent } from "./components/WizyAgent";
 import { PasswordChangeGuard } from "./components/PasswordChangeGuard";
 
@@ -124,6 +126,8 @@ function AppContent() {
             <Route path="/medical-records" element={<ProtectedRoute><MedicalRecords /></ProtectedRoute>} />
             <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
             <Route path="/my-orders" element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/terms" element={<Terms />} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>
