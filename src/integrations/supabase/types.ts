@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_deletion_requests: {
+        Row: {
+          cancelled_at: string | null
+          completed_at: string | null
+          created_at: string
+          id: string
+          reason: string | null
+          requested_at: string
+          scheduled_for: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cancelled_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          reason?: string | null
+          requested_at?: string
+          scheduled_for?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cancelled_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          reason?: string | null
+          requested_at?: string
+          scheduled_for?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       ads: {
         Row: {
           created_at: string
@@ -469,6 +508,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      cookie_consents: {
+        Row: {
+          analytics: boolean
+          created_at: string
+          id: string
+          ip_hash: string | null
+          marketing: boolean
+          necessary: boolean
+          session_id: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          analytics?: boolean
+          created_at?: string
+          id?: string
+          ip_hash?: string | null
+          marketing?: boolean
+          necessary?: boolean
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          analytics?: boolean
+          created_at?: string
+          id?: string
+          ip_hash?: string | null
+          marketing?: boolean
+          necessary?: boolean
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       doctor_availability: {
         Row: {
