@@ -12,6 +12,7 @@ import { AdBanner } from '@/components/AdBanner';
 import { HealthTipCard } from '@/components/HealthTipCard';
 import { UniversalSearch } from '@/components/UniversalSearch';
 import { useUnreadNotifications } from '@/hooks/useUnreadNotifications';
+import { NextStepNudge } from '@/components/NextStepNudge';
 
 export default function PatientHome() {
   const { user } = useAuth();
