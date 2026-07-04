@@ -12,6 +12,7 @@ import { ProfileImageUpload } from '@/components/ProfileImageUpload';
 import { Moon, Sun, Globe, LogOut, LayoutDashboard, KeyRound, ShoppingBag, FileText, Pill, Package, ShieldCheck, ScrollText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { GdprPanel } from '@/components/GdprPanel';
 
 const ROLE_LABEL: Record<string, string> = {
   patient: 'Mgonjwa',
