@@ -54,8 +54,11 @@ export default function PatientHome() {
     <div className="max-w-lg mx-auto px-4 pt-4 pb-24 space-y-4">
       <UniversalSearch placeholder="Tafuta daktari, hospitali, dawa..." global />
 
+      <NextStepNudge />
+
       <AdBanner page="home" />
       <HealthTipCard />
+
 
       {/* Services */}
       <div className="grid grid-cols-4 gap-2">
