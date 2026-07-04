@@ -248,6 +248,11 @@ export default function Profile() {
           <span className="text-sm flex-1">Masharti ya Matumizi</span>
         </button>
 
+        <div className="mt-6">
+          <GdprPanel />
+        </div>
+
+
 
         <button 
           onClick={handleSignOut}
