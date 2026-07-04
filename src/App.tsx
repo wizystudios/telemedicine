@@ -49,6 +49,7 @@ import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import { WizyAgent } from "./components/WizyAgent";
 import { PasswordChangeGuard } from "./components/PasswordChangeGuard";
+import { CookieConsent } from "./components/CookieConsent";
 
 const queryClient = new QueryClient();
 
@@ -136,6 +137,7 @@ function AppContent() {
       {!hideChrome && <BottomNav />}
       <WizyAgent />
       {user && <PasswordChangeGuard />}
+      <CookieConsent />
     </div>
   );
 }

@@ -12,6 +12,7 @@ import { ProfileImageUpload } from '@/components/ProfileImageUpload';
 import { Moon, Sun, Globe, LogOut, LayoutDashboard, KeyRound, ShoppingBag, FileText, Pill, Package, ShieldCheck, ScrollText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { GdprPanel } from '@/components/GdprPanel';
 
 const ROLE_LABEL: Record<string, string> = {
   patient: 'Mgonjwa',
@@ -246,6 +247,11 @@ export default function Profile() {
           <ScrollText className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm flex-1">Masharti ya Matumizi</span>
         </button>
+
+        <div className="mt-6">
+          <GdprPanel />
+        </div>
+
 
 
         <button 
