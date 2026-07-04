@@ -137,6 +137,7 @@ function AppContent() {
       {!hideChrome && <BottomNav />}
       <WizyAgent />
       {user && <PasswordChangeGuard />}
+      <CookieConsent />
     </div>
   );
 }
