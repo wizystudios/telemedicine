@@ -43,6 +43,7 @@ import Prescriptions from "./pages/Prescriptions";
 import MedicalRecords from "./pages/MedicalRecords";
 import Cart from "./pages/Cart";
 import Marketplace from "./pages/Marketplace";
+import Availability from "./pages/Availability";
 import MyOrders from "./pages/MyOrders";
 import PendingActions from "./pages/PendingActions";
 import Privacy from "./pages/Privacy";
@@ -115,6 +116,7 @@ function AppContent() {
             <Route path="/polyclinic-profile/:polyclinicId" element={<PolyclinicProfile />} />
             <Route path="/nearby" element={<NearbyPlaces />} />
             <Route path="/marketplace" element={<Marketplace />} />
+            <Route path="/availability" element={<Availability />} />
 
             <Route path="/book-appointment" element={<ProtectedRoute><BookAppointment /></ProtectedRoute>} />
             <Route path="/patients" element={<ProtectedRoute><Patients /></ProtectedRoute>} />
