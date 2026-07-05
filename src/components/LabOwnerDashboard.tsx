@@ -649,6 +649,7 @@ export default function LabOwnerDashboard() {
         </TabsContent>
         <TabsContent value="staff" className="space-y-4">
           <Card><CardContent className="p-3"><OrgStaffManager orgType="laboratory" orgId={lab.id} /></CardContent></Card>
+          <OrgAdsManager orgType="laboratory" orgId={lab.id} />
         </TabsContent>
       </Tabs>
 

@@ -756,6 +756,7 @@ export default function PharmacyOwnerDashboard() {
               <OrgStaffManager orgType="pharmacy" orgId={pharmacy.id} />
             </CardContent>
           </Card>
+          <OrgAdsManager orgType="pharmacy" orgId={pharmacy.id} />
         </TabsContent>
       </Tabs>
 

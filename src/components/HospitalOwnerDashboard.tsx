@@ -817,6 +817,7 @@ export default function HospitalOwnerDashboard() {
         </TabsContent>
         <TabsContent value="staff" className="space-y-4">
           <Card><CardContent className="p-3"><OrgStaffManager orgType="hospital" orgId={hospital.id} /></CardContent></Card>
+          <OrgAdsManager orgType="hospital" orgId={hospital.id} />
         </TabsContent>
       </Tabs>
 
