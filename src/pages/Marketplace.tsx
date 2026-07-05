@@ -5,6 +5,7 @@ import { useCart } from '@/hooks/useCart';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ArrowLeft, Pill, ShoppingCart, Search, Plus } from 'lucide-react';
+import { OrgAdsCarousel } from '@/components/marketplace/OrgAdsCarousel';
 
 interface MedicineRow {
   id: string;

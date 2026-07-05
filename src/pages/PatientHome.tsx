@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import {
   Stethoscope, Building2, Pill, FlaskConical, Clock,
-  ChevronRight, MapPin, Bell
+  ChevronRight, MapPin, Bell, Calendar as CalendarIcon
 } from 'lucide-react';
 import { AdBanner } from '@/components/AdBanner';
 import { HealthTipCard } from '@/components/HealthTipCard';
@@ -44,6 +44,7 @@ export default function PatientHome() {
   }, [user, unreadCount]);
 
   const services = [
+    { icon: CalendarIcon, label: 'Waliopo Leo', path: '/availability' },
     { icon: Stethoscope, label: 'Madaktari', path: '/doctors-list' },
     { icon: Building2, label: 'Hospitali', path: '/nearby?type=hospitals' },
     { icon: Pill, label: 'Famasi', path: '/marketplace' },
