@@ -5,6 +5,7 @@ import { useCart } from '@/hooks/useCart';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ArrowLeft, Pill, ShoppingCart, Search, Plus } from 'lucide-react';
+import { OrgAdsCarousel } from '@/components/marketplace/OrgAdsCarousel';
 
 interface MedicineRow {
   id: string;
@@ -59,6 +60,8 @@ export default function Marketplace() {
           <h1 className="text-lg font-semibold">Soko la Dawa</h1>
           <p className="text-xs text-muted-foreground">Tafuta na agiza dawa kutoka famasi mbalimbali</p>
         </div>
+
+        <OrgAdsCarousel />
 
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

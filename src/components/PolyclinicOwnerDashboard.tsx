@@ -23,6 +23,7 @@ import { SettingsDrawer } from '@/components/SettingsDrawer';
 import { ContentUploadSection } from '@/components/ContentUploadSection';
 import { DoctorImageUpload } from '@/components/DoctorImageUpload';
 import OrgStaffManager from '@/components/OrgStaffManager';
+import { OrgAdsManager } from '@/components/OrgAdsManager';
 import OrgStatsBanner from '@/components/OrgStatsBanner';
 import OrgDoctorApprovals from '@/components/OrgDoctorApprovals';
 
@@ -647,6 +648,7 @@ export default function PolyclinicOwnerDashboard() {
         </TabsContent>
         <TabsContent value="staff" className="space-y-4">
           <Card><CardContent className="p-3"><OrgStaffManager orgType="polyclinic" orgId={polyclinic.id} /></CardContent></Card>
+          <OrgAdsManager orgType="polyclinic" orgId={polyclinic.id} />
         </TabsContent>
       </Tabs>
 

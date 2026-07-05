@@ -26,6 +26,7 @@ import { ContentUploadSection } from '@/components/ContentUploadSection';
 import { DoctorImageUpload } from '@/components/DoctorImageUpload';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import OrgStaffManager from '@/components/OrgStaffManager';
+import { OrgAdsManager } from '@/components/OrgAdsManager';
 import OrgStatsBanner from '@/components/OrgStatsBanner';
 import OrgDoctorApprovals from '@/components/OrgDoctorApprovals';
 
@@ -817,6 +818,7 @@ export default function HospitalOwnerDashboard() {
         </TabsContent>
         <TabsContent value="staff" className="space-y-4">
           <Card><CardContent className="p-3"><OrgStaffManager orgType="hospital" orgId={hospital.id} /></CardContent></Card>
+          <OrgAdsManager orgType="hospital" orgId={hospital.id} />
         </TabsContent>
       </Tabs>
 

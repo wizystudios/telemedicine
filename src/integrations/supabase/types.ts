@@ -1511,6 +1511,69 @@ export type Database = {
           },
         ]
       }
+      org_ads: {
+        Row: {
+          clicks_count: number
+          created_at: string
+          cta_text: string | null
+          description: string | null
+          display_order: number
+          ends_at: string
+          hours: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          org_id: string
+          org_type: string
+          owner_id: string
+          services: string[] | null
+          starts_at: string
+          title: string
+          updated_at: string
+          views_count: number
+        }
+        Insert: {
+          clicks_count?: number
+          created_at?: string
+          cta_text?: string | null
+          description?: string | null
+          display_order?: number
+          ends_at?: string
+          hours?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          org_id: string
+          org_type: string
+          owner_id: string
+          services?: string[] | null
+          starts_at?: string
+          title: string
+          updated_at?: string
+          views_count?: number
+        }
+        Update: {
+          clicks_count?: number
+          created_at?: string
+          cta_text?: string | null
+          description?: string | null
+          display_order?: number
+          ends_at?: string
+          hours?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          org_id?: string
+          org_type?: string
+          owner_id?: string
+          services?: string[] | null
+          starts_at?: string
+          title?: string
+          updated_at?: string
+          views_count?: number
+        }
+        Relationships: []
+      }
       org_staff: {
         Row: {
           created_at: string
@@ -2622,6 +2685,26 @@ export type Database = {
         Args: { username_to_check: string }
         Returns: boolean
       }
+      doctors_available_on_date: {
+        Args: { _date: string }
+        Returns: {
+          avatar_url: string
+          consultation_fee: number
+          doctor_id: string
+          doctor_type: string
+          end_time: string
+          first_name: string
+          hospital_id: string
+          hospital_name: string
+          is_online: boolean
+          last_name: string
+          location: string
+          polyclinic_id: string
+          polyclinic_name: string
+          rating: number
+          start_time: string
+        }[]
+      }
       fuzzy_search_doctors: {
         Args: { lim?: number; q: string }
         Returns: {
@@ -2679,6 +2762,10 @@ export type Database = {
       }
       increment_content_views: {
         Args: { content_id_param: string }
+        Returns: undefined
+      }
+      increment_org_ad_metric: {
+        Args: { _ad_id: string; _metric: string }
         Returns: undefined
       }
       increment_post_views: {
