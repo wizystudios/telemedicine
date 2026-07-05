@@ -21,6 +21,7 @@ import { toast } from '@/hooks/use-toast';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { LogoUpload } from '@/components/LogoUpload';
 import OrgStaffManager from '@/components/OrgStaffManager';
+import { OrgAdsManager } from '@/components/OrgAdsManager';
 import OrgStatsBanner from '@/components/OrgStatsBanner';
 import { QRCodeSVG } from 'qrcode.react';
 import PharmacyPickupScanner from '@/components/PharmacyPickupScanner';

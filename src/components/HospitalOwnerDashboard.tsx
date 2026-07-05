@@ -26,6 +26,7 @@ import { ContentUploadSection } from '@/components/ContentUploadSection';
 import { DoctorImageUpload } from '@/components/DoctorImageUpload';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import OrgStaffManager from '@/components/OrgStaffManager';
+import { OrgAdsManager } from '@/components/OrgAdsManager';
 import OrgStatsBanner from '@/components/OrgStatsBanner';
 import OrgDoctorApprovals from '@/components/OrgDoctorApprovals';
 
