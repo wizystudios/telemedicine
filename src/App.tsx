@@ -51,6 +51,7 @@ import Terms from "./pages/Terms";
 import { WizyAgent } from "./components/WizyAgent";
 import { PasswordChangeGuard } from "./components/PasswordChangeGuard";
 import { CookieConsent } from "./components/CookieConsent";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
 const queryClient = new QueryClient();
 
@@ -93,47 +94,49 @@ function AppContent() {
           />
         )}
         <main className={`flex-1 min-w-0 ${isAuthRoute ? 'h-screen overflow-hidden' : isActiveChat ? '' : 'pb-14 md:pb-0'}`}>
-          <Routes>
-            <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Navigate to="/doctors-list" replace />} />
-            <Route path="/auth" element={user ? <Navigate to={new URLSearchParams(location.search).get('redirectTo') || '/dashboard'} replace /> : <Auth />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/force-password-change" element={<ProtectedRoute><ForcePasswordChange /></ProtectedRoute>} />
+          <ErrorBoundary>
+            <Routes>
+              <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Navigate to="/doctors-list" replace />} />
+              <Route path="/auth" element={user ? <Navigate to={new URLSearchParams(location.search).get('redirectTo') || '/dashboard'} replace /> : <Auth />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/force-password-change" element={<ProtectedRoute><ForcePasswordChange /></ProtectedRoute>} />
 
-            <Route path="/dashboard" element={<ProtectedRoute><RoleBasedDashboard /></ProtectedRoute>} />
-            <Route path="/chatbot" element={<ProtectedRoute><ChatbotPage /></ProtectedRoute>} />
-            <Route path="/appointments" element={<ProtectedRoute><Appointments /></ProtectedRoute>} />
-            <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
-            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-            <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
-            <Route path="/pending-actions" element={<ProtectedRoute><PendingActions /></ProtectedRoute>} />
+              <Route path="/dashboard" element={<ProtectedRoute><RoleBasedDashboard /></ProtectedRoute>} />
+              <Route path="/chatbot" element={<ProtectedRoute><ChatbotPage /></ProtectedRoute>} />
+              <Route path="/appointments" element={<ProtectedRoute><Appointments /></ProtectedRoute>} />
+              <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
+              <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+              <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+              <Route path="/pending-actions" element={<ProtectedRoute><PendingActions /></ProtectedRoute>} />
 
-            {/* Public browse routes (guest allowed) */}
-            <Route path="/doctors-list" element={<DoctorsList />} />
-            <Route path="/doctor-profile/:doctorId" element={<DoctorProfile />} />
-            <Route path="/hospital-profile/:hospitalId" element={<HospitalProfile />} />
-            <Route path="/pharmacy-profile/:pharmacyId" element={<PharmacyProfile />} />
-            <Route path="/laboratory-profile/:labId" element={<LaboratoryProfile />} />
-            <Route path="/polyclinic-profile/:polyclinicId" element={<PolyclinicProfile />} />
-            <Route path="/nearby" element={<NearbyPlaces />} />
-            <Route path="/marketplace" element={<Marketplace />} />
-            <Route path="/availability" element={<Availability />} />
+              {/* Public browse routes (guest allowed) */}
+              <Route path="/doctors-list" element={<DoctorsList />} />
+              <Route path="/doctor-profile/:doctorId" element={<DoctorProfile />} />
+              <Route path="/hospital-profile/:hospitalId" element={<HospitalProfile />} />
+              <Route path="/pharmacy-profile/:pharmacyId" element={<PharmacyProfile />} />
+              <Route path="/laboratory-profile/:labId" element={<LaboratoryProfile />} />
+              <Route path="/polyclinic-profile/:polyclinicId" element={<PolyclinicProfile />} />
+              <Route path="/nearby" element={<NearbyPlaces />} />
+              <Route path="/marketplace" element={<Marketplace />} />
+              <Route path="/availability" element={<Availability />} />
 
-            <Route path="/book-appointment" element={<ProtectedRoute><BookAppointment /></ProtectedRoute>} />
-            <Route path="/patients" element={<ProtectedRoute><Patients /></ProtectedRoute>} />
-            <Route path="/patient-detail/:patientId" element={<ProtectedRoute><PatientDetail /></ProtectedRoute>} />
-            <Route path="/patient-profile/:patientId" element={<ProtectedRoute><PatientProfile /></ProtectedRoute>} />
-            <Route path="/patient-problems" element={<ProtectedRoute><PatientProblems /></ProtectedRoute>} />
-            <Route path="/patient-problem-form" element={<ProtectedRoute><PatientProblemForm /></ProtectedRoute>} />
-            <Route path="/hospital-management" element={<ProtectedRoute><HospitalManagement /></ProtectedRoute>} />
-            <Route path="/prescriptions" element={<ProtectedRoute><Prescriptions /></ProtectedRoute>} />
-            <Route path="/medical-records" element={<ProtectedRoute><MedicalRecords /></ProtectedRoute>} />
-            <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
-            <Route path="/my-orders" element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />
-            <Route path="/privacy" element={<Privacy />} />
-            <Route path="/terms" element={<Terms />} />
+              <Route path="/book-appointment" element={<ProtectedRoute><BookAppointment /></ProtectedRoute>} />
+              <Route path="/patients" element={<ProtectedRoute><Patients /></ProtectedRoute>} />
+              <Route path="/patient-detail/:patientId" element={<ProtectedRoute><PatientDetail /></ProtectedRoute>} />
+              <Route path="/patient-profile/:patientId" element={<ProtectedRoute><PatientProfile /></ProtectedRoute>} />
+              <Route path="/patient-problems" element={<ProtectedRoute><PatientProblems /></ProtectedRoute>} />
+              <Route path="/patient-problem-form" element={<ProtectedRoute><PatientProblemForm /></ProtectedRoute>} />
+              <Route path="/hospital-management" element={<ProtectedRoute><HospitalManagement /></ProtectedRoute>} />
+              <Route path="/prescriptions" element={<ProtectedRoute><Prescriptions /></ProtectedRoute>} />
+              <Route path="/medical-records" element={<ProtectedRoute><MedicalRecords /></ProtectedRoute>} />
+              <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
+              <Route path="/my-orders" element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="/terms" element={<Terms />} />
 
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </ErrorBoundary>
         </main>
       </div>
       {!hideChrome && <BottomNav />}

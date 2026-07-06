@@ -42,7 +42,7 @@ export default function DoctorProfile() {
         `)
         .eq('id', doctorId)
         .eq('role', 'doctor')
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       return data;

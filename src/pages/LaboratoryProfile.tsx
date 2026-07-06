@@ -20,15 +20,29 @@ export default function LaboratoryProfile() {
   const { data: laboratory, isLoading } = useQuery({
     queryKey: ['laboratory-profile', labId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: lab, error } = await supabase
         .from('laboratories')
-        .select(`*, laboratory_services (id, name, description, price, category, is_available, waiting_hours, preparation_required), laboratory_insurance (insurance_id)`)
+        .select('*')
         .eq('id', labId)
-        .single();
+        .maybeSingle();
       if (error) throw error;
-      return data;
+      if (!lab) return null;
+
+      const [servicesRes, insRes] = await Promise.all([
+        supabase.from('laboratory_services')
+          .select('id, name, description, price, category, is_available, waiting_hours, preparation_required')
+          .eq('laboratory_id', labId),
+        supabase.from('laboratory_insurance')
+          .select('insurance_id').eq('laboratory_id', labId),
+      ]);
+
+      return {
+        ...lab,
+        laboratory_services: servicesRes.data || [],
+        laboratory_insurance: insRes.data || [],
+      };
     },
-    enabled: !!labId
+    enabled: !!labId,
   });
 
   if (isLoading) {

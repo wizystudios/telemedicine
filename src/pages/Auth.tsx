@@ -316,30 +316,55 @@ export default function Auth() {
         )}
 
         {/* REGISTER STEP 2: Identifier */}
-        {mode === 'register' && registerStep === 2 && (
-          <div className="w-full max-w-sm space-y-5 animate-fade-in">
-            <h2 className="text-lg font-bold text-center">
-              {authMethod === 'email' ? 'Email yako' : 'Nambari ya simu'}
-            </h2>
-            
-            <Input
-              type={authMethod === 'email' ? 'email' : 'tel'}
-              value={authMethod === 'email' ? email : phone}
-              onChange={(e) => authMethod === 'email' ? setEmail(e.target.value) : setPhone(e.target.value)}
-              className={inputClass}
-              placeholder={authMethod === 'email' ? 'mfano@email.com' : '+255 7XX XXX XXX'}
-              autoFocus
-            />
+        {mode === 'register' && registerStep === 2 && (() => {
+          const value = authMethod === 'email' ? email : phone;
+          const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+          const phoneDigits = phone.replace(/\D/g, '');
+          const phoneValid = phoneDigits.length >= 9 && phoneDigits.length <= 15;
+          const isValid = authMethod === 'email' ? emailValid : phoneValid;
+          const showErr = value.length > 0 && !isValid;
+          return (
+            <div className="w-full max-w-sm space-y-3 animate-fade-in">
+              <h2 className="text-lg font-bold text-center">
+                {authMethod === 'email' ? 'Email yako' : 'Nambari ya simu'}
+              </h2>
 
-            <Button
-              onClick={() => setRegisterStep(3)}
-              disabled={authMethod === 'email' ? !email : !phone}
-              className="w-full h-12 text-sm font-semibold"
-            >
-              Endelea <ArrowRight className="h-4 w-4 ml-2" />
-            </Button>
-          </div>
-        )}
+              <div className="space-y-1.5">
+                <Input
+                  type={authMethod === 'email' ? 'email' : 'tel'}
+                  value={value}
+                  onChange={(e) => authMethod === 'email' ? setEmail(e.target.value) : setPhone(e.target.value)}
+                  className={inputClass}
+                  placeholder={authMethod === 'email' ? 'mfano@email.com' : '+255 7XX XXX XXX'}
+                  autoFocus
+                  aria-invalid={showErr}
+                />
+                {showErr && (
+                  <p className="text-[11px] text-destructive pl-1">
+                    {authMethod === 'email'
+                      ? 'Email si sahihi — mfano: jina@email.com'
+                      : 'Nambari si sahihi — tumia namba 9–15 (mfano: +255712345678)'}
+                  </p>
+                )}
+                {!showErr && (
+                  <p className="text-[11px] text-muted-foreground pl-1">
+                    {authMethod === 'email'
+                      ? 'Tutatuma uthibitisho kwenye email hii.'
+                      : 'Tumia namba yenye nchi, mfano +255…'}
+                  </p>
+                )}
+              </div>
+
+              <Button
+                onClick={() => setRegisterStep(3)}
+                disabled={!isValid}
+                className="w-full h-12 text-sm font-semibold"
+              >
+                Endelea <ArrowRight className="h-4 w-4 ml-2" />
+              </Button>
+            </div>
+          );
+        })()}
 
         {/* REGISTER STEP 3: Password (strong) */}
         {mode === 'register' && registerStep === 3 && (

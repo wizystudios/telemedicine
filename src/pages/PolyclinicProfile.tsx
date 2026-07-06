@@ -20,23 +20,44 @@ export default function PolyclinicProfile() {
   const { data: polyclinic, isLoading } = useQuery({
     queryKey: ['polyclinic-profile', polyclinicId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: p, error } = await supabase
         .from('polyclinics')
-        .select(`
-          *,
-          doctor_profiles!doctor_profiles_polyclinic_id_fkey (
-            user_id, bio, experience_years, consultation_fee, doctor_type, is_available,
-            profiles!doctor_profiles_user_id_fkey (first_name, last_name, avatar_url)
-          ),
-          polyclinic_services (id, name, description, price, category, is_available),
-          polyclinic_insurance (insurance_id)
-        `)
+        .select('*')
         .eq('id', polyclinicId)
-        .single();
+        .maybeSingle();
       if (error) throw error;
-      return data;
+      if (!p) return null;
+
+      const [servicesRes, insRes, docsRes] = await Promise.all([
+        supabase.from('polyclinic_services')
+          .select('id, name, description, price, category, is_available')
+          .eq('polyclinic_id', polyclinicId),
+        supabase.from('polyclinic_insurance')
+          .select('insurance_id').eq('polyclinic_id', polyclinicId),
+        supabase.from('doctor_profiles')
+          .select('user_id, bio, experience_years, consultation_fee, doctor_type, is_available')
+          .eq('polyclinic_id', polyclinicId),
+      ]);
+
+      const doctorIds = (docsRes.data || []).map((d: any) => d.user_id).filter(Boolean);
+      let profilesMap: Record<string, any> = {};
+      if (doctorIds.length) {
+        const { data: profs } = await supabase
+          .from('profiles').select('id, first_name, last_name, avatar_url').in('id', doctorIds);
+        profilesMap = Object.fromEntries((profs || []).map((pr: any) => [pr.id, pr]));
+      }
+      const doctor_profiles = (docsRes.data || []).map((d: any) => ({
+        ...d, profiles: profilesMap[d.user_id] || null,
+      }));
+
+      return {
+        ...p,
+        polyclinic_services: servicesRes.data || [],
+        polyclinic_insurance: insRes.data || [],
+        doctor_profiles,
+      };
     },
-    enabled: !!polyclinicId
+    enabled: !!polyclinicId,
   });
 
   if (isLoading) {

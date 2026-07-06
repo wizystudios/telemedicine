@@ -10,33 +10,37 @@ import PharmacyOwnerDashboard from '@/components/PharmacyOwnerDashboard';
 import LabOwnerDashboard from '@/components/LabOwnerDashboard';
 import PolyclinicOwnerDashboard from '@/components/PolyclinicOwnerDashboard';
 import { Loader2 } from 'lucide-react';
+import { RoleOnboarding, shouldShowOnboarding } from '@/components/RoleOnboarding';
 
 export default function RoleBasedDashboard() {
   const { user } = useAuth();
   const [userRole, setUserRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
     async function fetchUserRole() {
       if (!user) return;
-      
+
       const { data } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', user.id)
         .maybeSingle();
-      
-      // Fallback to profiles table then metadata
+
+      let resolved: string;
       if (!data?.role) {
         const { data: profile } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', user.id)
           .maybeSingle();
-        setUserRole(profile?.role || user.user_metadata?.role || 'patient');
+        resolved = profile?.role || user.user_metadata?.role || 'patient';
       } else {
-        setUserRole(data.role);
+        resolved = data.role;
       }
+      setUserRole(resolved);
+      setShowOnboarding(shouldShowOnboarding(user.id, resolved));
       setLoading(false);
     }
     fetchUserRole();
@@ -52,20 +56,27 @@ export default function RoleBasedDashboard() {
     );
   }
 
+  let dashboard: React.ReactNode;
   switch (userRole) {
-    case 'super_admin':
-      return <SuperAdminDashboard />;
-    case 'doctor':
-      return <DoctorDashboard />;
-    case 'hospital_owner':
-      return <HospitalOwnerDashboard />;
-    case 'pharmacy_owner':
-      return <PharmacyOwnerDashboard />;
-    case 'lab_owner':
-      return <LabOwnerDashboard />;
-    case 'polyclinic_owner':
-      return <PolyclinicOwnerDashboard />;
-    default:
-      return <PatientHome />;
+    case 'super_admin': dashboard = <SuperAdminDashboard />; break;
+    case 'doctor': dashboard = <DoctorDashboard />; break;
+    case 'hospital_owner': dashboard = <HospitalOwnerDashboard />; break;
+    case 'pharmacy_owner': dashboard = <PharmacyOwnerDashboard />; break;
+    case 'lab_owner': dashboard = <LabOwnerDashboard />; break;
+    case 'polyclinic_owner': dashboard = <PolyclinicOwnerDashboard />; break;
+    default: dashboard = <PatientHome />;
   }
+
+  return (
+    <>
+      {dashboard}
+      {showOnboarding && userRole && (
+        <RoleOnboarding
+          userId={user.id}
+          role={userRole}
+          onDone={() => setShowOnboarding(false)}
+        />
+      )}
+    </>
+  );
 }
