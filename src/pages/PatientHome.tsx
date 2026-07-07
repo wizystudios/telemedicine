@@ -44,12 +44,12 @@ export default function PatientHome() {
   }, [user, unreadCount]);
 
   const services = [
-    { icon: CalendarIcon, label: 'Waliopo Leo', path: '/availability' },
     { icon: Stethoscope, label: 'Madaktari', path: '/doctors-list' },
-    { icon: Building2, label: 'Hospitali', path: '/nearby?type=hospitals' },
-    { icon: Pill, label: 'Famasi', path: '/marketplace' },
-    { icon: FlaskConical, label: 'Maabara', path: '/nearby?type=laboratories' },
+    { icon: Building2, label: 'Hospitali', path: '/hospitals' },
+    { icon: Pill, label: 'Famasi', path: '/pharmacies' },
+    { icon: FlaskConical, label: 'Maabara', path: '/laboratories' },
   ];
+
 
   return (
     <div className="max-w-lg mx-auto px-4 pt-4 pb-24 space-y-4">
@@ -74,6 +74,7 @@ export default function PatientHome() {
           </button>
         ))}
       </div>
+
 
       {/* Upcoming Appointments */}
       {upcomingAppointments.length > 0 && (

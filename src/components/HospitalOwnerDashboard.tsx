@@ -81,6 +81,18 @@ export default function HospitalOwnerDashboard() {
     }
   }, [user?.id]);
 
+  // Wave C: live refresh on appointments / ads changes for this org
+  useEffect(() => {
+    if (!hospital?.id) return;
+    const channel = supabase
+      .channel(`hospital-live-${hospital.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'appointments' }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'org_ads', filter: `org_id=eq.${hospital.id}` }, () => fetchData())
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [hospital?.id]);
+
+
   const fetchSpecialties = async () => {
     const { data } = await supabase.from('specialties').select('*').order('name');
     setSpecialties(data || []);

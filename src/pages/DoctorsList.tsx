@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { DoctorCard } from '@/components/DoctorCard';
 import { UniversalSearch } from '@/components/UniversalSearch';
+import { AvailabilityCalendarSidebar } from '@/components/AvailabilityCalendarSidebar';
 import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
@@ -49,39 +50,49 @@ export default function DoctorsList() {
   }, [doctors, query]);
 
   return (
-    <div className="mx-auto max-w-2xl space-y-3 px-3 pt-3 pb-20">
-      <div className="space-y-1">
-        <h1 className="text-base font-semibold">Madaktari</h1>
-        <p className="text-xs text-muted-foreground">Wasifu mfupi, hatua chache, ujumbe mmoja.</p>
-      </div>
-
-      <UniversalSearch
-        placeholder="Tafuta daktari, utaalamu..."
-        initial={initialQ}
-        onLocalFilter={setQuery}
-        global
-      />
-
-      {isLoading ? (
-        <div className="flex items-center justify-center py-16">
-          <Loader2 className="h-5 w-5 animate-spin text-primary" />
+    <div className="mx-auto max-w-6xl px-3 pt-3 pb-20">
+      <div className="grid gap-3 md:grid-cols-[280px_minmax(0,1fr)]">
+        {/* Left column: date + availability */}
+        <div className="md:sticky md:top-3 md:self-start">
+          <AvailabilityCalendarSidebar />
         </div>
-      ) : (
-        <>
-          <div className="grid grid-cols-1 gap-2">
-            {filtered.map((doctor) => (
-              <DoctorCard key={doctor.id} doctor={doctor} isOnline={doctor.isOnline} isVerified={doctor.isVerified} />
-            ))}
+
+        {/* Right column: doctors */}
+        <div className="space-y-3">
+          <div className="space-y-1">
+            <h1 className="text-base font-semibold">Madaktari</h1>
+            <p className="text-xs text-muted-foreground">Wasifu mfupi, hatua chache, ujumbe mmoja.</p>
           </div>
-          {filtered.length === 0 && (
-            <div className="rounded-2xl border border-dashed border-border py-10 text-center">
-              <p className="text-sm text-muted-foreground">
-                {query ? 'Hakuna daktari aliyepatikana' : 'Hakuna madaktari kwa sasa'}
-              </p>
+
+          <UniversalSearch
+            placeholder="Tafuta daktari, utaalamu..."
+            initial={initialQ}
+            onLocalFilter={setQuery}
+            global
+          />
+
+          {isLoading ? (
+            <div className="flex items-center justify-center py-16">
+              <Loader2 className="h-5 w-5 animate-spin text-primary" />
             </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 gap-2">
+                {filtered.map((doctor) => (
+                  <DoctorCard key={doctor.id} doctor={doctor} isOnline={doctor.isOnline} isVerified={doctor.isVerified} />
+                ))}
+              </div>
+              {filtered.length === 0 && (
+                <div className="rounded-2xl border border-dashed border-border py-10 text-center">
+                  <p className="text-sm text-muted-foreground">
+                    {query ? 'Hakuna daktari aliyepatikana' : 'Hakuna madaktari kwa sasa'}
+                  </p>
+                </div>
+              )}
+            </>
           )}
-        </>
-      )}
+        </div>
+      </div>
     </div>
   );
 }
