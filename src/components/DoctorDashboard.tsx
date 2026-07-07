@@ -22,6 +22,8 @@ import { SettingsDrawer } from '@/components/SettingsDrawer';
 import { ContentUploadSection } from '@/components/ContentUploadSection';
 import { HealthTipsSection } from '@/components/HealthTipsSection';
 import { PrescriptionWriter } from '@/components/PrescriptionWriter';
+import { DoctorJourneyStepper } from '@/components/DoctorJourneyStepper';
+
 
 export function DoctorDashboard() {
   const { user } = useAuth();
@@ -358,6 +360,33 @@ export function DoctorDashboard() {
           </CardContent>
         </Card>
       )}
+      {/* Guided doctor journey for in-flight appointments */}
+      {todayAppointments.filter(a => ['approved','in_progress'].includes(a.status)).length > 0 && (
+        <div className="space-y-2">
+          <h3 className="text-sm font-semibold px-1">Safari za Wagonjwa Leo</h3>
+          {todayAppointments
+            .filter(a => ['approved','in_progress'].includes(a.status))
+            .map(a => (
+              <DoctorJourneyStepper
+                key={a.id}
+                appointmentId={a.id}
+                patientId={a.patient_id}
+                patientName={`${a.profiles?.first_name ?? ''} ${a.profiles?.last_name ?? ''}`.trim() || 'Mgonjwa'}
+                status={a.status}
+                onWritePrescription={() => {
+                  setPrescriptionPatient({
+                    id: a.patient_id,
+                    name: `${a.profiles?.first_name} ${a.profiles?.last_name}`,
+                    appointmentId: a.id,
+                  });
+                  setPrescriptionOpen(true);
+                }}
+                onChanged={fetchData}
+              />
+            ))}
+        </div>
+      )}
+
 
       {/* Today's Schedule */}
       <Card>
