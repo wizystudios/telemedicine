@@ -22,6 +22,10 @@ import RoleBasedDashboard from "./components/RoleBasedDashboard";
 import ChatbotPage from "./pages/ChatbotPage";
 import NotFound from "./pages/NotFound";
 import LaboratoryProfile from "./pages/LaboratoryProfile";
+import HospitalsList from "./pages/HospitalsList";
+import PharmaciesList from "./pages/PharmaciesList";
+import LaboratoriesList from "./pages/LaboratoriesList";
+
 import PolyclinicProfile from "./pages/PolyclinicProfile";
 import NearbyPlaces from "./pages/NearbyPlaces";
 import Appointments from "./pages/Appointments";
@@ -118,7 +122,11 @@ function AppContent() {
               <Route path="/polyclinic-profile/:polyclinicId" element={<PolyclinicProfile />} />
               <Route path="/nearby" element={<NearbyPlaces />} />
               <Route path="/marketplace" element={<Marketplace />} />
+              <Route path="/hospitals" element={<HospitalsList />} />
+              <Route path="/pharmacies" element={<PharmaciesList />} />
+              <Route path="/laboratories" element={<LaboratoriesList />} />
               <Route path="/availability" element={<Availability />} />
+
 
               <Route path="/book-appointment" element={<ProtectedRoute><BookAppointment /></ProtectedRoute>} />
               <Route path="/patients" element={<ProtectedRoute><Patients /></ProtectedRoute>} />

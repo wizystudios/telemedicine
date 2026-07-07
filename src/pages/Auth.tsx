@@ -96,22 +96,30 @@ export default function Auth() {
         role
       });
       if (error) throw error;
+      // Role is now assigned by the on_auth_user_created_role trigger — no client insert needed.
       if (data?.user) {
-        await supabase.from('user_roles').insert([{ user_id: data.user.id, role: role as any }]);
-        // Mark password as just set so user is not asked to change immediately
-        await supabase.from('profiles').update({
-          must_change_password: false,
-          password_changed_at: new Date().toISOString(),
-        } as any).eq('id', data.user.id);
+        try {
+          await supabase.from('profiles').update({
+            must_change_password: false,
+            password_changed_at: new Date().toISOString(),
+          } as any).eq('id', data.user.id);
+        } catch {/* non-fatal */}
       }
-      toast({ title: 'Umefanikiwa!', description: 'Akaunti yako ya mgonjwa imetengenezwa.' });
-      navigate('/dashboard');
+      if (!data?.session) {
+        toast({ title: 'Akaunti imeundwa', description: 'Angalia email yako kuthibitisha akaunti kisha ingia.' });
+        setMode('login');
+        setLoginStep(1);
+      } else {
+        toast({ title: 'Karibu!', description: 'Akaunti yako imetengenezwa.' });
+        navigate('/dashboard');
+      }
     } catch (error: any) {
       toast({ title: 'Kosa', description: error.message, variant: 'destructive' });
     } finally {
       setIsLoading(false);
     }
   };
+
 
   const goBack = () => {
     if (mode === 'select') return;

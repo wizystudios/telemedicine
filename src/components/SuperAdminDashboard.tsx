@@ -612,24 +612,25 @@ export default function SuperAdminDashboard() {
 
       {/* Main tabs */}
       <div className="px-4">
-        <Tabs defaultValue="database" className="space-y-5">
+        <Tabs defaultValue="register-user" className="space-y-5">
           <TabsList className="w-full h-auto bg-muted/30 p-1.5 rounded-2xl grid grid-cols-5 gap-1">
-            <TabsTrigger value="database" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
-              <Activity className="h-3.5 w-3.5 mr-1" />Data
-            </TabsTrigger>
-            <TabsTrigger value="approvals" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
-              <ShieldCheck className="h-3.5 w-3.5 mr-1" />Idhini
-            </TabsTrigger>
             <TabsTrigger value="register-user" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
-              <UserPlus className="h-3.5 w-3.5 mr-1" />Mtumiaji
-            </TabsTrigger>
-            <TabsTrigger value="register-org" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
-              <Building className="h-3.5 w-3.5 mr-1" />Shirika
+              <UserPlus className="h-3.5 w-3.5 mr-1" />Sajili Mtumiaji
             </TabsTrigger>
             <TabsTrigger value="register-doctor" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
-              <Stethoscope className="h-3.5 w-3.5 mr-1" />Daktari
+              <Stethoscope className="h-3.5 w-3.5 mr-1" />Sajili Daktari
+            </TabsTrigger>
+            <TabsTrigger value="register-org" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
+              <Building className="h-3.5 w-3.5 mr-1" />Sajili Shirika
+            </TabsTrigger>
+            <TabsTrigger value="approvals" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
+              <ShieldCheck className="h-3.5 w-3.5 mr-1" />Idhinisha
+            </TabsTrigger>
+            <TabsTrigger value="database" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
+              <Activity className="h-3.5 w-3.5 mr-1" />Angalia Data
             </TabsTrigger>
           </TabsList>
+
 
           <TabsContent value="database" className="space-y-4 mt-2">
             {/* Table selector pills */}
