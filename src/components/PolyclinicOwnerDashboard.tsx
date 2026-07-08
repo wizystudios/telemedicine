@@ -67,6 +67,18 @@ export default function PolyclinicOwnerDashboard() {
     }
   }, [user?.id]);
 
+  useEffect(() => {
+    if (!polyclinic?.id) return;
+    const channel = supabase
+      .channel(`polyclinic-live-${polyclinic.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'doctor_profiles' }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'appointments' }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'polyclinic_services', filter: `polyclinic_id=eq.${polyclinic.id}` }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'org_ads', filter: `org_id=eq.${polyclinic.id}` }, () => fetchData())
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [polyclinic?.id]);
+
   const fetchSpecialties = async () => {
     const { data } = await supabase.from('specialties').select('*').order('name');
     setSpecialties(data || []);
@@ -78,7 +90,7 @@ export default function PolyclinicOwnerDashboard() {
         .from('polyclinics')
         .select('*')
         .eq('owner_id', user?.id)
-        .single();
+        .maybeSingle();
 
       if (!polyclinicData) {
         setLoading(false);

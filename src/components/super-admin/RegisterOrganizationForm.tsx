@@ -1,5 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useState, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { Building, Pill, TestTube, Hospital, User, Upload, MapPin, FileSpreadsheet, X, Check } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { adminCreate, fileToAdminUpload } from '@/lib/adminCreate';
 
 export default function RegisterOrganizationForm() {
   const { toast } = useToast();
@@ -113,25 +113,6 @@ export default function RegisterOrganizationForm() {
     }
   };
 
-  const uploadLogo = async (userId: string): Promise<string | null> => {
-    if (!logoFile) return null;
-    
-    const fileExt = logoFile.name.split('.').pop();
-    const fileName = `${userId}/logo.${fileExt}`;
-    
-    const { error } = await supabase.storage
-      .from('avatars')
-      .upload(fileName, logoFile, { upsert: true });
-    
-    if (error) {
-      console.error('Logo upload error:', error);
-      return null;
-    }
-    
-    const { data } = supabase.storage.from('avatars').getPublicUrl(fileName);
-    return data.publicUrl;
-  };
-
   const validateStrongPassword = (pw: string): string | null => {
     if (pw.length < 8) return 'Nenosiri lazima liwe na herufi 8+';
     if (!/[A-Z]/.test(pw)) return 'Nenosiri lazima liwe na herufi 1 KUBWA';
@@ -158,67 +139,26 @@ export default function RegisterOrganizationForm() {
     setIsSubmitting(true);
 
     try {
-      let role = '';
-      switch (orgType) {
-        case 'hospital': role = 'hospital_owner'; break;
-        case 'pharmacy': role = 'pharmacy_owner'; break;
-        case 'lab': role = 'lab_owner'; break;
-        case 'polyclinic': role = 'polyclinic_owner'; break;
-      }
-
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: ownerEmail,
-        password: ownerPassword,
-        options: { data: { first_name: ownerFirstName, last_name: ownerLastName, role } },
+      await adminCreate('create_organization', {
+        orgType,
+        name,
+        description,
+        address,
+        orgPhone: phone,
+        orgEmail: email,
+        website,
+        latitude,
+        longitude,
+        brelaNumber,
+        tinNumber,
+        ownerEmail,
+        ownerPassword,
+        ownerFirstName,
+        ownerLastName,
+        autoApprove,
+        logoFile: await fileToAdminUpload(logoFile),
+        licenseFile: await fileToAdminUpload(licenseFile),
       });
-
-      if (authError) throw authError;
-      if (!authData.user) throw new Error('User creation failed');
-
-      const logoUrl = await uploadLogo(authData.user.id);
-
-      // Upload license document to private bucket
-      const ext = licenseFile.name.split('.').pop();
-      const licensePath = `${authData.user.id}/license-${Date.now()}.${ext}`;
-      const { error: licErr } = await supabase.storage
-        .from('org-documents')
-        .upload(licensePath, licenseFile, { upsert: true });
-      if (licErr) throw licErr;
-
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .insert([{ user_id: authData.user.id, role } as any]);
-      if (roleError) throw roleError;
-
-      const approval = autoApprove ? 'approved' : 'pending_admin';
-      const baseOrgData: any = {
-        owner_id: authData.user.id,
-        name, description, address, phone, email,
-        is_verified: autoApprove,
-        brela_number: brelaNumber,
-        tin_number: tinNumber || null,
-        license_document_url: licensePath,
-        org_approval_status: approval,
-      };
-
-      if (orgType === 'hospital') {
-        const { error } = await supabase.from('hospitals').insert([{ ...baseOrgData, website: website || null, logo_url: logoUrl }]);
-        if (error) throw error;
-      } else if (orgType === 'polyclinic') {
-        const { error } = await supabase.from('polyclinics').insert([{ ...baseOrgData, logo_url: logoUrl }]);
-        if (error) throw error;
-      } else if (orgType === 'pharmacy') {
-        const { error } = await supabase.from('pharmacies').insert([{
-          ...baseOrgData,
-          location_lat: latitude ? parseFloat(latitude) : null,
-          location_lng: longitude ? parseFloat(longitude) : null,
-          logo_url: logoUrl,
-        }]);
-        if (error) throw error;
-      } else if (orgType === 'lab') {
-        const { error } = await supabase.from('laboratories').insert([{ ...baseOrgData, logo_url: logoUrl }]);
-        if (error) throw error;
-      }
 
       toast({
         title: 'Imefanikiwa!',
@@ -242,45 +182,21 @@ export default function RegisterOrganizationForm() {
     
     for (const row of csvData) {
       try {
-        const { data: authData, error: authError } = await supabase.auth.signUp({
-          email: row.owner_email || row.email,
-          password: row.password || 'TeleMed2024!',
-          options: {
-            data: {
-              first_name: row.first_name || row.name?.split(' ')[0] || '',
-              last_name: row.last_name || row.name?.split(' ')[1] || '',
-            },
-          },
-        });
-
-        if (authError || !authData.user) continue;
-
-        const roleMap: any = {
-          hospital: 'hospital_owner',
-          pharmacy: 'pharmacy_owner',
-          lab: 'lab_owner',
-          polyclinic: 'polyclinic_owner'
-        };
-        
-        const role = roleMap[row.type?.toLowerCase()] || 'hospital_owner';
-        
-        await supabase.from('user_roles').insert([{ user_id: authData.user.id, role } as any]);
-
-        const orgData = {
-          owner_id: authData.user.id,
+        await adminCreate('create_organization', {
+          orgType: row.type?.toLowerCase() || 'hospital',
           name: row.name || row.org_name,
           description: row.description || '',
-          address: row.address || '',
-          phone: row.phone || '',
-          email: row.email || row.owner_email,
-          is_verified: false,
-        };
-
-        const table = row.type?.toLowerCase() === 'pharmacy' ? 'pharmacies' : 
-                     row.type?.toLowerCase() === 'lab' ? 'laboratories' : 
-                     row.type?.toLowerCase() === 'polyclinic' ? 'polyclinics' : 'hospitals';
-        
-        await supabase.from(table).insert([orgData]);
+          address: row.address || '—',
+          orgPhone: row.phone || '',
+          orgEmail: row.email || row.owner_email || '',
+          ownerEmail: row.owner_email || row.email,
+          ownerPassword: row.password || 'TeleMed2026!',
+          ownerFirstName: row.first_name || row.name?.split(' ')[0] || '',
+          ownerLastName: row.last_name || row.name?.split(' ')[1] || '',
+          brelaNumber: row.brela_number || null,
+          tinNumber: row.tin_number || null,
+          autoApprove: false,
+        });
         successCount++;
       } catch (err) {
         console.error('Bulk import row error:', err);

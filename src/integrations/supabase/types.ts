@@ -2772,6 +2772,7 @@ export type Database = {
         Args: { post_id_param: string }
         Returns: undefined
       }
+      is_admin_or_super_admin: { Args: { _user_id: string }; Returns: boolean }
       is_hospital_owner_of_doctor: {
         Args: { _doctor_id: string; _user_id: string }
         Returns: boolean
@@ -2938,6 +2939,7 @@ export type Database = {
         | "hospital_owner"
         | "pharmacy_owner"
         | "lab_owner"
+        | "polyclinic_owner"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -3082,6 +3084,7 @@ export const Constants = {
         "hospital_owner",
         "pharmacy_owner",
         "lab_owner",
+        "polyclinic_owner",
       ],
     },
   },

@@ -71,6 +71,17 @@ export default function LabOwnerDashboard() {
     if (user) fetchData();
   }, [user]);
 
+  useEffect(() => {
+    if (!lab?.id) return;
+    const channel = supabase
+      .channel(`lab-live-${lab.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'lab_bookings', filter: `laboratory_id=eq.${lab.id}` }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'laboratory_services', filter: `laboratory_id=eq.${lab.id}` }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'org_ads', filter: `org_id=eq.${lab.id}` }, () => fetchData())
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [lab?.id]);
+
   const fetchData = async () => {
     try {
       // Fetch lab profile
@@ -78,7 +89,7 @@ export default function LabOwnerDashboard() {
         .from('laboratories')
         .select('*')
         .eq('owner_id', user?.id)
-        .single();
+        .maybeSingle();
 
       if (labError && labError.code !== 'PGRST116') throw labError;
       setLab(labData);

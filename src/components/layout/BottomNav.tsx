@@ -46,6 +46,7 @@ function itemsForRole(role: string | null): Item[] {
         { icon: Settings, label: 'Mipangilio', path: '/profile' },
       ];
     case 'super_admin':
+    case 'admin':
       return [
         { icon: Home, label: 'Dashibodi', path: '/dashboard' },
         { icon: UsersIcon, label: 'Watumiaji', path: '/dashboard?tab=users' },
@@ -82,7 +83,7 @@ export function BottomNav() {
   useEffect(() => {
     if (!user) { setRole(null); return; }
     (async () => {
-      const { data } = await supabase.from('user_roles').select('role').eq('user_id', user.id).maybeSingle();
+      const { data } = await supabase.from('user_roles').select('role').eq('user_id', user.id).order('created_at', { ascending: true }).limit(1).maybeSingle();
       setRole((data?.role as any) || user.user_metadata?.role || 'patient');
     })();
   }, [user]);
