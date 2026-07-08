@@ -84,7 +84,8 @@ serve(async (req) => {
       if (error) throw error;
       if (!data.user) throw new Error("User creation failed");
 
-      await admin.from("profiles").upsert({ id: data.user.id, email, first_name: firstName, last_name: lastName, phone: phone || null, role }, { onConflict: "id" });
+      const profileRole = role === "super_admin" ? "admin" : role;
+      await admin.from("profiles").upsert({ id: data.user.id, email, first_name: firstName, last_name: lastName, phone: phone || null, role: profileRole }, { onConflict: "id" });
       await admin.from("user_roles").upsert({ user_id: data.user.id, role }, { onConflict: "user_id,role" });
       return data.user;
     }
