@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { UserPlus } from 'lucide-react';
+import { adminCreate } from '@/lib/adminCreate';
 
 const ROLES = [
   { value: 'patient', label: 'Mgonjwa (Patient)' },
@@ -14,6 +14,7 @@ const ROLES = [
   { value: 'hospital_owner', label: 'Mmiliki wa Hospitali' },
   { value: 'pharmacy_owner', label: 'Mmiliki wa Duka la Dawa' },
   { value: 'lab_owner', label: 'Mmiliki wa Maabara' },
+  { value: 'polyclinic_owner', label: 'Mmiliki wa Polyclinic' },
   { value: 'admin', label: 'Admin' },
 ] as const;
 
@@ -32,42 +33,14 @@ export default function RegisterUserForm() {
     setIsSubmitting(true);
 
     try {
-      // 1. Create auth account
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      await adminCreate('create_user', {
         email,
         password,
-        options: {
-          data: {
-            first_name: firstName,
-            last_name: lastName,
-            phone,
-            role: role,
-          },
-        },
+        firstName,
+        lastName,
+        phone,
+        role,
       });
-
-      if (authError) throw authError;
-      if (!authData.user) throw new Error('User creation failed');
-
-      // 2. Assign role in user_roles table
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .insert([{ user_id: authData.user.id, role: role as any }]);
-
-      if (roleError) throw roleError;
-
-      // 3. Update profile with role
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ 
-          role: role as any,
-          first_name: firstName,
-          last_name: lastName,
-          phone
-        })
-        .eq('id', authData.user.id);
-
-      if (profileError) console.error('Profile update error:', profileError);
 
       toast({
         title: 'Imefanikiwa!',

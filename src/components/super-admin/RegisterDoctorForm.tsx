@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,7 +6,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Stethoscope } from 'lucide-react';
+import { AlertCircle, CheckCircle2, ClipboardCheck, LogIn, ShieldCheck, Stethoscope } from 'lucide-react';
+import { adminCreate } from '@/lib/adminCreate';
 
 export default function RegisterDoctorForm() {
   const { toast } = useToast();
@@ -24,55 +24,30 @@ export default function RegisterDoctorForm() {
   const [experienceYears, setExperienceYears] = useState('');
   const [consultationFee, setConsultationFee] = useState('');
   const [doctorType, setDoctorType] = useState<string>('general');
+  const [autoApprove, setAutoApprove] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      // 1. Create doctor auth account
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      await adminCreate('create_doctor', {
         email,
         password,
-        options: {
-          data: {
-            first_name: firstName,
-            last_name: lastName,
-            phone,
-            role: 'doctor',
-          },
-        },
+        firstName,
+        lastName,
+        phone,
+        licenseNumber,
+        bio,
+        experienceYears,
+        consultationFee,
+        doctorType,
+        autoApprove,
       });
 
-      if (authError) throw authError;
-      if (!authData.user) throw new Error('User creation failed');
-
-      // 2. Assign doctor role
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .insert([{ user_id: authData.user.id, role: 'doctor' } as any]);
-
-      if (roleError) throw roleError;
-
-      // 3. Create doctor profile
-      const { error: profileError } = await supabase
-        .from('doctor_profiles')
-        .insert([{
-          user_id: authData.user.id,
-          license_number: licenseNumber,
-          bio,
-          experience_years: experienceYears ? parseInt(experienceYears) : 0,
-          consultation_fee: consultationFee ? parseFloat(consultationFee) : 0,
-          doctor_type: doctorType,
-          is_private: true, // Private doctor
-          is_verified: false,
-        }]);
-
-      if (profileError) throw profileError;
-
       toast({
-        title: 'Success!',
-        description: 'Doctor registered successfully. They will receive verification email.',
+        title: 'Daktari amesajiliwa!',
+        description: autoApprove ? 'Akaunti iko tayari kuingia kwenye dashboard.' : 'Akaunti imetengenezwa; ithibitishe kabla ionekane kwa wagonjwa.',
       });
 
       // Reset form
@@ -100,6 +75,7 @@ export default function RegisterDoctorForm() {
     setExperienceYears('');
     setConsultationFee('');
     setDoctorType('general');
+    setAutoApprove(false);
   };
 
   return (
@@ -114,6 +90,19 @@ export default function RegisterDoctorForm() {
         </CardDescription>
       </CardHeader>
       <CardContent>
+        <div className="mb-5 grid gap-2 rounded-2xl border border-border bg-muted/30 p-3">
+          {[
+            { icon: ClipboardCheck, text: '1. Sajili akaunti ya daktari na namba ya leseni.' },
+            { icon: ShieldCheck, text: '2. Admin athibitishe leseni au uchague “thibitisha sasa”.' },
+            { icon: LogIn, text: '3. Daktari aingie; ataona onboarding na dashboard yake.' },
+            { icon: CheckCircle2, text: '4. Baada ya approval, wagonjwa wataweza kumuona na kuweka miadi.' },
+          ].map(({ icon: Icon, text }) => (
+            <div key={text} className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Icon className="h-3.5 w-3.5 text-primary" />
+              <span>{text}</span>
+            </div>
+          ))}
+        </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -229,8 +218,23 @@ export default function RegisterDoctorForm() {
             />
           </div>
 
+          <label className="flex items-start gap-3 rounded-2xl border border-border bg-muted/30 p-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={autoApprove}
+              onChange={(e) => setAutoApprove(e.target.checked)}
+              className="mt-0.5 h-4 w-4 accent-primary"
+            />
+            <div>
+              <p className="text-sm font-medium">Thibitisha daktari sasa</p>
+              <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                <AlertCircle className="h-3 w-3" /> Usitumie bila kukagua leseni.
+              </p>
+            </div>
+          </label>
+
           <Button type="submit" disabled={isSubmitting} className="w-full">
-            {isSubmitting ? 'Registering...' : 'Register Doctor'}
+            {isSubmitting ? 'Inasajili...' : 'Sajili Daktari'}
           </Button>
         </form>
       </CardContent>
