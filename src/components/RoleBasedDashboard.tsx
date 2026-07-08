@@ -26,6 +26,8 @@ export default function RoleBasedDashboard() {
         .from('user_roles')
         .select('role')
         .eq('user_id', user.id)
+        .order('created_at', { ascending: true })
+        .limit(1)
         .maybeSingle();
 
       let resolved: string;
@@ -59,6 +61,7 @@ export default function RoleBasedDashboard() {
   let dashboard: React.ReactNode;
   switch (userRole) {
     case 'super_admin': dashboard = <SuperAdminDashboard />; break;
+    case 'admin': dashboard = <SuperAdminDashboard />; break;
     case 'doctor': dashboard = <DoctorDashboard />; break;
     case 'hospital_owner': dashboard = <HospitalOwnerDashboard />; break;
     case 'pharmacy_owner': dashboard = <PharmacyOwnerDashboard />; break;

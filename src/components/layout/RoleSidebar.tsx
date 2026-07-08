@@ -28,6 +28,7 @@ const roleLabels: Record<string, string> = {
   lab_owner: 'Maabara',
   polyclinic_owner: 'Polyclinic',
   super_admin: 'Admin',
+  admin: 'Admin',
 };
 
 function getNavItems(role: string) {
@@ -93,13 +94,11 @@ function getNavItems(role: string) {
         { icon: Settings, label: 'Mipangilio', path: '/profile' },
       ];
     case 'super_admin':
+    case 'admin':
       return [
         { icon: Home, label: 'Dashboard', path: '/dashboard' },
         { icon: Users, label: 'Watumiaji', path: '/dashboard?tab=users' },
-        { icon: Stethoscope, label: 'Madaktari', path: '/dashboard?tab=doctors' },
-        { icon: Building2, label: 'Hospitali', path: '/dashboard?tab=hospitals' },
-        { icon: Pill, label: 'Famasi', path: '/dashboard?tab=pharmacies' },
-        { icon: FlaskConical, label: 'Maabara', path: '/dashboard?tab=labs' },
+        { icon: Building2, label: 'Sajili Shirika', path: '/dashboard?tab=orgs' },
         { icon: Shield, label: 'Idhini', path: '/dashboard?tab=approvals' },
         { icon: Settings, label: 'Mipangilio', path: '/profile' },
       ];
@@ -125,6 +124,8 @@ export function RoleSidebar({ open, onClose }: RoleSidebarProps) {
         .from('user_roles')
         .select('role')
         .eq('user_id', user.id)
+        .order('created_at', { ascending: true })
+        .limit(1)
         .maybeSingle();
       setUserRole(data?.role || user.user_metadata?.role || 'patient');
     };
