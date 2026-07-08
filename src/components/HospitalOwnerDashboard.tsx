@@ -104,7 +104,7 @@ export default function HospitalOwnerDashboard() {
         .from('hospitals')
         .select('*')
         .eq('owner_id', user?.id)
-        .single();
+        .maybeSingle();
 
       if (!hospitalData) {
         setLoading(false);

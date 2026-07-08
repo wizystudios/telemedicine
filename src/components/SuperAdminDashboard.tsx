@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -35,6 +36,7 @@ const TABLES = [
 
 export default function SuperAdminDashboard() {
   const { toast } = useToast();
+  const location = useLocation();
   const [stats, setStats] = useState({
     totalUsers: 0, totalDoctors: 0, totalHospitals: 0, totalPolyclinics: 0,
     totalPharmacies: 0, totalLabs: 0, totalAppointments: 0,
@@ -44,9 +46,24 @@ export default function SuperAdminDashboard() {
   const [tableData, setTableData] = useState<any[]>([]);
   const [tableLoading, setTableLoading] = useState(false);
   const [viewingRow, setViewingRow] = useState<any>(null);
+  const [adminTab, setAdminTab] = useState('register-user');
 
   useEffect(() => { fetchStats(); }, []);
   useEffect(() => { fetchTableData(activeTable); }, [activeTable]);
+  useEffect(() => {
+    const tab = new URLSearchParams(location.search).get('tab');
+    const mapped: Record<string, string> = {
+      users: 'register-user',
+      doctors: 'register-doctor',
+      orgs: 'register-org',
+      hospitals: 'register-org',
+      pharmacies: 'register-org',
+      labs: 'register-org',
+      approvals: 'approvals',
+      database: 'database',
+    };
+    setAdminTab(mapped[tab || ''] || 'register-user');
+  }, [location.search]);
 
   const fetchStats = async () => {
     try {
@@ -612,7 +629,7 @@ export default function SuperAdminDashboard() {
 
       {/* Main tabs */}
       <div className="px-4">
-        <Tabs defaultValue="register-user" className="space-y-5">
+        <Tabs value={adminTab} onValueChange={setAdminTab} className="space-y-5">
           <TabsList className="w-full h-auto bg-muted/30 p-1.5 rounded-2xl grid grid-cols-5 gap-1">
             <TabsTrigger value="register-user" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
               <UserPlus className="h-3.5 w-3.5 mr-1" />Sajili Mtumiaji
