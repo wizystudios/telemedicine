@@ -79,13 +79,24 @@ export default function PharmacyOwnerDashboard() {
     if (user?.id) fetchData();
   }, [user?.id]);
 
+  useEffect(() => {
+    if (!pharmacy?.id) return;
+    const channel = supabase
+      .channel(`pharmacy-live-${pharmacy.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'pharmacy_orders', filter: `pharmacy_id=eq.${pharmacy.id}` }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'pharmacy_medicines', filter: `pharmacy_id=eq.${pharmacy.id}` }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'org_ads', filter: `org_id=eq.${pharmacy.id}` }, () => fetchData())
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [pharmacy?.id]);
+
   const fetchData = async () => {
     try {
       const { data: pharmacyData } = await supabase
         .from('pharmacies')
         .select('*')
         .eq('owner_id', user?.id)
-        .single();
+        .maybeSingle();
 
       if (!pharmacyData) {
         setLoading(false);
