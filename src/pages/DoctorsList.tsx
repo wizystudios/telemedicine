@@ -19,26 +19,25 @@ export default function DoctorsList() {
     queryFn: async () => {
       const db = supabase as any;
       const { data, error } = await db
-        .from('doctor_profiles')
-        .select(`user_id, specialty_id, doctor_type, consultation_fee, is_verified, org_approval_status, specialization:specialties(name), profiles!doctor_profiles_user_id_fkey(id, first_name, last_name, avatar_url)`)
-        .eq('is_verified', true)
-        .eq('org_approval_status', 'approved');
+        .from('public_doctors')
+        .select('id, first_name, last_name, avatar_url, doctor_type, specialty_name, consultation_fee, is_verified, org_approval_status')
+        .eq('is_verified', true);
       if (error) throw error;
       const rows = (data || []) as any[];
-      const ids = rows.map(d => d.user_id).filter(Boolean);
+      const ids = rows.map(d => d.id).filter(Boolean);
       const { data: onlineRows } = user && ids.length
         ? await db.from('doctor_online_status').select('doctor_id, is_online').in('doctor_id', ids)
         : { data: [] as any[] };
       const onlineMap = new Map((onlineRows || []).map((r: any) => [r.doctor_id, !!r.is_online]));
       return rows.map(d => ({
-        id: d.user_id,
-        first_name: d.profiles?.first_name || '',
-        last_name: d.profiles?.last_name || '',
-        avatar_url: d.profiles?.avatar_url,
-        specialization: d.specialization?.name || d.doctor_type || 'Daktari',
+        id: d.id,
+        first_name: d.first_name || '',
+        last_name: d.last_name || '',
+        avatar_url: d.avatar_url,
+        specialization: d.specialty_name || d.doctor_type || 'Daktari',
         consultation_fee: d.consultation_fee || 0,
-        isOnline: Boolean(onlineMap.get(d.user_id)),
-        isVerified: true,
+        isOnline: Boolean(onlineMap.get(d.id)),
+        isVerified: d.org_approval_status === 'approved',
       }));
     },
   });

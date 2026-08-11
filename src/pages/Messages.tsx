@@ -40,49 +40,24 @@ export default function Messages() {
   const otherUserId = doctorId || patientId;
 
   const { data: otherUser } = useQuery({
-    queryKey: ['user-profile', otherUserId],
+    queryKey: ['chat-peer', otherUserId],
     queryFn: async () => {
       if (!otherUserId) return null;
-      const { data } = await supabase.from('profiles').select('*').eq('id', otherUserId).single();
-      return data;
+      const { data } = await (supabase as any).rpc('get_chat_peer', { _id: otherUserId });
+      return (Array.isArray(data) ? data[0] : data) || null;
     },
     enabled: !!otherUserId,
-  });
-
-  const { data: currentUserProfile } = useQuery({
-    queryKey: ['current-user-profile', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return null;
-      const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-      return data;
-    },
-    enabled: !!user?.id,
   });
 
   const { data: conversation } = useQuery({
     queryKey: ['conversation', user?.id, otherUserId],
     queryFn: async () => {
       if (!user?.id || !otherUserId) return null;
-      const { data: existing } = await supabase
-        .from('appointments')
-        .select('*')
-        .or(`and(patient_id.eq.${user.id},doctor_id.eq.${otherUserId}),and(patient_id.eq.${otherUserId},doctor_id.eq.${user.id})`)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (existing) return existing;
-
-      const isPatient = currentUserProfile?.role === 'patient';
-      const { data } = await supabase.from('appointments').insert({
-        patient_id: isPatient ? user.id : otherUserId,
-        doctor_id: isPatient ? otherUserId : user.id,
-        appointment_date: new Date().toISOString(),
-        status: 'scheduled',
-        consultation_type: 'chat',
-      }).select().single();
-      return data;
+      const { data, error } = await (supabase as any).rpc('get_or_create_chat_thread', { _other_id: otherUserId });
+      if (error) throw error;
+      return data ? { id: data as string } : null;
     },
-    enabled: !!user?.id && !!otherUserId && !!currentUserProfile,
+    enabled: !!user?.id && !!otherUserId,
   });
 
   const { data: messages = [] } = useQuery({
@@ -95,6 +70,32 @@ export default function Messages() {
     },
     enabled: !!conversation?.id,
   });
+
+  // ── Signed URLs for private chat attachments ──
+  const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
+  useEffect(() => {
+    const paths = (messages as any[])
+      .map(m => m.file_url as string | null)
+      .filter((p): p is string => !!p && !p.startsWith('http') && !p.startsWith('blob:'))
+      .filter(p => !signedUrls[p]);
+    if (!paths.length) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.storage.from('chat-attachments').createSignedUrls(paths, 60 * 60);
+      if (cancelled || !data) return;
+      setSignedUrls(prev => {
+        const next = { ...prev };
+        data.forEach((row: any) => { if (row.signedUrl && row.path) next[row.path] = row.signedUrl; });
+        return next;
+      });
+    })();
+    return () => { cancelled = true; };
+  }, [messages, signedUrls]);
+
+  const resolveUrl = (url?: string | null) =>
+    !url ? undefined : (url.startsWith('http') || url.startsWith('blob:') ? url : signedUrls[url]);
+
+
 
   const markAsRead = useCallback(async () => {
     if (!conversation?.id || !user?.id) return;
@@ -129,15 +130,17 @@ export default function Messages() {
         });
       }
       for (const file of files) {
-        const ext = file.name.split('.').pop();
-        const path = `${user?.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-        const { error: upErr } = await supabase.storage.from('avatars').upload(path, file);
+        const ext = (file.name.split('.').pop() || 'bin').toLowerCase();
+        // Path MUST start with the conversation id — storage RLS checks participation.
+        const path = `${conversation.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from('chat-attachments')
+          .upload(path, file, { contentType: file.type || 'application/octet-stream', upsert: false });
         if (upErr) throw upErr;
-        const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path);
         inserts.push({
           appointment_id: conversation.id, sender_id: user?.id, message: file.name,
           message_type: file.type.startsWith('image/') ? 'image' : 'file',
-          file_url: publicUrl, file_type: file.type, status: 'sent',
+          file_url: path, file_type: file.type, status: 'sent',
         });
       }
       const { error } = await supabase.from('chat_messages').insert(inserts);
@@ -255,8 +258,9 @@ export default function Messages() {
       <div className="flex-1 overflow-y-auto px-3 py-3 space-y-1.5">
         {allMessages.map((msg: any) => {
           const isMe = msg.sender_id === user?.id;
-          const showImage = msg.message_type === 'image' && msg.file_url;
-          const showFile = msg.message_type === 'file' && msg.file_url;
+          const fileHref = resolveUrl(msg.file_url);
+          const showImage = msg.message_type === 'image' && !!msg.file_url;
+          const showFile = msg.message_type === 'file' && !!msg.file_url;
 
           return (
             <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
@@ -268,14 +272,20 @@ export default function Messages() {
                 } ${msg._failed ? 'opacity-60 ring-1 ring-destructive' : ''}`}
               >
                 {showImage && (
-                  <a href={msg.file_url} target="_blank" rel="noreferrer" className="block">
-                    <img src={msg.file_url} alt={msg.message || 'picha'} className="rounded-lg max-w-[220px] max-h-[220px] object-cover mb-0.5" />
-                  </a>
+                  fileHref ? (
+                    <a href={fileHref} target="_blank" rel="noreferrer" className="block">
+                      <img src={fileHref} alt={msg.message || 'picha'} className="rounded-lg max-w-[220px] max-h-[220px] object-cover mb-0.5" />
+                    </a>
+                  ) : (
+                    <div className="h-24 w-40 rounded-lg bg-background/40 flex items-center justify-center mb-0.5">
+                      <Loader2 className="h-4 w-4 animate-spin opacity-60" />
+                    </div>
+                  )
                 )}
                 {showFile && (
                   <a
-                    href={msg.file_url} target="_blank" rel="noreferrer"
-                    className={`flex items-center gap-2 rounded-lg px-2 py-1.5 my-0.5 ${isMe ? 'bg-primary-foreground/10' : 'bg-background/60'}`}
+                    href={fileHref} target="_blank" rel="noreferrer" download={msg.message}
+                    className={`flex items-center gap-2 rounded-lg px-2 py-1.5 my-0.5 ${isMe ? 'bg-primary-foreground/10' : 'bg-background/60'} ${fileHref ? '' : 'pointer-events-none opacity-60'}`}
                   >
                     <FileText className="h-3.5 w-3.5 shrink-0" />
                     <span className="text-[11px] truncate flex-1">{msg.message}</span>
@@ -286,6 +296,7 @@ export default function Messages() {
                   <p className="whitespace-pre-wrap break-words">{msg.message}</p>
                 )}
                 {showImage && msg.message && msg.message !== msg.file_url && (
+
                   <p className="whitespace-pre-wrap break-words text-[11px] opacity-90">{msg.message}</p>
                 )}
                 <div className="flex items-center justify-end gap-1 mt-0.5 opacity-70">

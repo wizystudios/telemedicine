@@ -43,7 +43,7 @@ export function AvailabilityCalendarSidebar() {
   const dateLabel = new Date(date).toLocaleDateString('sw-TZ', { weekday: 'short', day: 'numeric', month: 'short' });
 
   return (
-    <aside className="rounded-3xl border border-border bg-card p-3 space-y-3">
+    <aside className="space-y-3">
       <div className="flex items-center gap-2">
         <div className="h-8 w-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
           <CalendarDays className="h-4 w-4" />
@@ -72,7 +72,7 @@ export function AvailabilityCalendarSidebar() {
           const initials = `${r.first_name?.[0] ?? ''}${r.last_name?.[0] ?? ''}`.toUpperCase();
           const orgName = r.hospital_name || r.polyclinic_name;
           return (
-            <div key={`${r.doctor_id}-${i}`} className="rounded-2xl border border-border/60 p-2 space-y-1.5">
+            <div key={`${r.doctor_id}-${i}`} className="rounded-2xl p-2 space-y-1.5">
               <button
                 onClick={() => navigate(`/doctor-profile/${r.doctor_id}`)}
                 className="flex items-center gap-2 w-full text-left"
