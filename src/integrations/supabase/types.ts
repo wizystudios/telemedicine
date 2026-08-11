@@ -916,8 +916,10 @@ export type Database = {
           id: string
           is_promoted: boolean | null
           is_verified: boolean | null
+          latitude: number | null
           license_document_url: string | null
           logo_url: string | null
+          longitude: number | null
           name: string
           org_approval_status: string
           org_rejection_reason: string | null
@@ -943,8 +945,10 @@ export type Database = {
           id?: string
           is_promoted?: boolean | null
           is_verified?: boolean | null
+          latitude?: number | null
           license_document_url?: string | null
           logo_url?: string | null
+          longitude?: number | null
           name: string
           org_approval_status?: string
           org_rejection_reason?: string | null
@@ -970,8 +974,10 @@ export type Database = {
           id?: string
           is_promoted?: boolean | null
           is_verified?: boolean | null
+          latitude?: number | null
           license_document_url?: string | null
           logo_url?: string | null
+          longitude?: number | null
           name?: string
           org_approval_status?: string
           org_rejection_reason?: string | null
@@ -1175,8 +1181,10 @@ export type Database = {
           id: string
           is_promoted: boolean | null
           is_verified: boolean | null
+          latitude: number | null
           license_document_url: string | null
           logo_url: string | null
+          longitude: number | null
           name: string
           opening_hours: Json | null
           org_approval_status: string
@@ -1203,8 +1211,10 @@ export type Database = {
           id?: string
           is_promoted?: boolean | null
           is_verified?: boolean | null
+          latitude?: number | null
           license_document_url?: string | null
           logo_url?: string | null
+          longitude?: number | null
           name: string
           opening_hours?: Json | null
           org_approval_status?: string
@@ -1231,8 +1241,10 @@ export type Database = {
           id?: string
           is_promoted?: boolean | null
           is_verified?: boolean | null
+          latitude?: number | null
           license_document_url?: string | null
           logo_url?: string | null
+          longitude?: number | null
           name?: string
           opening_hours?: Json | null
           org_approval_status?: string
@@ -1825,10 +1837,12 @@ export type Database = {
           id: string
           is_promoted: boolean | null
           is_verified: boolean | null
+          latitude: number | null
           license_document_url: string | null
           location_lat: number | null
           location_lng: number | null
           logo_url: string | null
+          longitude: number | null
           medications_available: string[] | null
           name: string
           opening_hours: Json | null
@@ -1856,10 +1870,12 @@ export type Database = {
           id?: string
           is_promoted?: boolean | null
           is_verified?: boolean | null
+          latitude?: number | null
           license_document_url?: string | null
           location_lat?: number | null
           location_lng?: number | null
           logo_url?: string | null
+          longitude?: number | null
           medications_available?: string[] | null
           name: string
           opening_hours?: Json | null
@@ -1887,10 +1903,12 @@ export type Database = {
           id?: string
           is_promoted?: boolean | null
           is_verified?: boolean | null
+          latitude?: number | null
           license_document_url?: string | null
           location_lat?: number | null
           location_lng?: number | null
           logo_url?: string | null
+          longitude?: number | null
           medications_available?: string[] | null
           name?: string
           opening_hours?: Json | null
@@ -2205,8 +2223,10 @@ export type Database = {
           id: string
           is_promoted: boolean | null
           is_verified: boolean | null
+          latitude: number | null
           license_document_url: string | null
           logo_url: string | null
+          longitude: number | null
           name: string
           org_approval_status: string
           org_rejection_reason: string | null
@@ -2228,8 +2248,10 @@ export type Database = {
           id?: string
           is_promoted?: boolean | null
           is_verified?: boolean | null
+          latitude?: number | null
           license_document_url?: string | null
           logo_url?: string | null
+          longitude?: number | null
           name: string
           org_approval_status?: string
           org_rejection_reason?: string | null
@@ -2251,8 +2273,10 @@ export type Database = {
           id?: string
           is_promoted?: boolean | null
           is_verified?: boolean | null
+          latitude?: number | null
           license_document_url?: string | null
           logo_url?: string | null
+          longitude?: number | null
           name?: string
           org_approval_status?: string
           org_rejection_reason?: string | null
