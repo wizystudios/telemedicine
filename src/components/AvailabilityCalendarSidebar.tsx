@@ -43,7 +43,7 @@ export function AvailabilityCalendarSidebar() {
   const dateLabel = new Date(date).toLocaleDateString('sw-TZ', { weekday: 'short', day: 'numeric', month: 'short' });
 
   return (
-    <aside className="rounded-3xl border border-border bg-card p-3 space-y-3">
+    <aside className="space-y-3">
       <div className="flex items-center gap-2">
         <div className="h-8 w-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
           <CalendarDays className="h-4 w-4" />
