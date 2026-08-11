@@ -71,6 +71,32 @@ export default function Messages() {
     enabled: !!conversation?.id,
   });
 
+  // ── Signed URLs for private chat attachments ──
+  const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
+  useEffect(() => {
+    const paths = (messages as any[])
+      .map(m => m.file_url as string | null)
+      .filter((p): p is string => !!p && !p.startsWith('http') && !p.startsWith('blob:'))
+      .filter(p => !signedUrls[p]);
+    if (!paths.length) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.storage.from('chat-attachments').createSignedUrls(paths, 60 * 60);
+      if (cancelled || !data) return;
+      setSignedUrls(prev => {
+        const next = { ...prev };
+        data.forEach((row: any) => { if (row.signedUrl && row.path) next[row.path] = row.signedUrl; });
+        return next;
+      });
+    })();
+    return () => { cancelled = true; };
+  }, [messages, signedUrls]);
+
+  const resolveUrl = (url?: string | null) =>
+    !url ? undefined : (url.startsWith('http') || url.startsWith('blob:') ? url : signedUrls[url]);
+
+
+
   const markAsRead = useCallback(async () => {
     if (!conversation?.id || !user?.id) return;
     await supabase.from('chat_messages')
