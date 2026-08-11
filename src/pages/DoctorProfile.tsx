@@ -31,21 +31,16 @@ export default function DoctorProfile() {
   const { data: doctor, isLoading } = useQuery({
     queryKey: ['doctor-profile', doctorId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select(`
-          *,
-          doctor_profiles (
-            bio, experience_years, consultation_fee, rating, total_reviews,
-            education, languages, is_verified, license_number, hospital_name, doctor_type, specialty_id
-          )
-        `)
+      const { data, error } = await (supabase as any)
+        .from('public_doctors')
+        .select('*')
         .eq('id', doctorId)
-        .eq('role', 'doctor')
         .maybeSingle();
 
       if (error) throw error;
-      return data;
+      if (!data) return null;
+      // Keep the existing shape used below.
+      return { ...data, doctor_profiles: [data] };
     },
     enabled: !!doctorId,
   });
