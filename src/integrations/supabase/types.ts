@@ -2681,6 +2681,7 @@ export type Database = {
         Args: { p_approve: boolean; p_doctor_id: string; p_reason?: string }
         Returns: undefined
       }
+      can_access_chat_attachment: { Args: { _name: string }; Returns: boolean }
       check_username_available: {
         Args: { username_to_check: string }
         Returns: boolean
