@@ -72,7 +72,7 @@ export function AvailabilityCalendarSidebar() {
           const initials = `${r.first_name?.[0] ?? ''}${r.last_name?.[0] ?? ''}`.toUpperCase();
           const orgName = r.hospital_name || r.polyclinic_name;
           return (
-            <div key={`${r.doctor_id}-${i}`} className="rounded-2xl border border-border/60 p-2 space-y-1.5">
+            <div key={`${r.doctor_id}-${i}`} className="rounded-2xl p-2 space-y-1.5">
               <button
                 onClick={() => navigate(`/doctor-profile/${r.doctor_id}`)}
                 className="flex items-center gap-2 w-full text-left"
