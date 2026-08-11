@@ -16,6 +16,7 @@ export default function HospitalsList() {
       const { data, error } = await supabase
         .from('hospitals')
         .select('id, name, address, logo_url, rating, total_reviews, is_verified, has_ambulance')
+        .eq('is_verified', true)
         .order('is_verified', { ascending: false })
         .order('rating', { ascending: false });
       if (error) throw error;

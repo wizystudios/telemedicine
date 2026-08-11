@@ -67,7 +67,7 @@ export function Navbar({ onToggleSidebar }: NavbarProps) {
   if (hideNav) return null;
   if (!user) {
     return (
-      <nav className="w-full sticky top-0 z-40 bg-transparent">
+      <nav className="w-full sticky top-0 z-40 border-b border-border bg-background shadow-sm">
         <div className="flex items-center justify-between h-12 px-4">
           <Link to="/" className="flex items-center gap-2">
             <div className="h-7 w-7 rounded-lg bg-primary flex items-center justify-center">
@@ -84,7 +84,7 @@ export function Navbar({ onToggleSidebar }: NavbarProps) {
   }
 
   return (
-    <nav className="w-full sticky top-0 z-40 bg-transparent">
+    <nav className="w-full sticky top-0 z-40 border-b border-border bg-background shadow-sm">
       <div className="flex items-center justify-between h-12 px-4">
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onToggleSidebar}>

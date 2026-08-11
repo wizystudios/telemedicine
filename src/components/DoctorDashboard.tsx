@@ -72,14 +72,18 @@ export function DoctorDashboard() {
 
   const fetchData = async () => {
     try {
-      const today = new Date().toISOString().split('T')[0];
+      const startOfToday = new Date();
+      startOfToday.setHours(0, 0, 0, 0);
+      const endOfToday = new Date(startOfToday);
+      endOfToday.setDate(endOfToday.getDate() + 1);
       
       // Fetch pending appointments
       const { data: pending } = await supabase
         .from('appointments')
         .select('*, profiles!appointments_patient_id_fkey(first_name, last_name, avatar_url)')
         .eq('doctor_id', user?.id)
-        .eq('status', 'pending')
+        .eq('status', 'scheduled')
+        .neq('consultation_type', 'chat')
         .order('appointment_date', { ascending: true })
         .limit(10);
 
@@ -88,8 +92,9 @@ export function DoctorDashboard() {
         .from('appointments')
         .select('*, profiles!appointments_patient_id_fkey(first_name, last_name, avatar_url)')
         .eq('doctor_id', user?.id)
-        .gte('appointment_date', today)
-        .lt('appointment_date', today + 'T23:59:59')
+        .gte('appointment_date', startOfToday.toISOString())
+        .lt('appointment_date', endOfToday.toISOString())
+        .neq('consultation_type', 'chat')
         .order('appointment_date', { ascending: true });
 
       // Fetch stats
@@ -97,14 +102,18 @@ export function DoctorDashboard() {
         .from('appointments')
         .select('*', { count: 'exact', head: true })
         .eq('doctor_id', user?.id)
-        .gte('appointment_date', today);
+        .gte('appointment_date', startOfToday.toISOString())
+        .lt('appointment_date', endOfToday.toISOString())
+        .neq('consultation_type', 'chat');
 
       const { count: completedCount } = await supabase
         .from('appointments')
         .select('*', { count: 'exact', head: true })
         .eq('doctor_id', user?.id)
         .eq('status', 'completed')
-        .gte('appointment_date', today);
+        .gte('appointment_date', startOfToday.toISOString())
+        .lt('appointment_date', endOfToday.toISOString())
+        .neq('consultation_type', 'chat');
 
       // Fetch doctor rating
       const { data: doctorProfile } = await supabase

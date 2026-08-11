@@ -16,6 +16,7 @@ export default function PharmaciesList() {
       const { data, error } = await supabase
         .from('pharmacies')
         .select('id, name, address, logo_url, rating, total_reviews, is_verified')
+        .eq('is_verified', true)
         .order('is_verified', { ascending: false })
         .order('rating', { ascending: false });
       if (error) throw error;

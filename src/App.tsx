@@ -98,7 +98,7 @@ function AppContent() {
           />
         )}
         <main className={`flex-1 min-w-0 ${isAuthRoute ? 'h-screen overflow-hidden' : isActiveChat ? '' : 'pb-14 md:pb-0'}`}>
-          <ErrorBoundary>
+          <ErrorBoundary key={location.pathname + location.search}>
             <Routes>
               <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Navigate to="/doctors-list" replace />} />
               <Route path="/auth" element={user ? <Navigate to={new URLSearchParams(location.search).get('redirectTo') || '/dashboard'} replace /> : <Auth />} />
@@ -121,6 +121,7 @@ function AppContent() {
               <Route path="/laboratory-profile/:labId" element={<LaboratoryProfile />} />
               <Route path="/polyclinic-profile/:polyclinicId" element={<PolyclinicProfile />} />
               <Route path="/nearby" element={<NearbyPlaces />} />
+              <Route path="/nearby/:type" element={<NearbyPlaces />} />
               <Route path="/marketplace" element={<Marketplace />} />
               <Route path="/hospitals" element={<HospitalsList />} />
               <Route path="/pharmacies" element={<PharmaciesList />} />
