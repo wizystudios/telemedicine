@@ -104,15 +104,17 @@ export default function Messages() {
         });
       }
       for (const file of files) {
-        const ext = file.name.split('.').pop();
-        const path = `${user?.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-        const { error: upErr } = await supabase.storage.from('avatars').upload(path, file);
+        const ext = (file.name.split('.').pop() || 'bin').toLowerCase();
+        // Path MUST start with the conversation id — storage RLS checks participation.
+        const path = `${conversation.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from('chat-attachments')
+          .upload(path, file, { contentType: file.type || 'application/octet-stream', upsert: false });
         if (upErr) throw upErr;
-        const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path);
         inserts.push({
           appointment_id: conversation.id, sender_id: user?.id, message: file.name,
           message_type: file.type.startsWith('image/') ? 'image' : 'file',
-          file_url: publicUrl, file_type: file.type, status: 'sent',
+          file_url: path, file_type: file.type, status: 'sent',
         });
       }
       const { error } = await supabase.from('chat_messages').insert(inserts);
