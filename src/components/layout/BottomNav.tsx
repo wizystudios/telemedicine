@@ -99,7 +99,7 @@ export function BottomNav() {
   const navItems = itemsForRole(user ? role : null);
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 w-full md:hidden z-50 safe-area-bottom bg-transparent">
+    <nav className="fixed bottom-0 left-0 right-0 w-full md:hidden z-50 safe-area-bottom border-t border-border bg-background shadow-[0_-4px_14px_hsl(var(--foreground)/0.08)]">
       <div className="flex justify-around items-end h-16 px-1">
         {navItems.map((item) => {
           const Icon = item.icon;

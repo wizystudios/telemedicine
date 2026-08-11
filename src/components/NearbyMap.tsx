@@ -8,7 +8,7 @@ import {
   Star, CheckCircle2, AlertCircle, Locate,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { RealMap, MapPoint } from '@/components/RealMap';
 import { haversineKm } from '@/lib/distance';
 
@@ -29,13 +29,19 @@ interface NearbyItem {
 
 export function NearbyMap() {
   const navigate = useNavigate();
+  const { type } = useParams();
+  const [searchParams] = useSearchParams();
   const [userLocation, setUserLocation] = useState<Location | null>(null);
   const [isLocating, setIsLocating] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [hospitals, setHospitals] = useState<NearbyItem[]>([]);
   const [pharmacies, setPharmacies] = useState<NearbyItem[]>([]);
   const [laboratories, setLaboratories] = useState<NearbyItem[]>([]);
-  const [selectedTab, setSelectedTab] = useState('hospitals');
+  const requestedType = type || searchParams.get('type') || 'hospitals';
+  const initialTab = requestedType === 'pharmacy' || requestedType === 'pharmacies' ? 'pharmacies'
+    : requestedType === 'lab' || requestedType === 'laboratory' || requestedType === 'laboratories' ? 'labs'
+    : 'hospitals';
+  const [selectedTab, setSelectedTab] = useState(initialTab);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => { fetchNearbyPlaces(); }, []);
