@@ -40,49 +40,24 @@ export default function Messages() {
   const otherUserId = doctorId || patientId;
 
   const { data: otherUser } = useQuery({
-    queryKey: ['user-profile', otherUserId],
+    queryKey: ['chat-peer', otherUserId],
     queryFn: async () => {
       if (!otherUserId) return null;
-      const { data } = await supabase.from('profiles').select('*').eq('id', otherUserId).single();
-      return data;
+      const { data } = await (supabase as any).rpc('get_chat_peer', { _id: otherUserId });
+      return (Array.isArray(data) ? data[0] : data) || null;
     },
     enabled: !!otherUserId,
-  });
-
-  const { data: currentUserProfile } = useQuery({
-    queryKey: ['current-user-profile', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return null;
-      const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-      return data;
-    },
-    enabled: !!user?.id,
   });
 
   const { data: conversation } = useQuery({
     queryKey: ['conversation', user?.id, otherUserId],
     queryFn: async () => {
       if (!user?.id || !otherUserId) return null;
-      const { data: existing } = await supabase
-        .from('appointments')
-        .select('*')
-        .or(`and(patient_id.eq.${user.id},doctor_id.eq.${otherUserId}),and(patient_id.eq.${otherUserId},doctor_id.eq.${user.id})`)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (existing) return existing;
-
-      const isPatient = currentUserProfile?.role === 'patient';
-      const { data } = await supabase.from('appointments').insert({
-        patient_id: isPatient ? user.id : otherUserId,
-        doctor_id: isPatient ? otherUserId : user.id,
-        appointment_date: new Date().toISOString(),
-        status: 'scheduled',
-        consultation_type: 'chat',
-      }).select().single();
-      return data;
+      const { data, error } = await (supabase as any).rpc('get_or_create_chat_thread', { _other_id: otherUserId });
+      if (error) throw error;
+      return data ? { id: data as string } : null;
     },
-    enabled: !!user?.id && !!otherUserId && !!currentUserProfile,
+    enabled: !!user?.id && !!otherUserId,
   });
 
   const { data: messages = [] } = useQuery({
