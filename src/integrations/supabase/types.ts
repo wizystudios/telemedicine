@@ -284,6 +284,75 @@ export type Database = {
           },
         ]
       }
+      audit_logs: {
+        Row: {
+          actor_role: string | null
+          created_at: string
+          description: string | null
+          entity_id: string | null
+          entity_type: string | null
+          event_type: string
+          id: string
+          metadata: Json
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          actor_role?: string | null
+          created_at?: string
+          description?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          event_type: string
+          id?: string
+          metadata?: Json
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          actor_role?: string | null
+          created_at?: string
+          description?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          event_type?: string
+          id?: string
+          metadata?: Json
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      biometric_credentials: {
+        Row: {
+          created_at: string
+          credential_id: string
+          device_label: string | null
+          id: string
+          last_used_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          credential_id: string
+          device_label?: string | null
+          id?: string
+          last_used_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          credential_id?: string
+          device_label?: string | null
+          id?: string
+          last_used_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       call_sessions: {
         Row: {
           call_type: string
@@ -2982,6 +3051,32 @@ export type Database = {
         Args: { p_approve: boolean; p_doctor_id: string; p_reason?: string }
         Returns: undefined
       }
+      admin_backfill_directory: { Args: { _dry_run?: boolean }; Returns: Json }
+      admin_license_queue: {
+        Args: never
+        Returns: {
+          address: string
+          brela_number: string
+          created_at: string
+          is_verified: boolean
+          license_document_url: string
+          name: string
+          org_approval_status: string
+          org_id: string
+          org_type: string
+          phone: string
+          tin_number: string
+        }[]
+      }
+      admin_review_org_license: {
+        Args: {
+          _approve: boolean
+          _org_id: string
+          _org_type: string
+          _reason?: string
+        }
+        Returns: undefined
+      }
       can_access_chat_attachment: { Args: { _name: string }; Returns: boolean }
       check_username_available: {
         Args: { username_to_check: string }
@@ -3102,6 +3197,17 @@ export type Database = {
         Returns: boolean
       }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      log_audit_event: {
+        Args: {
+          _description?: string
+          _entity_id?: string
+          _entity_type?: string
+          _event_type: string
+          _metadata?: Json
+          _user_agent?: string
+        }
+        Returns: string
+      }
       lookup_user_by_contact: {
         Args: { contact: string }
         Returns: {
