@@ -710,7 +710,13 @@ export default function SuperAdminDashboard() {
             {renderCards()}
           </TabsContent>
 
-          <TabsContent value="approvals" className="mt-2"><AdminDoctorApprovals /></TabsContent>
+          <TabsContent value="approvals" className="mt-2 space-y-6">
+            <AdminDoctorApprovals />
+            <DirectoryBackfill />
+          </TabsContent>
+          <TabsContent value="licenses" className="mt-2"><AdminLicenseApprovals /></TabsContent>
+          <TabsContent value="audit" className="mt-2"><AuditLogView /></TabsContent>
+          <TabsContent value="diagnostics" className="mt-2"><SystemDiagnostics /></TabsContent>
           <TabsContent value="register-user"><RegisterUserForm /></TabsContent>
           <TabsContent value="register-org"><RegisterOrganizationForm /></TabsContent>
           <TabsContent value="register-doctor"><RegisterDoctorForm /></TabsContent>
