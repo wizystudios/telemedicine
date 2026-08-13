@@ -19,6 +19,10 @@ import RegisterOrganizationForm from '@/components/super-admin/RegisterOrganizat
 import RegisterDoctorForm from '@/components/super-admin/RegisterDoctorForm';
 import RegisterUserForm from '@/components/super-admin/RegisterUserForm';
 import AdminDoctorApprovals from '@/components/super-admin/AdminDoctorApprovals';
+import AdminLicenseApprovals from '@/components/super-admin/AdminLicenseApprovals';
+import AuditLogView from '@/components/super-admin/AuditLogView';
+import SystemDiagnostics from '@/components/super-admin/SystemDiagnostics';
+import DirectoryBackfill from '@/components/super-admin/DirectoryBackfill';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 type AppRole = 'patient' | 'doctor' | 'hospital_owner' | 'pharmacy_owner' | 'lab_owner' | 'admin' | 'super_admin' | 'polyclinic_owner';
