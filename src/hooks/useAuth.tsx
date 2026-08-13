@@ -168,8 +168,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (data.session) {
         setSession(data.session);
         setUser(data.user);
+        syncBiometricTokens(data.session);
+        logAudit('login', { entityType: 'auth', description: 'Password sign-in' });
       }
-      
+
       return { data, error: null };
     } catch (err: any) {
       console.error('SignIn exception:', err);
