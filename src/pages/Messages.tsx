@@ -83,6 +83,11 @@ export default function Messages() {
     (async () => {
       const { data } = await supabase.storage.from('chat-attachments').createSignedUrls(paths, 60 * 60);
       if (cancelled || !data) return;
+      logAudit('attachment_accessed', {
+        entityType: 'chat_attachment',
+        description: `Signed access to ${paths.length} attachment(s)`,
+        metadata: { count: paths.length },
+      });
       setSignedUrls(prev => {
         const next = { ...prev };
         data.forEach((row: any) => { if (row.signedUrl && row.path) next[row.path] = row.signedUrl; });
