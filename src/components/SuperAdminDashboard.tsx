@@ -643,6 +643,15 @@ export default function SuperAdminDashboard() {
             <TabsTrigger value="approvals" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
               <ShieldCheck className="h-3.5 w-3.5 mr-1" />Idhinisha
             </TabsTrigger>
+            <TabsTrigger value="licenses" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
+              <ShieldCheck className="h-3.5 w-3.5 mr-1" />Leseni
+            </TabsTrigger>
+            <TabsTrigger value="audit" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
+              <Activity className="h-3.5 w-3.5 mr-1" />Kumbukumbu
+            </TabsTrigger>
+            <TabsTrigger value="diagnostics" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
+              <Activity className="h-3.5 w-3.5 mr-1" />Uchunguzi
+            </TabsTrigger>
             <TabsTrigger value="database" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
               <Activity className="h-3.5 w-3.5 mr-1" />Angalia Data
             </TabsTrigger>
