@@ -2,6 +2,8 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { syncBiometricTokens, clearBiometric } from '@/lib/biometric';
+import { logAudit } from '@/lib/audit';
 
 interface AuthContextType {
   user: User | null;
