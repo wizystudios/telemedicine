@@ -13,6 +13,7 @@ import { Moon, Sun, Globe, LogOut, LayoutDashboard, KeyRound, ShoppingBag, FileT
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { GdprPanel } from '@/components/GdprPanel';
+import { BiometricSetting } from '@/components/BiometricSetting';
 
 const ROLE_LABEL: Record<string, string> = {
   patient: 'Mgonjwa',
