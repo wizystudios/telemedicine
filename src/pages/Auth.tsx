@@ -197,11 +197,22 @@ export default function Auth() {
               <h2 className="text-xl font-bold">Karibu TeleMed</h2>
               <p className="text-sm text-muted-foreground mt-1">Afya yako mkononi mwako</p>
             </div>
+            {bioReady && (
+              <Button
+                onClick={handleBiometricLogin}
+                disabled={isLoading}
+                className="w-full h-12 text-sm font-semibold"
+              >
+                <Fingerprint className="h-4 w-4 mr-2" />
+                {isLoading ? 'Subiri...' : `Ingia kwa alama ya kidole${bioName ? ` (${bioName})` : ''}`}
+              </Button>
+            )}
             <Button
               onClick={() => { setMode('login'); setLoginStep(1); }}
+              variant={bioReady ? 'outline' : 'default'}
               className="w-full h-12 text-sm font-semibold"
             >
-              Ingia <ArrowRight className="h-4 w-4 ml-2" />
+              Ingia kwa nenosiri <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
             <Button
               variant="outline"
