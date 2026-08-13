@@ -13,6 +13,7 @@ import { Moon, Sun, Globe, LogOut, LayoutDashboard, KeyRound, ShoppingBag, FileT
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { GdprPanel } from '@/components/GdprPanel';
+import { BiometricSetting } from '@/components/BiometricSetting';
 
 const ROLE_LABEL: Record<string, string> = {
   patient: 'Mgonjwa',
@@ -248,7 +249,8 @@ export default function Profile() {
           <span className="text-sm flex-1">Masharti ya Matumizi</span>
         </button>
 
-        <div className="mt-6">
+        <div className="mt-6 space-y-4">
+          <BiometricSetting displayName={user?.email || 'TeleMed'} />
           <GdprPanel />
         </div>
 

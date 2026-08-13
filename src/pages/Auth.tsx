@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,9 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
   HeartPulse, Eye, EyeOff,
-  ChevronLeft, ArrowRight, Phone, Mail
+  ChevronLeft, ArrowRight, Phone, Mail, Fingerprint
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { biometricLogin, getStoredBiometric, isBiometricEnrolled } from '@/lib/biometric';
 
 type Role = 'patient';
 type AuthMethod = 'email' | 'phone';
@@ -55,6 +56,27 @@ export default function Auth() {
     } else {
       toast({ title: 'Tumeshatuma', description: 'Angalia email yako kwa kiungo cha kurejesha nenosiri.' });
     }
+  };
+
+  const [bioReady, setBioReady] = useState(false);
+  const [bioName, setBioName] = useState('');
+
+  useEffect(() => {
+    const stored = getStoredBiometric();
+    setBioReady(isBiometricEnrolled());
+    setBioName(stored?.displayName || stored?.email || '');
+  }, []);
+
+  const handleBiometricLogin = async () => {
+    setIsLoading(true);
+    const { error } = await biometricLogin();
+    setIsLoading(false);
+    if (error) {
+      setBioReady(isBiometricEnrolled());
+      toast({ title: 'Imeshindwa', description: error, variant: 'destructive' });
+      return;
+    }
+    navigate('/dashboard');
   };
 
   const handleLogin = async () => {
@@ -175,11 +197,22 @@ export default function Auth() {
               <h2 className="text-xl font-bold">Karibu TeleMed</h2>
               <p className="text-sm text-muted-foreground mt-1">Afya yako mkononi mwako</p>
             </div>
+            {bioReady && (
+              <Button
+                onClick={handleBiometricLogin}
+                disabled={isLoading}
+                className="w-full h-12 text-sm font-semibold"
+              >
+                <Fingerprint className="h-4 w-4 mr-2" />
+                {isLoading ? 'Subiri...' : `Ingia kwa alama ya kidole${bioName ? ` (${bioName})` : ''}`}
+              </Button>
+            )}
             <Button
               onClick={() => { setMode('login'); setLoginStep(1); }}
+              variant={bioReady ? 'outline' : 'default'}
               className="w-full h-12 text-sm font-semibold"
             >
-              Ingia <ArrowRight className="h-4 w-4 ml-2" />
+              Ingia kwa nenosiri <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
             <Button
               variant="outline"

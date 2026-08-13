@@ -19,6 +19,10 @@ import RegisterOrganizationForm from '@/components/super-admin/RegisterOrganizat
 import RegisterDoctorForm from '@/components/super-admin/RegisterDoctorForm';
 import RegisterUserForm from '@/components/super-admin/RegisterUserForm';
 import AdminDoctorApprovals from '@/components/super-admin/AdminDoctorApprovals';
+import AdminLicenseApprovals from '@/components/super-admin/AdminLicenseApprovals';
+import AuditLogView from '@/components/super-admin/AuditLogView';
+import SystemDiagnostics from '@/components/super-admin/SystemDiagnostics';
+import DirectoryBackfill from '@/components/super-admin/DirectoryBackfill';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 type AppRole = 'patient' | 'doctor' | 'hospital_owner' | 'pharmacy_owner' | 'lab_owner' | 'admin' | 'super_admin' | 'polyclinic_owner';
@@ -630,7 +634,7 @@ export default function SuperAdminDashboard() {
       {/* Main tabs */}
       <div className="px-4">
         <Tabs value={adminTab} onValueChange={setAdminTab} className="space-y-5">
-          <TabsList className="w-full h-auto bg-muted/30 p-1.5 rounded-2xl grid grid-cols-5 gap-1">
+          <TabsList className="w-full h-auto bg-muted/30 p-1.5 rounded-2xl grid grid-cols-4 sm:grid-cols-8 gap-1">
             <TabsTrigger value="register-user" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
               <UserPlus className="h-3.5 w-3.5 mr-1" />Sajili Mtumiaji
             </TabsTrigger>
@@ -642,6 +646,15 @@ export default function SuperAdminDashboard() {
             </TabsTrigger>
             <TabsTrigger value="approvals" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
               <ShieldCheck className="h-3.5 w-3.5 mr-1" />Idhinisha
+            </TabsTrigger>
+            <TabsTrigger value="licenses" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
+              <ShieldCheck className="h-3.5 w-3.5 mr-1" />Leseni
+            </TabsTrigger>
+            <TabsTrigger value="audit" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
+              <Activity className="h-3.5 w-3.5 mr-1" />Kumbukumbu
+            </TabsTrigger>
+            <TabsTrigger value="diagnostics" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
+              <Activity className="h-3.5 w-3.5 mr-1" />Uchunguzi
             </TabsTrigger>
             <TabsTrigger value="database" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
               <Activity className="h-3.5 w-3.5 mr-1" />Angalia Data
@@ -697,7 +710,13 @@ export default function SuperAdminDashboard() {
             {renderCards()}
           </TabsContent>
 
-          <TabsContent value="approvals" className="mt-2"><AdminDoctorApprovals /></TabsContent>
+          <TabsContent value="approvals" className="mt-2 space-y-6">
+            <AdminDoctorApprovals />
+            <DirectoryBackfill />
+          </TabsContent>
+          <TabsContent value="licenses" className="mt-2"><AdminLicenseApprovals /></TabsContent>
+          <TabsContent value="audit" className="mt-2"><AuditLogView /></TabsContent>
+          <TabsContent value="diagnostics" className="mt-2"><SystemDiagnostics /></TabsContent>
           <TabsContent value="register-user"><RegisterUserForm /></TabsContent>
           <TabsContent value="register-org"><RegisterOrganizationForm /></TabsContent>
           <TabsContent value="register-doctor"><RegisterDoctorForm /></TabsContent>

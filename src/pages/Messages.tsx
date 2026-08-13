@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { logAudit } from '@/lib/audit';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -83,6 +84,11 @@ export default function Messages() {
     (async () => {
       const { data } = await supabase.storage.from('chat-attachments').createSignedUrls(paths, 60 * 60);
       if (cancelled || !data) return;
+      logAudit('attachment_accessed', {
+        entityType: 'chat_attachment',
+        description: `Signed access to ${paths.length} attachment(s)`,
+        metadata: { count: paths.length },
+      });
       setSignedUrls(prev => {
         const next = { ...prev };
         data.forEach((row: any) => { if (row.signedUrl && row.path) next[row.path] = row.signedUrl; });
@@ -145,6 +151,19 @@ export default function Messages() {
       }
       const { error } = await supabase.from('chat_messages').insert(inserts);
       if (error) throw error;
+      logAudit('chat_message_sent', {
+        entityType: 'appointment',
+        entityId: conversation.id,
+        description: files.length ? `${files.length} kiambatisho` : 'Ujumbe wa maandishi',
+        metadata: { attachments: files.length, has_text: !!text.trim() },
+      });
+      if (files.length) {
+        logAudit('attachment_uploaded', {
+          entityType: 'appointment',
+          entityId: conversation.id,
+          metadata: { count: files.length },
+        });
+      }
       // Remove optimistic entry — realtime will deliver the real one
       setOptimisticMsgs(prev => prev.filter(m => m.tempId !== tempId));
       queryClient.invalidateQueries({ queryKey: ['messages', conversation.id] });

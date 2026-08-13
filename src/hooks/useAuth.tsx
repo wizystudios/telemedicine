@@ -2,6 +2,8 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { syncBiometricTokens } from '@/lib/biometric';
+import { logAudit } from '@/lib/audit';
 
 interface AuthContextType {
   user: User | null;
@@ -32,6 +34,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+        if (session) syncBiometricTokens(session);
       }
     );
 
@@ -165,8 +168,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (data.session) {
         setSession(data.session);
         setUser(data.user);
+        syncBiometricTokens(data.session);
+        logAudit('login', { entityType: 'auth', description: 'Password sign-in' });
       }
-      
+
       return { data, error: null };
     } catch (err: any) {
       console.error('SignIn exception:', err);
@@ -180,6 +185,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log('signOut called');
     try {
       setLoading(true);
+      await logAudit('logout', { entityType: 'auth' });
       const { error } = await supabase.auth.signOut();
       if (error) {
         console.error('SignOut error:', error);
