@@ -58,6 +58,27 @@ export default function Auth() {
     }
   };
 
+  const [bioReady, setBioReady] = useState(false);
+  const [bioName, setBioName] = useState('');
+
+  useEffect(() => {
+    const stored = getStoredBiometric();
+    setBioReady(isBiometricEnrolled());
+    setBioName(stored?.displayName || stored?.email || '');
+  }, []);
+
+  const handleBiometricLogin = async () => {
+    setIsLoading(true);
+    const { error } = await biometricLogin();
+    setIsLoading(false);
+    if (error) {
+      setBioReady(isBiometricEnrolled());
+      toast({ title: 'Imeshindwa', description: error, variant: 'destructive' });
+      return;
+    }
+    navigate('/dashboard');
+  };
+
   const handleLogin = async () => {
     setIsLoading(true);
     try {
