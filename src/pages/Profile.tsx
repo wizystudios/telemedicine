@@ -248,7 +248,8 @@ export default function Profile() {
           <span className="text-sm flex-1">Masharti ya Matumizi</span>
         </button>
 
-        <div className="mt-6">
+        <div className="mt-6 space-y-4">
+          <BiometricSetting displayName={user?.email || 'TeleMed'} />
           <GdprPanel />
         </div>
 
