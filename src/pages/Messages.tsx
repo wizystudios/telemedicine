@@ -151,6 +151,19 @@ export default function Messages() {
       }
       const { error } = await supabase.from('chat_messages').insert(inserts);
       if (error) throw error;
+      logAudit('chat_message_sent', {
+        entityType: 'appointment',
+        entityId: conversation.id,
+        description: files.length ? `${files.length} kiambatisho` : 'Ujumbe wa maandishi',
+        metadata: { attachments: files.length, has_text: !!text.trim() },
+      });
+      if (files.length) {
+        logAudit('attachment_uploaded', {
+          entityType: 'appointment',
+          entityId: conversation.id,
+          metadata: { count: files.length },
+        });
+      }
       // Remove optimistic entry — realtime will deliver the real one
       setOptimisticMsgs(prev => prev.filter(m => m.tempId !== tempId));
       queryClient.invalidateQueries({ queryKey: ['messages', conversation.id] });
