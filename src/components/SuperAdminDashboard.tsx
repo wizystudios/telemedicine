@@ -630,7 +630,7 @@ export default function SuperAdminDashboard() {
       {/* Main tabs */}
       <div className="px-4">
         <Tabs value={adminTab} onValueChange={setAdminTab} className="space-y-5">
-          <TabsList className="w-full h-auto bg-muted/30 p-1.5 rounded-2xl grid grid-cols-5 gap-1">
+          <TabsList className="w-full h-auto bg-muted/30 p-1.5 rounded-2xl grid grid-cols-4 sm:grid-cols-8 gap-1">
             <TabsTrigger value="register-user" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
               <UserPlus className="h-3.5 w-3.5 mr-1" />Sajili Mtumiaji
             </TabsTrigger>
