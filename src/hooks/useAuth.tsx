@@ -185,6 +185,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log('signOut called');
     try {
       setLoading(true);
+      await logAudit('logout', { entityType: 'auth' });
       const { error } = await supabase.auth.signOut();
       if (error) {
         console.error('SignOut error:', error);
