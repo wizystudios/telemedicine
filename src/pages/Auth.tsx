@@ -6,9 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
   HeartPulse, Eye, EyeOff,
-  ChevronLeft, ArrowRight, Phone, Mail
+  ChevronLeft, ArrowRight, Phone, Mail, Fingerprint
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { biometricLogin, getStoredBiometric, isBiometricEnrolled } from '@/lib/biometric';
 
 type Role = 'patient';
 type AuthMethod = 'email' | 'phone';
