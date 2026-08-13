@@ -17,10 +17,13 @@ function b64(buf: ArrayBuffer): string {
     .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
-function fromB64(s: string): Uint8Array {
+function fromB64(s: string): ArrayBuffer {
   const pad = s.replace(/-/g, '+').replace(/_/g, '/');
   const raw = atob(pad + '='.repeat((4 - (pad.length % 4)) % 4));
-  return Uint8Array.from(raw, (c) => c.charCodeAt(0));
+  const buf = new ArrayBuffer(raw.length);
+  const view = new Uint8Array(buf);
+  for (let i = 0; i < raw.length; i++) view[i] = raw.charCodeAt(i);
+  return buf;
 }
 
 export function getStoredBiometric(): StoredBiometric | null {
