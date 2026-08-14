@@ -23,6 +23,8 @@ import AdminLicenseApprovals from '@/components/super-admin/AdminLicenseApproval
 import AuditLogView from '@/components/super-admin/AuditLogView';
 import SystemDiagnostics from '@/components/super-admin/SystemDiagnostics';
 import DirectoryBackfill from '@/components/super-admin/DirectoryBackfill';
+import AuditRetention from '@/components/super-admin/AuditRetention';
+import DiagnosticsHistory from '@/components/super-admin/DiagnosticsHistory';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 type AppRole = 'patient' | 'doctor' | 'hospital_owner' | 'pharmacy_owner' | 'lab_owner' | 'admin' | 'super_admin' | 'polyclinic_owner';
@@ -64,6 +66,8 @@ export default function SuperAdminDashboard() {
       pharmacies: 'register-org',
       labs: 'register-org',
       approvals: 'approvals',
+      retention: 'retention',
+      reports: 'reports',
       database: 'database',
     };
     setAdminTab(mapped[tab || ''] || 'register-user');
@@ -634,7 +638,7 @@ export default function SuperAdminDashboard() {
       {/* Main tabs */}
       <div className="px-4">
         <Tabs value={adminTab} onValueChange={setAdminTab} className="space-y-5">
-          <TabsList className="w-full h-auto bg-muted/30 p-1.5 rounded-2xl grid grid-cols-4 sm:grid-cols-8 gap-1">
+          <TabsList className="w-full h-auto bg-muted/30 p-1.5 rounded-2xl grid grid-cols-4 sm:grid-cols-5 gap-1">
             <TabsTrigger value="register-user" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
               <UserPlus className="h-3.5 w-3.5 mr-1" />Sajili Mtumiaji
             </TabsTrigger>
@@ -653,8 +657,14 @@ export default function SuperAdminDashboard() {
             <TabsTrigger value="audit" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
               <Activity className="h-3.5 w-3.5 mr-1" />Kumbukumbu
             </TabsTrigger>
+            <TabsTrigger value="retention" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
+              <Trash2 className="h-3.5 w-3.5 mr-1" />Muda wa Kuhifadhi
+            </TabsTrigger>
             <TabsTrigger value="diagnostics" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
               <Activity className="h-3.5 w-3.5 mr-1" />Uchunguzi
+            </TabsTrigger>
+            <TabsTrigger value="reports" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
+              <TrendingUp className="h-3.5 w-3.5 mr-1" />Ripoti za Kila Siku
             </TabsTrigger>
             <TabsTrigger value="database" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
               <Activity className="h-3.5 w-3.5 mr-1" />Angalia Data
@@ -716,7 +726,9 @@ export default function SuperAdminDashboard() {
           </TabsContent>
           <TabsContent value="licenses" className="mt-2"><AdminLicenseApprovals /></TabsContent>
           <TabsContent value="audit" className="mt-2"><AuditLogView /></TabsContent>
+          <TabsContent value="retention" className="mt-2"><AuditRetention /></TabsContent>
           <TabsContent value="diagnostics" className="mt-2"><SystemDiagnostics /></TabsContent>
+          <TabsContent value="reports" className="mt-2"><DiagnosticsHistory /></TabsContent>
           <TabsContent value="register-user"><RegisterUserForm /></TabsContent>
           <TabsContent value="register-org"><RegisterOrganizationForm /></TabsContent>
           <TabsContent value="register-doctor"><RegisterDoctorForm /></TabsContent>

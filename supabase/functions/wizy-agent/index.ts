@@ -32,9 +32,42 @@ Guest AKIOMBA kitendo (kuagiza dawa, kuweka miadi, kutuma ujumbe, ku-post tatizo
 4. Kama ni KUAGIZA DAWA na account ipo: tumia direct_order_medicine mara moja bila pending confirmation.
 5. Kama ni miadi/ujumbe/tatizo: tumia queue_pending_action({ contact, action_type, payload, human_summary }).
 
+═══ MODE YA MAPOKEZI (RECEPTIONIST) ═══
+Wewe ni MPOKEZI wa hospitali, polyclinic, famasi na maabara ZOTE zilizothibitishwa.
+Mtumiaji akiuliza kuhusu taasisi kwa jina ("JK Hospital inatoa huduma gani?", "kuna madaktari gani leo pale?", "bei ya kipimo cha malaria pale?", "wanapokea bima gani?"):
+1. Tumia facility_reception({ facility_name, date? }) MARA MOJA — hutatua jina (fuzzy), hurudisha huduma, bei, madaktari wa leo na saa zao, bima na mawasiliano.
+2. Kama matokeo ni 'choices' (majina mengi yanafanana), muulize achague kwa jina.
+3. Baada ya tool, andika sentensi 1-2 tu ya muhtasari — UI inaonyesha kadi kamili zenye viungo vya kubuku au kupiga simu.
+4. Akiuliza "nani yupo leo" au "nani anapatikana kesho" tumia facility_reception na date sahihi (YYYY-MM-DD).
+5. Akitaka kuweka miadi na daktari uliyemtaja, endelea na create_appointment_request (au guest flow).
+
 KAMWE: Usimuulize guest password. Kwa dawa tumia direct_order_medicine; kwa vitendo vingine tumia pending_actions.`;
 
 const TOOLS = [
+  {
+    type: "function",
+    function: {
+      name: "facility_reception",
+      description: "MPOKEZI: taarifa kamili za taasisi kwa JINA — huduma na bei, madaktari waliopo siku husika na saa zao, bima zinazokubalika, mawasiliano. Tumia kwa maswali yoyote kuhusu hospitali/polyclinic/famasi/maabara.",
+      parameters: {
+        type: "object",
+        properties: {
+          facility_name: { type: "string", description: "jina la hospitali/famasi/maabara" },
+          org_type: { type: "string", enum: ["hospital", "polyclinic", "pharmacy", "laboratory"] },
+          date: { type: "string", description: "YYYY-MM-DD, chaguo-msingi ni leo" },
+        },
+        required: ["facility_name"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "doctors_available_on_date",
+      description: "Madaktari wote wanaopatikana tarehe fulani (mfumo mzima), pamoja na saa na taasisi wanapofanya kazi.",
+      parameters: { type: "object", properties: { date: { type: "string", description: "YYYY-MM-DD" } } },
+    },
+  },
   {
     type: "function",
     function: {
@@ -229,6 +262,34 @@ const TOOLS = [
 async function executeTool(name: string, args: any, supabase: any, adminClient: any, userId: string | null) {
   try {
     switch (name) {
+      case "facility_reception": {
+        const name = String(args.facility_name || "").trim();
+        const { data: matches, error: mErr } = await supabase.rpc("wizy_find_org", { _query: name, _lim: 6 });
+        if (mErr) return { error: mErr.message };
+        let list = (matches || []) as any[];
+        if (args.org_type) list = list.filter((m: any) => m.org_type === args.org_type);
+        if (list.length === 0) {
+          return { found: false, query: name, suggestion: `Sijapata taasisi inayoitwa "${name}". Jaribu sehemu ya jina (mfano "JK" au "Muhimbili").` };
+        }
+        const top = list[0];
+        const strong = list.length === 1 || (top.score ?? 0) - (list[1]?.score ?? 0) > 0.15;
+        if (!strong) {
+          return { choices: list.map((m: any) => ({ org_type: m.org_type, org_id: m.org_id, name: m.name, address: m.address })) };
+        }
+        const { data: overview, error: oErr } = await supabase.rpc("wizy_org_overview", {
+          _org_type: top.org_type, _org_id: top.org_id, _date: args.date || null,
+        });
+        if (oErr) return { error: oErr.message };
+        return { found: true, ...(overview as any) };
+      }
+
+      case "doctors_available_on_date": {
+        const d = args.date || new Date().toISOString().slice(0, 10);
+        const { data, error } = await supabase.rpc("doctors_available_on_date", { _date: d });
+        if (error) return { error: error.message };
+        return { date: d, doctors: data || [], navigate: "/availability" };
+      }
+
       case "search_doctors": {
         const q = (args.query || "").trim();
         if (q) {

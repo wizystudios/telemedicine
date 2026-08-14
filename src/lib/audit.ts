@@ -17,7 +17,9 @@ export type AuditEvent =
   | 'license_approved'
   | 'license_rejected'
   | 'directory_backfill'
-  | 'diagnostics_run';
+  | 'diagnostics_run'
+  | 'audit_purged'
+  | 'biometric_reset';
 
 interface AuditOptions {
   entityType?: string;
@@ -62,4 +64,6 @@ export const AUDIT_LABELS: Record<string, string> = {
   license_rejected: 'Leseni imekataliwa',
   directory_backfill: 'Orodha imesasishwa',
   diagnostics_run: 'Uchunguzi wa mfumo',
+  audit_purged: 'Kumbukumbu zimefutwa (retention)',
+  biometric_reset: 'Alama ya kidole imerejeshwa',
 };

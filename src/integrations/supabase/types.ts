@@ -663,6 +663,45 @@ export type Database = {
         }
         Relationships: []
       }
+      diagnostics_runs: {
+        Row: {
+          created_at: string
+          failed: number
+          id: string
+          org_id: string | null
+          org_type: string | null
+          passed: number
+          ran_by: string | null
+          results: Json
+          source: string
+          warned: number
+        }
+        Insert: {
+          created_at?: string
+          failed?: number
+          id?: string
+          org_id?: string | null
+          org_type?: string | null
+          passed?: number
+          ran_by?: string | null
+          results?: Json
+          source?: string
+          warned?: number
+        }
+        Update: {
+          created_at?: string
+          failed?: number
+          id?: string
+          org_id?: string | null
+          org_type?: string | null
+          passed?: number
+          ran_by?: string | null
+          results?: Json
+          source?: string
+          warned?: number
+        }
+        Relationships: []
+      }
       doctor_availability: {
         Row: {
           created_at: string | null
@@ -2975,6 +3014,30 @@ export type Database = {
         }
         Relationships: []
       }
+      system_settings: {
+        Row: {
+          created_at: string
+          key: string
+          updated_at: string
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          created_at?: string
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Update: {
+          created_at?: string
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -3051,6 +3114,27 @@ export type Database = {
         Args: { p_approve: boolean; p_doctor_id: string; p_reason?: string }
         Returns: undefined
       }
+      admin_audit_logs: {
+        Args: {
+          _from?: string
+          _limit?: number
+          _org_id?: string
+          _org_type?: string
+          _to?: string
+        }
+        Returns: {
+          actor_name: string
+          actor_role: string
+          created_at: string
+          description: string
+          entity_id: string
+          entity_type: string
+          event_type: string
+          id: string
+          metadata: Json
+          user_id: string
+        }[]
+      }
       admin_backfill_directory: { Args: { _dry_run?: boolean }; Returns: Json }
       admin_license_queue: {
         Args: never
@@ -3077,11 +3161,14 @@ export type Database = {
         }
         Returns: undefined
       }
+      admin_run_diagnostics: { Args: never; Returns: Json }
+      audit_retention_preview: { Args: { _days: number }; Returns: Json }
       can_access_chat_attachment: { Args: { _name: string }; Returns: boolean }
       check_username_available: {
         Args: { username_to_check: string }
         Returns: boolean
       }
+      cron_purge_audit_logs: { Args: never; Returns: undefined }
       doctors_available_on_date: {
         Args: { _date: string }
         Returns: {
@@ -3219,6 +3306,16 @@ export type Database = {
         }[]
       }
       lookup_user_id_by_email: { Args: { _email: string }; Returns: string }
+      my_biometric_devices: {
+        Args: never
+        Returns: {
+          created_at: string
+          credential_id: string
+          device_label: string
+          id: string
+          last_used_at: string
+        }[]
+      }
       org_approve_doctor: {
         Args: { p_approve: boolean; p_doctor_id: string; p_reason?: string }
         Returns: undefined
@@ -3226,6 +3323,12 @@ export type Database = {
       org_dashboard_stats: {
         Args: { p_org_id: string; p_org_type: string }
         Returns: Json
+      }
+      org_member_ids: {
+        Args: { _org_id: string; _org_type: string }
+        Returns: {
+          user_id: string
+        }[]
       }
       owns_institution_logo: { Args: { _name: string }; Returns: boolean }
       pharmacy_lookup_orders: {
@@ -3280,15 +3383,22 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      purge_audit_logs: { Args: { _days?: number }; Returns: Json }
       record_profile_visit: {
         Args: { p_entity_id: string; p_entity_type: string }
         Returns: undefined
       }
+      reset_my_biometric: { Args: never; Returns: Json }
+      run_scheduled_diagnostics: { Args: never; Returns: Json }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
       update_doctor_online_status: {
         Args: { is_online_param: boolean; status_message_param?: string }
         Returns: undefined
+      }
+      user_belongs_to_org: {
+        Args: { _org_id: string; _org_type: string; _user_id: string }
+        Returns: boolean
       }
       wizy_create_pharmacy_order_for_contact: {
         Args: {
@@ -3311,6 +3421,19 @@ export type Database = {
           total_price: number
         }[]
       }
+      wizy_find_org: {
+        Args: { _lim?: number; _query: string }
+        Returns: {
+          address: string
+          logo_url: string
+          name: string
+          org_id: string
+          org_type: string
+          phone: string
+          rating: number
+          score: number
+        }[]
+      }
       wizy_list_my_orders: {
         Args: { _limit?: number; _user_id: string }
         Returns: {
@@ -3322,6 +3445,10 @@ export type Database = {
           status: string
           total_price: number
         }[]
+      }
+      wizy_org_overview: {
+        Args: { _date?: string; _org_id: string; _org_type: string }
+        Returns: Json
       }
       wizy_recent_chats: {
         Args: { _limit?: number; _user_id: string }

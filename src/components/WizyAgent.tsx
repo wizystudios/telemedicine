@@ -362,6 +362,169 @@ function ToolResultCard({
     );
   }
 
+  // ── Receptionist: full facility answer ──
+  if (tool === 'facility_reception') {
+    if (Array.isArray(result.choices)) {
+      return (
+        <div className="space-y-1.5">
+          <p className="text-[11px] text-muted-foreground">Nimepata taasisi kadhaa — chagua moja:</p>
+          {result.choices.map((c: any) => (
+            <button
+              key={c.org_id}
+              onClick={() => onSend(`Nipe taarifa za ${c.name}`)}
+              className="w-full text-left p-2.5 rounded-xl bg-card border border-border hover:bg-muted/50"
+            >
+              <p className="text-sm font-semibold truncate">{c.name}</p>
+              <p className="text-[11px] text-muted-foreground truncate">{c.address || '—'}</p>
+            </button>
+          ))}
+        </div>
+      );
+    }
+    if (result.found === false) {
+      return (
+        <div className="p-3 rounded-xl bg-muted/50 border border-border text-xs space-y-2">
+          <p className="font-medium flex items-center gap-1"><AlertCircle className="h-3.5 w-3.5 text-amber-500" /> Hakuna taasisi</p>
+          <p className="text-muted-foreground">{result.suggestion}</p>
+          <Button size="sm" variant="outline" className="h-7 text-[11px] w-full" onClick={() => onNavigate('/hospitals')}>
+            Tazama hospitali zote
+          </Button>
+        </div>
+      );
+    }
+    const org = result.org || {};
+    const type = result.org_type;
+    const route = type === 'pharmacy' ? '/pharmacy-profile/' : type === 'laboratory' ? '/laboratory-profile/'
+      : type === 'polyclinic' ? '/polyclinic-profile/' : '/hospital-profile/';
+    const Icon = type === 'pharmacy' ? Pill : type === 'laboratory' ? TestTube : Building2;
+    const services: any[] = result.services || [];
+    const items: any[] = result.items || [];
+    const doctors: any[] = result.doctors || [];
+    const today = doctors.filter((d) => d.available_today);
+    const insurance: string[] = result.insurance || [];
+
+    return (
+      <div className="space-y-2">
+        <div className="p-3 rounded-2xl bg-card border border-border">
+          <div className="flex items-center gap-3">
+            <div className="h-11 w-11 rounded-xl bg-primary/10 flex items-center justify-center overflow-hidden shrink-0">
+              {org.logo_url ? <img src={org.logo_url} alt={org.name} className="h-11 w-11 object-cover" /> : <Icon className="h-5 w-5 text-primary" />}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold truncate">{org.name}</p>
+              <p className="text-[11px] text-muted-foreground truncate flex items-center gap-1">
+                <MapPin className="h-3 w-3" /> {org.address || 'Anwani haijapatikana'}
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-1.5 mt-2.5">
+            <Button size="sm" className="h-7 px-2 text-[11px] flex-1" onClick={() => onNavigate(`${route}${org.id}`)}>
+              Fungua ukurasa
+            </Button>
+            {org.phone && (
+              <Button size="sm" variant="outline" className="h-7 px-2 text-[11px]" asChild>
+                <a href={`tel:${org.phone}`}><Phone className="h-3 w-3 mr-1" />Piga</a>
+              </Button>
+            )}
+          </div>
+          {org.has_ambulance && org.ambulance_phone && (
+            <a href={`tel:${org.ambulance_phone}`} className="mt-2 block text-[11px] text-destructive font-medium">
+              🚑 Ambulensi: {org.ambulance_phone}{org.ambulance_available_24h ? ' (saa 24)' : ''}
+            </a>
+          )}
+        </div>
+
+        {(services.length > 0 || items.length > 0) && (
+          <div className="p-3 rounded-2xl bg-card border border-border space-y-1.5">
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
+              {type === 'pharmacy' ? 'Dawa zinazopatikana' : 'Huduma na bei'}
+            </p>
+            {(services.length ? services : items).slice(0, 8).map((s: any, i: number) => (
+              <div key={i} className="flex items-center justify-between gap-2">
+                <span className="text-xs truncate">{s.name}</span>
+                <span className="text-[11px] text-muted-foreground shrink-0">
+                  {s.price ? `TZS ${Number(s.price).toLocaleString()}` : s.in_stock === false ? 'Haipo' : '—'}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {(type === 'hospital' || type === 'polyclinic') && (
+          <div className="p-3 rounded-2xl bg-card border border-border space-y-1.5">
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+              <Clock className="h-3 w-3" /> Madaktari waliopo {result.date ? new Date(result.date).toLocaleDateString('sw-TZ') : 'leo'}
+            </p>
+            {today.length === 0 ? (
+              <p className="text-[11px] text-muted-foreground">
+                Hakuna daktari mwenye ratiba siku hii{doctors.length ? ` (${doctors.length} wamesajiliwa hapa).` : '.'}
+              </p>
+            ) : today.slice(0, 6).map((d: any) => (
+              <div key={d.doctor_id} className="flex items-center gap-2">
+                <Avatar className="h-7 w-7">
+                  <AvatarImage src={d.avatar_url} alt={d.name} />
+                  <AvatarFallback>{(d.name || 'D')[0]}</AvatarFallback>
+                </Avatar>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-medium truncate">Dr. {d.name}</p>
+                  <p className="text-[10px] text-muted-foreground truncate">
+                    {d.doctor_type || 'Daktari'}
+                    {d.today_slots?.[0] ? ` • ${String(d.today_slots[0].start).slice(0, 5)}–${String(d.today_slots[0].end).slice(0, 5)}` : ''}
+                    {d.is_online ? ' • yupo mtandaoni' : ''}
+                  </p>
+                </div>
+                <Button size="sm" className="h-6 px-2 text-[10px]" onClick={() => onNavigate(`/book-appointment?doctor=${d.doctor_id}`)}>
+                  Buku
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {insurance.length > 0 && (
+          <div className="p-3 rounded-2xl bg-card border border-border">
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">Bima zinazokubalika</p>
+            <div className="flex flex-wrap gap-1">
+              {insurance.map((n) => <Badge key={n} variant="secondary" className="text-[10px]">{n}</Badge>)}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (tool === 'doctors_available_on_date' && Array.isArray(result.doctors)) {
+    if (result.doctors.length === 0) {
+      return (
+        <div className="p-3 rounded-xl bg-muted/50 border border-border text-xs text-muted-foreground">
+          Hakuna daktari mwenye ratiba tarehe {result.date}.
+        </div>
+      );
+    }
+    return (
+      <div className="space-y-1.5">
+        {result.doctors.slice(0, 6).map((d: any) => (
+          <div key={`${d.doctor_id}-${d.start_time}`} className="flex items-center gap-3 p-2.5 rounded-xl bg-card border border-border">
+            <Avatar className="h-9 w-9">
+              <AvatarImage src={d.avatar_url} alt={d.first_name} />
+              <AvatarFallback>{(d.first_name || 'D')[0]}</AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold truncate">Dr. {d.first_name} {d.last_name}</p>
+              <p className="text-[11px] text-muted-foreground truncate">
+                {String(d.start_time).slice(0, 5)}–{String(d.end_time).slice(0, 5)}
+                {d.hospital_name || d.polyclinic_name ? ` • ${d.hospital_name || d.polyclinic_name}` : ''}
+              </p>
+            </div>
+            <Button size="sm" className="h-7 px-2 text-[11px]" onClick={() => onNavigate(`/book-appointment?doctor=${d.doctor_id}`)}>
+              Buku
+            </Button>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   if (tool === 'search_doctors' && Array.isArray(result.doctors) && result.doctors.length > 0) {
     return (
       <div className="space-y-1.5">
