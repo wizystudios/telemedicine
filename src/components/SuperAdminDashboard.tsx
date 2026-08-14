@@ -23,6 +23,8 @@ import AdminLicenseApprovals from '@/components/super-admin/AdminLicenseApproval
 import AuditLogView from '@/components/super-admin/AuditLogView';
 import SystemDiagnostics from '@/components/super-admin/SystemDiagnostics';
 import DirectoryBackfill from '@/components/super-admin/DirectoryBackfill';
+import AuditRetention from '@/components/super-admin/AuditRetention';
+import DiagnosticsHistory from '@/components/super-admin/DiagnosticsHistory';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 type AppRole = 'patient' | 'doctor' | 'hospital_owner' | 'pharmacy_owner' | 'lab_owner' | 'admin' | 'super_admin' | 'polyclinic_owner';
@@ -64,6 +66,8 @@ export default function SuperAdminDashboard() {
       pharmacies: 'register-org',
       labs: 'register-org',
       approvals: 'approvals',
+      retention: 'retention',
+      reports: 'reports',
       database: 'database',
     };
     setAdminTab(mapped[tab || ''] || 'register-user');
@@ -722,7 +726,9 @@ export default function SuperAdminDashboard() {
           </TabsContent>
           <TabsContent value="licenses" className="mt-2"><AdminLicenseApprovals /></TabsContent>
           <TabsContent value="audit" className="mt-2"><AuditLogView /></TabsContent>
+          <TabsContent value="retention" className="mt-2"><AuditRetention /></TabsContent>
           <TabsContent value="diagnostics" className="mt-2"><SystemDiagnostics /></TabsContent>
+          <TabsContent value="reports" className="mt-2"><DiagnosticsHistory /></TabsContent>
           <TabsContent value="register-user"><RegisterUserForm /></TabsContent>
           <TabsContent value="register-org"><RegisterOrganizationForm /></TabsContent>
           <TabsContent value="register-doctor"><RegisterDoctorForm /></TabsContent>
