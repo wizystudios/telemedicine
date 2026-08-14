@@ -108,6 +108,19 @@ export default function SystemDiagnostics() {
       push({ name: 'Kumbukumbu za mfumo (audit)', status: id.error ? 'fail' : 'pass', detail: id.error?.message || 'Tukio limerekodiwa.' });
     } catch (e: any) { push({ name: 'Kumbukumbu za mfumo (audit)', status: 'fail', detail: e.message }); }
 
+    // Persist the run so it appears in the scheduled report history
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      await (supabase.from('diagnostics_runs' as any) as any).insert({
+        source: 'manual',
+        ran_by: user?.id ?? null,
+        passed: out.filter((r) => r.status === 'pass').length,
+        warned: out.filter((r) => r.status === 'warn').length,
+        failed: out.filter((r) => r.status === 'fail').length,
+        results: out,
+      });
+    } catch { /* non-fatal */ }
+
     await logAudit('diagnostics_run', { entityType: 'system', metadata: { checks: out.length } });
     setRunning(false);
   };
