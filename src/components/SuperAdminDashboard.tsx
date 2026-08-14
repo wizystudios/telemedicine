@@ -634,7 +634,7 @@ export default function SuperAdminDashboard() {
       {/* Main tabs */}
       <div className="px-4">
         <Tabs value={adminTab} onValueChange={setAdminTab} className="space-y-5">
-          <TabsList className="w-full h-auto bg-muted/30 p-1.5 rounded-2xl grid grid-cols-4 sm:grid-cols-8 gap-1">
+          <TabsList className="w-full h-auto bg-muted/30 p-1.5 rounded-2xl grid grid-cols-4 sm:grid-cols-5 gap-1">
             <TabsTrigger value="register-user" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
               <UserPlus className="h-3.5 w-3.5 mr-1" />Sajili Mtumiaji
             </TabsTrigger>
@@ -653,8 +653,14 @@ export default function SuperAdminDashboard() {
             <TabsTrigger value="audit" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
               <Activity className="h-3.5 w-3.5 mr-1" />Kumbukumbu
             </TabsTrigger>
+            <TabsTrigger value="retention" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
+              <Trash2 className="h-3.5 w-3.5 mr-1" />Muda wa Kuhifadhi
+            </TabsTrigger>
             <TabsTrigger value="diagnostics" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
               <Activity className="h-3.5 w-3.5 mr-1" />Uchunguzi
+            </TabsTrigger>
+            <TabsTrigger value="reports" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
+              <TrendingUp className="h-3.5 w-3.5 mr-1" />Ripoti za Kila Siku
             </TabsTrigger>
             <TabsTrigger value="database" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
               <Activity className="h-3.5 w-3.5 mr-1" />Angalia Data
