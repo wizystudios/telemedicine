@@ -473,7 +473,7 @@ function ToolResultCard({
                     {d.is_online ? ' • yupo mtandaoni' : ''}
                   </p>
                 </div>
-                <Button size="sm" className="h-6 px-2 text-[10px]" onClick={() => onNavigate(`/book-appointment/${d.doctor_id}`)}>
+                <Button size="sm" className="h-6 px-2 text-[10px]" onClick={() => onNavigate(`/book-appointment?doctor=${d.doctor_id}`)}>
                   Buku
                 </Button>
               </div>
@@ -516,7 +516,7 @@ function ToolResultCard({
                 {d.hospital_name || d.polyclinic_name ? ` • ${d.hospital_name || d.polyclinic_name}` : ''}
               </p>
             </div>
-            <Button size="sm" className="h-7 px-2 text-[11px]" onClick={() => onNavigate(`/book-appointment/${d.doctor_id}`)}>
+            <Button size="sm" className="h-7 px-2 text-[11px]" onClick={() => onNavigate(`/book-appointment?doctor=${d.doctor_id}`)}>
               Buku
             </Button>
           </div>
