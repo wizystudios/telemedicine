@@ -25,6 +25,7 @@ import SystemDiagnostics from '@/components/super-admin/SystemDiagnostics';
 import DirectoryBackfill from '@/components/super-admin/DirectoryBackfill';
 import AuditRetention from '@/components/super-admin/AuditRetention';
 import DiagnosticsHistory from '@/components/super-admin/DiagnosticsHistory';
+import RealtimeDashboardCharts from '@/components/RealtimeDashboardCharts';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 type AppRole = 'patient' | 'doctor' | 'hospital_owner' | 'pharmacy_owner' | 'lab_owner' | 'admin' | 'super_admin' | 'polyclinic_owner';
@@ -669,6 +670,9 @@ export default function SuperAdminDashboard() {
             <TabsTrigger value="database" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
               <Activity className="h-3.5 w-3.5 mr-1" />Angalia Data
             </TabsTrigger>
+            <TabsTrigger value="charts" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
+              <TrendingUp className="h-3.5 w-3.5 mr-1" />Chati za Moja kwa Moja
+            </TabsTrigger>
           </TabsList>
 
 
@@ -729,6 +733,7 @@ export default function SuperAdminDashboard() {
           <TabsContent value="retention" className="mt-2"><AuditRetention /></TabsContent>
           <TabsContent value="diagnostics" className="mt-2"><SystemDiagnostics /></TabsContent>
           <TabsContent value="reports" className="mt-2"><DiagnosticsHistory /></TabsContent>
+          <TabsContent value="charts" className="mt-2"><RealtimeDashboardCharts scope="admin" days={30} /></TabsContent>
           <TabsContent value="register-user"><RegisterUserForm /></TabsContent>
           <TabsContent value="register-org"><RegisterOrganizationForm /></TabsContent>
           <TabsContent value="register-doctor"><RegisterDoctorForm /></TabsContent>

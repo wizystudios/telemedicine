@@ -23,6 +23,7 @@ import { ContentUploadSection } from '@/components/ContentUploadSection';
 import { HealthTipsSection } from '@/components/HealthTipsSection';
 import { PrescriptionWriter } from '@/components/PrescriptionWriter';
 import { DoctorJourneyStepper } from '@/components/DoctorJourneyStepper';
+import RealtimeDashboardCharts from '@/components/RealtimeDashboardCharts';
 
 
 export function DoctorDashboard() {
@@ -280,6 +281,8 @@ export function DoctorDashboard() {
           <Settings className="h-4 w-4" />
         </Button>
       </div>
+
+      <RealtimeDashboardCharts scope="doctor" />
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-2">
