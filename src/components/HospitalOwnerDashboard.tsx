@@ -28,6 +28,9 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import OrgStaffManager from '@/components/OrgStaffManager';
 import { OrgAdsManager } from '@/components/OrgAdsManager';
 import OrgStatsBanner from '@/components/OrgStatsBanner';
+import RealtimeDashboardCharts from '@/components/RealtimeDashboardCharts';
+import OrgReportsTab from '@/components/OrgReportsTab';
+import OrgLinksFaqManager from '@/components/OrgLinksFaqManager';
 import OrgDoctorApprovals from '@/components/OrgDoctorApprovals';
 
 const DAYS = ['Jumapili', 'Jumatatu', 'Jumanne', 'Jumatano', 'Alhamisi', 'Ijumaa', 'Jumamosi'];
@@ -475,9 +478,11 @@ export default function HospitalOwnerDashboard() {
       {/* Real-time analytics banner */}
       <OrgStatsBanner orgType="hospital" orgId={hospital.id} />
 
+      <RealtimeDashboardCharts scope="hospital" orgId={hospital.id} />
+
       {/* Tabs for different sections */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="flex w-full overflow-x-auto rounded-2xl no-scrollbar">
           <TabsTrigger value="overview" className="text-xs">Muhtasari</TabsTrigger>
           <TabsTrigger value="doctors" className="text-xs">Madaktari</TabsTrigger>
           <TabsTrigger value="approvals" className="text-xs">Idhini</TabsTrigger>
@@ -485,6 +490,8 @@ export default function HospitalOwnerDashboard() {
           <TabsTrigger value="content" className="text-xs">Maudhui</TabsTrigger>
           <TabsTrigger value="ambulance" className="text-xs">Ambulance</TabsTrigger>
           <TabsTrigger value="staff" className="text-xs">Wafanyakazi</TabsTrigger>
+          <TabsTrigger value="links" className="text-xs">Viungo &amp; FAQ</TabsTrigger>
+          <TabsTrigger value="reports" className="text-xs">Ripoti</TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
@@ -831,6 +838,13 @@ export default function HospitalOwnerDashboard() {
         <TabsContent value="staff" className="space-y-4">
           <Card><CardContent className="p-3"><OrgStaffManager orgType="hospital" orgId={hospital.id} /></CardContent></Card>
           <OrgAdsManager orgType="hospital" orgId={hospital.id} />
+        </TabsContent>
+        <TabsContent value="links" className="space-y-4">
+          <OrgLinksFaqManager orgType="hospital" orgId={hospital.id} />
+        </TabsContent>
+
+        <TabsContent value="reports" className="space-y-4">
+          <OrgReportsTab orgType="hospital" orgId={hospital.id} />
         </TabsContent>
       </Tabs>
 

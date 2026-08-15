@@ -23,6 +23,9 @@ import { LogoUpload } from '@/components/LogoUpload';
 import OrgStaffManager from '@/components/OrgStaffManager';
 import { OrgAdsManager } from '@/components/OrgAdsManager';
 import OrgStatsBanner from '@/components/OrgStatsBanner';
+import RealtimeDashboardCharts from '@/components/RealtimeDashboardCharts';
+import OrgReportsTab from '@/components/OrgReportsTab';
+import OrgLinksFaqManager from '@/components/OrgLinksFaqManager';
 import { QRCodeSVG } from 'qrcode.react';
 import PharmacyPickupScanner from '@/components/PharmacyPickupScanner';
 import { ScanLine } from 'lucide-react';
@@ -374,13 +377,17 @@ export default function PharmacyOwnerDashboard() {
 
       <OrgStatsBanner orgType="pharmacy" orgId={pharmacy.id} />
 
+      <RealtimeDashboardCharts scope="pharmacy" orgId={pharmacy.id} />
+
       <Tabs defaultValue="orders" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="flex w-full overflow-x-auto rounded-2xl no-scrollbar">
           <TabsTrigger value="orders">Maagizo</TabsTrigger>
           <TabsTrigger value="medicines">Dawa</TabsTrigger>
           <TabsTrigger value="profile">Taarifa</TabsTrigger>
           <TabsTrigger value="content">Maudhui</TabsTrigger>
           <TabsTrigger value="staff">Wafanyakazi</TabsTrigger>
+          <TabsTrigger value="links" className="text-xs">Viungo &amp; FAQ</TabsTrigger>
+          <TabsTrigger value="reports" className="text-xs">Ripoti</TabsTrigger>
         </TabsList>
 
         <TabsContent value="orders" className="space-y-4">
@@ -769,6 +776,13 @@ export default function PharmacyOwnerDashboard() {
             </CardContent>
           </Card>
           <OrgAdsManager orgType="pharmacy" orgId={pharmacy.id} />
+        </TabsContent>
+        <TabsContent value="links" className="space-y-4">
+          <OrgLinksFaqManager orgType="pharmacy" orgId={pharmacy.id} />
+        </TabsContent>
+
+        <TabsContent value="reports" className="space-y-4">
+          <OrgReportsTab orgType="pharmacy" orgId={pharmacy.id} />
         </TabsContent>
       </Tabs>
 

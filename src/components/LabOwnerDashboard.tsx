@@ -22,6 +22,9 @@ import { LogoUpload } from '@/components/LogoUpload';
 import OrgStaffManager from '@/components/OrgStaffManager';
 import { OrgAdsManager } from '@/components/OrgAdsManager';
 import OrgStatsBanner from '@/components/OrgStatsBanner';
+import RealtimeDashboardCharts from '@/components/RealtimeDashboardCharts';
+import OrgReportsTab from '@/components/OrgReportsTab';
+import OrgLinksFaqManager from '@/components/OrgLinksFaqManager';
 
 export default function LabOwnerDashboard() {
   const { user } = useAuth();
@@ -344,13 +347,17 @@ export default function LabOwnerDashboard() {
 
       <OrgStatsBanner orgType="laboratory" orgId={lab.id} />
 
+      <RealtimeDashboardCharts scope="laboratory" orgId={lab.id} />
+
       <Tabs defaultValue="bookings" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="flex w-full overflow-x-auto rounded-2xl no-scrollbar">
           <TabsTrigger value="bookings">Vipimo</TabsTrigger>
           <TabsTrigger value="services">Huduma</TabsTrigger>
           <TabsTrigger value="profile">Taarifa</TabsTrigger>
           <TabsTrigger value="content">Maudhui</TabsTrigger>
           <TabsTrigger value="staff">Wafanyakazi</TabsTrigger>
+          <TabsTrigger value="links" className="text-xs">Viungo &amp; FAQ</TabsTrigger>
+          <TabsTrigger value="reports" className="text-xs">Ripoti</TabsTrigger>
         </TabsList>
 
         <TabsContent value="bookings" className="space-y-4">
@@ -662,6 +669,13 @@ export default function LabOwnerDashboard() {
         <TabsContent value="staff" className="space-y-4">
           <Card><CardContent className="p-3"><OrgStaffManager orgType="laboratory" orgId={lab.id} /></CardContent></Card>
           <OrgAdsManager orgType="laboratory" orgId={lab.id} />
+        </TabsContent>
+        <TabsContent value="links" className="space-y-4">
+          <OrgLinksFaqManager orgType="laboratory" orgId={lab.id} />
+        </TabsContent>
+
+        <TabsContent value="reports" className="space-y-4">
+          <OrgReportsTab orgType="laboratory" orgId={lab.id} />
         </TabsContent>
       </Tabs>
 
