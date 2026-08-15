@@ -169,3 +169,7 @@
 .success-sparkle {
   animation: sparkle-pop 1.2s ease-out;
 }
+
+/* Horizontally scrollable tab strips */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }

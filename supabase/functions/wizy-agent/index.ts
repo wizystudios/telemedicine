@@ -39,7 +39,9 @@ Mtumiaji akiuliza kuhusu taasisi kwa jina ("JK Hospital inatoa huduma gani?", "k
 2. Kama matokeo ni 'choices' (majina mengi yanafanana), muulize achague kwa jina.
 3. Baada ya tool, andika sentensi 1-2 tu ya muhtasari — UI inaonyesha kadi kamili zenye viungo vya kubuku au kupiga simu.
 4. Akiuliza "nani yupo leo" au "nani anapatikana kesho" tumia facility_reception na date sahihi (YYYY-MM-DD).
-5. Akitaka kuweka miadi na daktari uliyemtaja, endelea na create_appointment_request (au guest flow).
+5. Akitaka kuweka miadi na daktari uliyemtaja: tumia doctor_free_slots({doctor_name, date}) kwanza — mtumiaji achague saa — kisha create_appointment_request na appointment_date kamili (ISO). Baada ya kuthibitisha, sema "Miadi imethibitishwa" na saa halisi.
+6. Ukiona tovuti au mitandao ya kijamii kwenye jibu, mwelekeze mtumiaji ("unaweza kuwatembelea kwenye tovuti/Instagram yao").
+7. Kama taasisi ina FAQs, jibu swali la mtumiaji kwa kutumia FAQ hizo kabla ya kubuni jibu lako.
 
 KAMWE: Usimuulize guest password. Kwa dawa tumia direct_order_medicine; kwa vitendo vingine tumia pending_actions.`;
 
@@ -122,6 +124,21 @@ const TOOLS = [
       name: "list_my_appointments",
       description: "Onyesha miadi ya mtumiaji aliye-login",
       parameters: { type: "object", properties: {} },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "doctor_free_slots",
+      description: "Nafasi (saa) zilizo wazi za daktari siku fulani. Tumia doctor_name. Tumia hii KABLA ya kuthibitisha miadi ili mtumiaji achague saa.",
+      parameters: {
+        type: "object",
+        properties: {
+          doctor_name: { type: "string" },
+          date: { type: "string", description: "YYYY-MM-DD, chaguo-msingi leo" },
+        },
+        required: ["doctor_name"],
+      },
     },
   },
   {
@@ -368,6 +385,15 @@ async function executeTool(name: string, args: any, supabase: any, adminClient: 
         return { appointments: data || [], navigate: "/appointments" };
       }
 
+      case "doctor_free_slots": {
+        const { data: docs } = await supabase.rpc("fuzzy_search_doctors", { q: String(args.doctor_name || ""), lim: 1 });
+        const did = docs?.[0]?.user_id;
+        if (!did) return { error: "Sijapata daktari kwa jina hilo. Tumia search_doctors kwanza." };
+        const { data, error } = await supabase.rpc("wizy_doctor_slots", { _doctor_id: did, _date: args.date || null });
+        if (error) return { error: error.message };
+        return data;
+      }
+
       case "create_appointment_request": {
         if (!userId) return { error: "Mtumiaji hayupo login. Tumia lookup_account + queue_pending_action.", needs_guest_flow: true };
         let doctorId: string | null = null;
@@ -385,7 +411,18 @@ async function executeTool(name: string, args: any, supabase: any, adminClient: 
           })
           .select().single();
         if (error) return { error: error.message };
-        return { success: true, appointment: data, navigate: "/appointments" };
+        const { data: docInfo } = await supabase
+          .from("doctor_profiles")
+          .select("hospital_name, polyclinic_name, profiles!doctor_profiles_user_id_fkey(first_name,last_name)")
+          .eq("user_id", doctorId).maybeSingle();
+        const prof: any = (docInfo as any)?.profiles;
+        return {
+          success: true,
+          appointment: data,
+          doctor_name: prof ? `${prof.first_name || ""} ${prof.last_name || ""}`.trim() : args.doctor_name,
+          facility_name: (docInfo as any)?.hospital_name || (docInfo as any)?.polyclinic_name || null,
+          navigate: "/appointments",
+        };
       }
 
       case "add_to_cart": {

@@ -473,10 +473,48 @@ function ToolResultCard({
                     {d.is_online ? ' • yupo mtandaoni' : ''}
                   </p>
                 </div>
+                <Button size="sm" variant="outline" className="h-6 px-2 text-[10px]"
+                        onClick={() => onSend(`Nionyeshe nafasi za Dr. ${d.name} ${result.date ? `tarehe ${result.date}` : 'leo'}`)}>
+                  Nafasi
+                </Button>
                 <Button size="sm" className="h-6 px-2 text-[10px]" onClick={() => onNavigate(`/book-appointment?doctor=${d.doctor_id}`)}>
                   Buku
                 </Button>
               </div>
+            ))}
+          </div>
+        )}
+
+        {(org.website || (org.social_links && Object.keys(org.social_links).length > 0)) && (
+          <div className="p-3 rounded-2xl bg-card border border-border">
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">Viungo rasmi</p>
+            <div className="flex flex-wrap gap-1.5">
+              {org.website && (
+                <a href={org.website} target="_blank" rel="noreferrer"
+                   className="text-[11px] px-2.5 py-1 rounded-xl bg-primary/10 text-primary font-medium">
+                  Tovuti
+                </a>
+              )}
+              {Object.entries(org.social_links || {}).map(([k, v]: any) => (
+                <a key={k}
+                   href={String(v).startsWith('http') ? String(v) : `https://wa.me/${String(v).replace(/\D/g, '')}`}
+                   target="_blank" rel="noreferrer"
+                   className="text-[11px] px-2.5 py-1 rounded-xl bg-muted text-foreground capitalize">
+                  {k}
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {Array.isArray(result.faqs) && result.faqs.length > 0 && (
+          <div className="p-3 rounded-2xl bg-card border border-border space-y-1.5">
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Maswali yanayoulizwa mara kwa mara</p>
+            {result.faqs.slice(0, 6).map((q: any, i: number) => (
+              <button key={i} onClick={() => onSend(`${org.name}: ${q.question}`)}
+                      className="w-full text-left text-xs px-2.5 py-1.5 rounded-xl bg-muted/60 hover:bg-muted">
+                {q.question}
+              </button>
             ))}
           </div>
         )}
@@ -489,6 +527,53 @@ function ToolResultCard({
             </div>
           </div>
         )}
+      </div>
+    );
+  }
+
+  // ── Free time slots for a doctor ──
+  if (tool === 'doctor_free_slots') {
+    const slots: any[] = result.slots || [];
+    return (
+      <div className="p-3 rounded-2xl bg-card border border-border space-y-2">
+        <p className="text-xs font-semibold">
+          Nafasi za Dr. {result.doctor_name} — {new Date(result.date).toLocaleDateString('sw-TZ', { dateStyle: 'medium' })}
+        </p>
+        {slots.length === 0 ? (
+          <p className="text-[11px] text-muted-foreground">Hakuna nafasi wazi siku hii. Jaribu siku nyingine.</p>
+        ) : (
+          <div className="flex flex-wrap gap-1.5">
+            {slots.slice(0, 16).map((s: any) => (
+              <button
+                key={s.iso}
+                onClick={() => onSend(`Nathibitisha miadi na Dr. ${result.doctor_name} saa ${s.time} tarehe ${result.date}`)}
+                className="text-[11px] px-2.5 py-1.5 rounded-xl bg-primary/10 text-primary font-semibold hover:bg-primary/20"
+              >
+                {s.time}
+              </button>
+            ))}
+          </div>
+        )}
+        <p className="text-[10px] text-muted-foreground">Gusa saa unayotaka — nitaithibitisha mara moja.</p>
+      </div>
+    );
+  }
+
+  // ── Appointment confirmed ──
+  if (tool === 'create_appointment_request' && result.success) {
+    const appt = result.appointment || {};
+    const when = appt.appointment_date ? new Date(appt.appointment_date) : null;
+    return (
+      <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 space-y-2">
+        <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-300">✅ Miadi imethibitishwa</p>
+        <p className="text-[11px] text-muted-foreground">
+          {result.doctor_name ? `Dr. ${result.doctor_name}` : 'Daktari'}
+          {result.facility_name ? ` • ${result.facility_name}` : ''}
+          {when ? ` • ${when.toLocaleDateString('sw-TZ', { dateStyle: 'medium' })} saa ${when.toLocaleTimeString('sw-TZ', { hour: '2-digit', minute: '2-digit' })}` : ''}
+        </p>
+        <Button size="sm" className="h-7 text-[11px] w-full" onClick={() => onNavigate('/appointments')}>
+          Tazama miadi yangu
+        </Button>
       </div>
     );
   }

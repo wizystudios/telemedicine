@@ -25,6 +25,9 @@ import { DoctorImageUpload } from '@/components/DoctorImageUpload';
 import OrgStaffManager from '@/components/OrgStaffManager';
 import { OrgAdsManager } from '@/components/OrgAdsManager';
 import OrgStatsBanner from '@/components/OrgStatsBanner';
+import RealtimeDashboardCharts from '@/components/RealtimeDashboardCharts';
+import OrgReportsTab from '@/components/OrgReportsTab';
+import OrgLinksFaqManager from '@/components/OrgLinksFaqManager';
 import OrgDoctorApprovals from '@/components/OrgDoctorApprovals';
 
 const DAYS = ['Jumapili', 'Jumatatu', 'Jumanne', 'Jumatano', 'Alhamisi', 'Ijumaa', 'Jumamosi'];
@@ -383,15 +386,19 @@ export default function PolyclinicOwnerDashboard() {
       {/* Real-time analytics banner */}
       <OrgStatsBanner orgType="polyclinic" orgId={polyclinic.id} />
 
+      <RealtimeDashboardCharts scope="polyclinic" orgId={polyclinic.id} />
+
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="flex w-full overflow-x-auto rounded-2xl no-scrollbar">
           <TabsTrigger value="overview" className="text-xs">Muhtasari</TabsTrigger>
           <TabsTrigger value="doctors" className="text-xs">Madaktari</TabsTrigger>
           <TabsTrigger value="approvals" className="text-xs">Idhini</TabsTrigger>
           <TabsTrigger value="services" className="text-xs">Huduma</TabsTrigger>
           <TabsTrigger value="content" className="text-xs">Maudhui</TabsTrigger>
           <TabsTrigger value="staff" className="text-xs">Wafanyakazi</TabsTrigger>
+          <TabsTrigger value="links" className="text-xs">Viungo &amp; FAQ</TabsTrigger>
+          <TabsTrigger value="reports" className="text-xs">Ripoti</TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
@@ -661,6 +668,13 @@ export default function PolyclinicOwnerDashboard() {
         <TabsContent value="staff" className="space-y-4">
           <Card><CardContent className="p-3"><OrgStaffManager orgType="polyclinic" orgId={polyclinic.id} /></CardContent></Card>
           <OrgAdsManager orgType="polyclinic" orgId={polyclinic.id} />
+        </TabsContent>
+        <TabsContent value="links" className="space-y-4">
+          <OrgLinksFaqManager orgType="polyclinic" orgId={polyclinic.id} />
+        </TabsContent>
+
+        <TabsContent value="reports" className="space-y-4">
+          <OrgReportsTab orgType="polyclinic" orgId={polyclinic.id} />
         </TabsContent>
       </Tabs>
 
