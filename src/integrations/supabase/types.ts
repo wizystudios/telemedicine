@@ -1113,6 +1113,7 @@ export type Database = {
           promotion_expires_at: string | null
           rating: number | null
           services: string[] | null
+          social_links: Json
           tin_number: string | null
           total_reviews: number | null
           updated_at: string
@@ -1142,6 +1143,7 @@ export type Database = {
           promotion_expires_at?: string | null
           rating?: number | null
           services?: string[] | null
+          social_links?: Json
           tin_number?: string | null
           total_reviews?: number | null
           updated_at?: string
@@ -1171,6 +1173,7 @@ export type Database = {
           promotion_expires_at?: string | null
           rating?: number | null
           services?: string[] | null
+          social_links?: Json
           tin_number?: string | null
           total_reviews?: number | null
           updated_at?: string
@@ -1400,6 +1403,7 @@ export type Database = {
           po_box: string | null
           promotion_expires_at: string | null
           rating: number | null
+          social_links: Json
           test_types: string[] | null
           tin_number: string | null
           total_reviews: number | null
@@ -1430,6 +1434,7 @@ export type Database = {
           po_box?: string | null
           promotion_expires_at?: string | null
           rating?: number | null
+          social_links?: Json
           test_types?: string[] | null
           tin_number?: string | null
           total_reviews?: number | null
@@ -1460,6 +1465,7 @@ export type Database = {
           po_box?: string | null
           promotion_expires_at?: string | null
           rating?: number | null
+          social_links?: Json
           test_types?: string[] | null
           tin_number?: string | null
           total_reviews?: number | null
@@ -1813,6 +1819,45 @@ export type Database = {
         }
         Relationships: []
       }
+      org_faqs: {
+        Row: {
+          answer: string
+          created_at: string
+          created_by: string | null
+          display_order: number
+          id: string
+          is_published: boolean
+          org_id: string
+          org_type: string
+          question: string
+          updated_at: string
+        }
+        Insert: {
+          answer: string
+          created_at?: string
+          created_by?: string | null
+          display_order?: number
+          id?: string
+          is_published?: boolean
+          org_id: string
+          org_type: string
+          question: string
+          updated_at?: string
+        }
+        Update: {
+          answer?: string
+          created_at?: string
+          created_by?: string | null
+          display_order?: number
+          id?: string
+          is_published?: boolean
+          org_id?: string
+          org_type?: string
+          question?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       org_staff: {
         Row: {
           created_at: string
@@ -2110,9 +2155,11 @@ export type Database = {
           quote_of_day: string | null
           rating: number | null
           services: string[] | null
+          social_links: Json
           tin_number: string | null
           total_reviews: number | null
           updated_at: string
+          website: string | null
         }
         Insert: {
           address: string
@@ -2143,9 +2190,11 @@ export type Database = {
           quote_of_day?: string | null
           rating?: number | null
           services?: string[] | null
+          social_links?: Json
           tin_number?: string | null
           total_reviews?: number | null
           updated_at?: string
+          website?: string | null
         }
         Update: {
           address?: string
@@ -2176,9 +2225,11 @@ export type Database = {
           quote_of_day?: string | null
           rating?: number | null
           services?: string[] | null
+          social_links?: Json
           tin_number?: string | null
           total_reviews?: number | null
           updated_at?: string
+          website?: string | null
         }
         Relationships: [
           {
@@ -2504,9 +2555,11 @@ export type Database = {
           promotion_expires_at: string | null
           rating: number | null
           services: string[] | null
+          social_links: Json
           tin_number: string | null
           total_reviews: number | null
           updated_at: string
+          website: string | null
         }
         Insert: {
           address: string
@@ -2529,9 +2582,11 @@ export type Database = {
           promotion_expires_at?: string | null
           rating?: number | null
           services?: string[] | null
+          social_links?: Json
           tin_number?: string | null
           total_reviews?: number | null
           updated_at?: string
+          website?: string | null
         }
         Update: {
           address?: string
@@ -2554,9 +2609,11 @@ export type Database = {
           promotion_expires_at?: string | null
           rating?: number | null
           services?: string[] | null
+          social_links?: Json
           tin_number?: string | null
           total_reviews?: number | null
           updated_at?: string
+          website?: string | null
         }
         Relationships: [
           {
@@ -3169,6 +3226,17 @@ export type Database = {
         Returns: boolean
       }
       cron_purge_audit_logs: { Args: never; Returns: undefined }
+      dashboard_timeseries: {
+        Args: { _days?: number; _org_id?: string; _scope: string }
+        Returns: {
+          appointments: number
+          day: string
+          messages: number
+          orders: number
+          revenue: number
+          visits: number
+        }[]
+      }
       doctors_available_on_date: {
         Args: { _date: string }
         Returns: {
@@ -3331,6 +3399,10 @@ export type Database = {
         }[]
       }
       owns_institution_logo: { Args: { _name: string }; Returns: boolean }
+      owns_org: {
+        Args: { _org_id: string; _org_type: string }
+        Returns: boolean
+      }
       pharmacy_lookup_orders: {
         Args: { _pharmacy_id: string; _q: string }
         Returns: {
@@ -3420,6 +3492,10 @@ export type Database = {
           quantity: number
           total_price: number
         }[]
+      }
+      wizy_doctor_slots: {
+        Args: { _date?: string; _doctor_id: string }
+        Returns: Json
       }
       wizy_find_org: {
         Args: { _lim?: number; _query: string }
