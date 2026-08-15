@@ -198,14 +198,18 @@ export default function Auth() {
               <p className="text-sm text-muted-foreground mt-1">Afya yako mkononi mwako</p>
             </div>
             {bioReady && (
-              <Button
-                onClick={handleBiometricLogin}
-                disabled={isLoading}
-                className="w-full h-12 text-sm font-semibold"
-              >
-                <Fingerprint className="h-4 w-4 mr-2" />
-                {isLoading ? 'Subiri...' : `Ingia kwa alama ya kidole${bioName ? ` (${bioName})` : ''}`}
-              </Button>
+              <div className="flex flex-col items-center gap-2 pb-2">
+                <button
+                  type="button"
+                  aria-label="Ingia kwa alama ya kidole"
+                  onClick={handleBiometricLogin}
+                  disabled={isLoading}
+                  className="h-16 w-16 rounded-full bg-primary/10 text-primary flex items-center justify-center transition-transform active:scale-95 hover:bg-primary/15 disabled:opacity-50"
+                >
+                  <Fingerprint className={`h-8 w-8 ${isLoading ? 'animate-pulse' : ''}`} />
+                </button>
+                <span className="text-[11px] text-muted-foreground">Gusa kuingia</span>
+              </div>
             )}
             <Button
               onClick={() => { setMode('login'); setLoginStep(1); }}
