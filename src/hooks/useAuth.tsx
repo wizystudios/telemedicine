@@ -186,7 +186,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setLoading(true);
       await logAudit('logout', { entityType: 'auth' });
-      const { error } = await supabase.auth.signOut();
+      // 'local' keeps the stored refresh token valid so biometric login still works
+      const { error } = await supabase.auth.signOut({ scope: 'local' });
       if (error) {
         console.error('SignOut error:', error);
       } else {
