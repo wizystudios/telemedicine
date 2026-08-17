@@ -531,7 +531,63 @@ function ToolResultCard({
     );
   }
 
+  // ── Official FAQ answer (with source indicator) ──
+  if (tool === 'facility_faq_answer') {
+    if (!result.found) {
+      return (
+        <div className="p-3 rounded-2xl bg-card border border-border space-y-2">
+          <p className="text-xs">
+            {result.org_name
+              ? `${result.org_name} hawajaweka jibu rasmi la swali hili.`
+              : 'Sijapata taasisi hiyo.'}
+          </p>
+          {Array.isArray(result.faqs) && result.faqs.length > 0 && (
+            <div className="space-y-1.5">
+              {result.faqs.map((q: any, i: number) => (
+                <button key={i} onClick={() => onSend(`${result.org_name}: ${q.question}`)}
+                        className="w-full text-left text-xs px-2.5 py-1.5 rounded-xl bg-muted/60 hover:bg-muted">
+                  {q.question}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    }
+    return (
+      <div className="p-3 rounded-2xl bg-card border border-border space-y-2">
+        <p className="text-xs font-semibold">{result.question}</p>
+        <p className="text-xs text-muted-foreground whitespace-pre-line">{result.answer}</p>
+        <div className="pt-2 border-t border-border/60 flex flex-wrap items-center gap-2">
+          <Badge variant="secondary" className="text-[10px] gap-1">
+            <ShieldCheck className="h-3 w-3" /> {result.source}
+          </Badge>
+          {result.updated_at && (
+            <span className="text-[10px] text-muted-foreground">
+              ilisasishwa {new Date(result.updated_at).toLocaleDateString('sw-TZ', { dateStyle: 'medium' })}
+            </span>
+          )}
+          {result.website && (
+            <a href={result.website} target="_blank" rel="noreferrer"
+               className="text-[10px] text-primary underline">Tovuti rasmi</a>
+          )}
+        </div>
+        {Array.isArray(result.other_faqs) && result.other_faqs.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            {result.other_faqs.map((q: any, i: number) => (
+              <button key={i} onClick={() => onSend(`${result.org_name}: ${q.question}`)}
+                      className="text-[10px] px-2.5 py-1 rounded-xl bg-muted/60 hover:bg-muted">
+                {q.question}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   // ── Free time slots for a doctor ──
+
   if (tool === 'doctor_free_slots') {
     const slots: any[] = result.slots || [];
     return (
