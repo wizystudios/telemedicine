@@ -510,6 +510,7 @@ function ToolResultCard({
         {Array.isArray(result.faqs) && result.faqs.length > 0 && (
           <div className="p-3 rounded-2xl bg-card border border-border space-y-1.5">
             <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Maswali yanayoulizwa mara kwa mara</p>
+            <p className="text-[10px] text-muted-foreground -mt-1">Chanzo: FAQ rasmi ya {org.name}</p>
             {result.faqs.slice(0, 6).map((q: any, i: number) => (
               <button key={i} onClick={() => onSend(`${org.name}: ${q.question}`)}
                       className="w-full text-left text-xs px-2.5 py-1.5 rounded-xl bg-muted/60 hover:bg-muted">
