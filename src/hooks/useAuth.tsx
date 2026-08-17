@@ -2,7 +2,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { syncBiometricTokens } from '@/lib/biometric';
+import { syncBiometricTokens, restoreSessionSilently, markSignedOut, clearSignedOutFlag } from '@/lib/biometric';
 import { logAudit } from '@/lib/audit';
 
 interface AuthContextType {
@@ -45,6 +45,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (error) {
           console.error('Error getting session:', error);
         } else {
+          if (!session) {
+            // Enrolled device: restore silently so a refresh never bounces to login
+            const restored = await restoreSessionSilently();
+            if (restored) {
+              const { data: { session: fresh } } = await supabase.auth.getSession();
+              setSession(fresh);
+              setUser(fresh?.user ?? null);
+              return;
+            }
+          }
           console.log('Initial session check:', session?.user?.id);
           console.log('Initial user metadata:', session?.user?.user_metadata);
           console.log('Initial user role:', session?.user?.user_metadata?.role);
@@ -169,6 +179,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(data.session);
         setUser(data.user);
         syncBiometricTokens(data.session);
+        clearSignedOutFlag();
         logAudit('login', { entityType: 'auth', description: 'Password sign-in' });
       }
 
@@ -186,6 +197,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setLoading(true);
       await logAudit('logout', { entityType: 'auth' });
+      markSignedOut();
       // 'local' keeps the stored refresh token valid so biometric login still works
       const { error } = await supabase.auth.signOut({ scope: 'local' });
       if (error) {
