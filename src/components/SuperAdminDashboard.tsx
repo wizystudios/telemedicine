@@ -708,19 +708,36 @@ export default function SuperAdminDashboard() {
             {renderCards()}
           </TabsContent>
 
-          <TabsContent value="approvals" className="mt-2 space-y-6">
-            <AdminDoctorApprovals />
-            <DirectoryBackfill />
+          <TabsContent value="create" className="mt-2"><SmartCreateWizard /></TabsContent>
+
+          <TabsContent value="approvals" className="mt-2">
+            <Tabs defaultValue="doctors" className="space-y-4">
+              <TabsList className="rounded-2xl">
+                <TabsTrigger value="doctors" className="rounded-xl text-xs">Madaktari</TabsTrigger>
+                <TabsTrigger value="licenses" className="rounded-xl text-xs">Leseni</TabsTrigger>
+                <TabsTrigger value="directory" className="rounded-xl text-xs">Orodha</TabsTrigger>
+              </TabsList>
+              <TabsContent value="doctors"><AdminDoctorApprovals /></TabsContent>
+              <TabsContent value="licenses"><AdminLicenseApprovals /></TabsContent>
+              <TabsContent value="directory"><DirectoryBackfill /></TabsContent>
+            </Tabs>
           </TabsContent>
-          <TabsContent value="licenses" className="mt-2"><AdminLicenseApprovals /></TabsContent>
-          <TabsContent value="audit" className="mt-2"><AuditLogView /></TabsContent>
-          <TabsContent value="retention" className="mt-2"><AuditRetention /></TabsContent>
-          <TabsContent value="diagnostics" className="mt-2"><SystemDiagnostics /></TabsContent>
-          <TabsContent value="reports" className="mt-2"><DiagnosticsHistory /></TabsContent>
-          <TabsContent value="charts" className="mt-2"><RealtimeDashboardCharts scope="admin" days={30} /></TabsContent>
-          <TabsContent value="register-user"><RegisterUserForm /></TabsContent>
-          <TabsContent value="register-org"><RegisterOrganizationForm /></TabsContent>
-          <TabsContent value="register-doctor"><RegisterDoctorForm /></TabsContent>
+
+          <TabsContent value="reports" className="mt-2">
+            <Tabs defaultValue="audit" className="space-y-4">
+              <TabsList className="rounded-2xl flex-wrap h-auto">
+                <TabsTrigger value="audit" className="rounded-xl text-xs">Kumbukumbu</TabsTrigger>
+                <TabsTrigger value="diagnostics" className="rounded-xl text-xs">Uchunguzi</TabsTrigger>
+                <TabsTrigger value="history" className="rounded-xl text-xs">Ripoti za kila siku</TabsTrigger>
+                <TabsTrigger value="retention" className="rounded-xl text-xs">Muda wa kuhifadhi</TabsTrigger>
+              </TabsList>
+              <TabsContent value="audit"><AuditLogView /></TabsContent>
+              <TabsContent value="diagnostics"><SystemDiagnostics /></TabsContent>
+              <TabsContent value="history"><DiagnosticsHistory /></TabsContent>
+              <TabsContent value="retention"><AuditRetention /></TabsContent>
+            </Tabs>
+          </TabsContent>
+
         </Tabs>
       </div>
 
