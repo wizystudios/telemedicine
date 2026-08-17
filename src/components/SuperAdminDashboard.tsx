@@ -15,8 +15,6 @@ import {
   Stethoscope, CalendarCheck, UserPlus, Building2, Mail, Globe,
   Award, TrendingUp, Hash, ShieldCheck,
 } from 'lucide-react';
-import RegisterOrganizationForm from '@/components/super-admin/RegisterOrganizationForm';
-import RegisterDoctorForm from '@/components/super-admin/RegisterDoctorForm';
 import RegisterUserForm from '@/components/super-admin/RegisterUserForm';
 import SmartCreateWizard from '@/components/super-admin/SmartCreateWizard';
 import AdminDoctorApprovals from '@/components/super-admin/AdminDoctorApprovals';
