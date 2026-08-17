@@ -63,6 +63,39 @@ export function clearBiometric() {
   localStorage.removeItem(STORE_KEY);
 }
 
+const SIGNED_OUT_KEY = 'tm_signed_out';
+
+export function markSignedOut() {
+  localStorage.setItem(SIGNED_OUT_KEY, '1');
+}
+
+export function clearSignedOutFlag() {
+  localStorage.removeItem(SIGNED_OUT_KEY);
+}
+
+/**
+ * Silently restores the session from the stored biometric tokens after a page
+ * refresh, so an enrolled user never sees the login screen until they fully sign out.
+ * No fingerprint prompt is shown — the device was already verified at enrolment.
+ */
+export async function restoreSessionSilently(): Promise<boolean> {
+  if (localStorage.getItem(SIGNED_OUT_KEY)) return false;
+  const stored = getStoredBiometric();
+  if (!stored?.refresh_token) return false;
+  try {
+    const { data, error } = await supabase.auth.setSession({
+      access_token: stored.access_token,
+      refresh_token: stored.refresh_token,
+    });
+    if (error || !data.session) return false;
+    syncBiometricTokens(data.session);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+
 export async function enableBiometric(displayName: string): Promise<{ error?: string }> {
   if (!(await isBiometricSupported())) return { error: 'Kifaa hiki hakina alama ya kidole / Face ID.' };
 
