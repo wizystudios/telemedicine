@@ -18,6 +18,7 @@ import {
 import RegisterOrganizationForm from '@/components/super-admin/RegisterOrganizationForm';
 import RegisterDoctorForm from '@/components/super-admin/RegisterDoctorForm';
 import RegisterUserForm from '@/components/super-admin/RegisterUserForm';
+import SmartCreateWizard from '@/components/super-admin/SmartCreateWizard';
 import AdminDoctorApprovals from '@/components/super-admin/AdminDoctorApprovals';
 import AdminLicenseApprovals from '@/components/super-admin/AdminLicenseApprovals';
 import AuditLogView from '@/components/super-admin/AuditLogView';
@@ -53,7 +54,7 @@ export default function SuperAdminDashboard() {
   const [tableData, setTableData] = useState<any[]>([]);
   const [tableLoading, setTableLoading] = useState(false);
   const [viewingRow, setViewingRow] = useState<any>(null);
-  const [adminTab, setAdminTab] = useState('register-user');
+  const [adminTab, setAdminTab] = useState('create');
 
   useEffect(() => { fetchStats(); }, []);
   useEffect(() => { fetchTableData(activeTable); }, [activeTable]);
