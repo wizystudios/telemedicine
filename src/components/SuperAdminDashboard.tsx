@@ -15,9 +15,8 @@ import {
   Stethoscope, CalendarCheck, UserPlus, Building2, Mail, Globe,
   Award, TrendingUp, Hash, ShieldCheck,
 } from 'lucide-react';
-import RegisterOrganizationForm from '@/components/super-admin/RegisterOrganizationForm';
-import RegisterDoctorForm from '@/components/super-admin/RegisterDoctorForm';
 import RegisterUserForm from '@/components/super-admin/RegisterUserForm';
+import SmartCreateWizard from '@/components/super-admin/SmartCreateWizard';
 import AdminDoctorApprovals from '@/components/super-admin/AdminDoctorApprovals';
 import AdminLicenseApprovals from '@/components/super-admin/AdminLicenseApprovals';
 import AuditLogView from '@/components/super-admin/AuditLogView';
@@ -53,7 +52,7 @@ export default function SuperAdminDashboard() {
   const [tableData, setTableData] = useState<any[]>([]);
   const [tableLoading, setTableLoading] = useState(false);
   const [viewingRow, setViewingRow] = useState<any>(null);
-  const [adminTab, setAdminTab] = useState('register-user');
+  const [adminTab, setAdminTab] = useState('create');
 
   useEffect(() => { fetchStats(); }, []);
   useEffect(() => { fetchTableData(activeTable); }, [activeTable]);
@@ -638,42 +637,26 @@ export default function SuperAdminDashboard() {
 
       {/* Main tabs */}
       <div className="px-4">
+        <div className="mb-6">
+          <RealtimeDashboardCharts scope="admin" days={30} />
+        </div>
+
         <Tabs value={adminTab} onValueChange={setAdminTab} className="space-y-5">
-          <TabsList className="w-full h-auto bg-muted/30 p-1.5 rounded-2xl grid grid-cols-4 sm:grid-cols-5 gap-1">
-            <TabsTrigger value="register-user" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
-              <UserPlus className="h-3.5 w-3.5 mr-1" />Sajili Mtumiaji
-            </TabsTrigger>
-            <TabsTrigger value="register-doctor" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
-              <Stethoscope className="h-3.5 w-3.5 mr-1" />Sajili Daktari
-            </TabsTrigger>
-            <TabsTrigger value="register-org" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
-              <Building className="h-3.5 w-3.5 mr-1" />Sajili Shirika
+          <TabsList className="w-full h-auto bg-muted/30 p-1.5 rounded-2xl grid grid-cols-4 gap-1">
+            <TabsTrigger value="create" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
+              <UserPlus className="h-3.5 w-3.5 mr-1" />Unda
             </TabsTrigger>
             <TabsTrigger value="approvals" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
-              <ShieldCheck className="h-3.5 w-3.5 mr-1" />Idhinisha
-            </TabsTrigger>
-            <TabsTrigger value="licenses" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
-              <ShieldCheck className="h-3.5 w-3.5 mr-1" />Leseni
-            </TabsTrigger>
-            <TabsTrigger value="audit" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
-              <Activity className="h-3.5 w-3.5 mr-1" />Kumbukumbu
-            </TabsTrigger>
-            <TabsTrigger value="retention" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
-              <Trash2 className="h-3.5 w-3.5 mr-1" />Muda wa Kuhifadhi
-            </TabsTrigger>
-            <TabsTrigger value="diagnostics" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
-              <Activity className="h-3.5 w-3.5 mr-1" />Uchunguzi
+              <ShieldCheck className="h-3.5 w-3.5 mr-1" />Idhini
             </TabsTrigger>
             <TabsTrigger value="reports" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
-              <TrendingUp className="h-3.5 w-3.5 mr-1" />Ripoti za Kila Siku
+              <TrendingUp className="h-3.5 w-3.5 mr-1" />Ripoti
             </TabsTrigger>
             <TabsTrigger value="database" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
-              <Activity className="h-3.5 w-3.5 mr-1" />Angalia Data
-            </TabsTrigger>
-            <TabsTrigger value="charts" className="text-[11px] data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl py-2.5">
-              <TrendingUp className="h-3.5 w-3.5 mr-1" />Chati za Moja kwa Moja
+              <Activity className="h-3.5 w-3.5 mr-1" />Data
             </TabsTrigger>
           </TabsList>
+
 
 
           <TabsContent value="database" className="space-y-4 mt-2">
@@ -724,19 +707,36 @@ export default function SuperAdminDashboard() {
             {renderCards()}
           </TabsContent>
 
-          <TabsContent value="approvals" className="mt-2 space-y-6">
-            <AdminDoctorApprovals />
-            <DirectoryBackfill />
+          <TabsContent value="create" className="mt-2"><SmartCreateWizard /></TabsContent>
+
+          <TabsContent value="approvals" className="mt-2">
+            <Tabs defaultValue="doctors" className="space-y-4">
+              <TabsList className="rounded-2xl">
+                <TabsTrigger value="doctors" className="rounded-xl text-xs">Madaktari</TabsTrigger>
+                <TabsTrigger value="licenses" className="rounded-xl text-xs">Leseni</TabsTrigger>
+                <TabsTrigger value="directory" className="rounded-xl text-xs">Orodha</TabsTrigger>
+              </TabsList>
+              <TabsContent value="doctors"><AdminDoctorApprovals /></TabsContent>
+              <TabsContent value="licenses"><AdminLicenseApprovals /></TabsContent>
+              <TabsContent value="directory"><DirectoryBackfill /></TabsContent>
+            </Tabs>
           </TabsContent>
-          <TabsContent value="licenses" className="mt-2"><AdminLicenseApprovals /></TabsContent>
-          <TabsContent value="audit" className="mt-2"><AuditLogView /></TabsContent>
-          <TabsContent value="retention" className="mt-2"><AuditRetention /></TabsContent>
-          <TabsContent value="diagnostics" className="mt-2"><SystemDiagnostics /></TabsContent>
-          <TabsContent value="reports" className="mt-2"><DiagnosticsHistory /></TabsContent>
-          <TabsContent value="charts" className="mt-2"><RealtimeDashboardCharts scope="admin" days={30} /></TabsContent>
-          <TabsContent value="register-user"><RegisterUserForm /></TabsContent>
-          <TabsContent value="register-org"><RegisterOrganizationForm /></TabsContent>
-          <TabsContent value="register-doctor"><RegisterDoctorForm /></TabsContent>
+
+          <TabsContent value="reports" className="mt-2">
+            <Tabs defaultValue="audit" className="space-y-4">
+              <TabsList className="rounded-2xl flex-wrap h-auto">
+                <TabsTrigger value="audit" className="rounded-xl text-xs">Kumbukumbu</TabsTrigger>
+                <TabsTrigger value="diagnostics" className="rounded-xl text-xs">Uchunguzi</TabsTrigger>
+                <TabsTrigger value="history" className="rounded-xl text-xs">Ripoti za kila siku</TabsTrigger>
+                <TabsTrigger value="retention" className="rounded-xl text-xs">Muda wa kuhifadhi</TabsTrigger>
+              </TabsList>
+              <TabsContent value="audit"><AuditLogView /></TabsContent>
+              <TabsContent value="diagnostics"><SystemDiagnostics /></TabsContent>
+              <TabsContent value="history"><DiagnosticsHistory /></TabsContent>
+              <TabsContent value="retention"><AuditRetention /></TabsContent>
+            </Tabs>
+          </TabsContent>
+
         </Tabs>
       </div>
 

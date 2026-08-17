@@ -120,6 +120,13 @@ export default function RealtimeDashboardCharts({ scope, orgId, days = 14 }: Pro
           {showRevenue && <Stat label="Mapato (TZS)" value={money(total('revenue'))} />}
         </div>
 
+        {total('appointments') + total('messages') + total('orders') + total('revenue') === 0 && (
+          <p className="text-[11px] text-muted-foreground mb-3">
+            Bado hakuna shughuli katika siku {days} zilizopita. Chati zitajaza zenyewe mara moja shughuli mpya zinapoingia.
+          </p>
+        )}
+
+
         <div className="h-56">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={rows} margin={{ left: -22, right: 6, top: 6 }}>

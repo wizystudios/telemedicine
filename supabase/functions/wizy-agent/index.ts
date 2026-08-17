@@ -41,7 +41,8 @@ Mtumiaji akiuliza kuhusu taasisi kwa jina ("JK Hospital inatoa huduma gani?", "k
 4. Akiuliza "nani yupo leo" au "nani anapatikana kesho" tumia facility_reception na date sahihi (YYYY-MM-DD).
 5. Akitaka kuweka miadi na daktari uliyemtaja: tumia doctor_free_slots({doctor_name, date}) kwanza — mtumiaji achague saa — kisha create_appointment_request na appointment_date kamili (ISO). Baada ya kuthibitisha, sema "Miadi imethibitishwa" na saa halisi.
 6. Ukiona tovuti au mitandao ya kijamii kwenye jibu, mwelekeze mtumiaji ("unaweza kuwatembelea kwenye tovuti/Instagram yao").
-7. Kama taasisi ina FAQs, jibu swali la mtumiaji kwa kutumia FAQ hizo kabla ya kubuni jibu lako.
+7. Kama swali linahusu sera/utaratibu wa taasisi (saa za kazi, bima, malipo, maandalizi ya kipimo n.k.) tumia facility_faq_answer({facility_name, question}) — hurudisha jibu rasmi la taasisi.
+8. UNAPOTUMIA FAQ au tovuti ya taasisi, MALIZIA jibu lako kwa mstari wa chanzo: "Chanzo: FAQ rasmi ya <jina la taasisi> (ilisasishwa <tarehe>)". Kama huna chanzo rasmi, sema wazi "Hili si jibu rasmi la taasisi".
 
 KAMWE: Usimuulize guest password. Kwa dawa tumia direct_order_medicine; kwa vitendo vingine tumia pending_actions.`;
 
@@ -59,6 +60,21 @@ const TOOLS = [
           date: { type: "string", description: "YYYY-MM-DD, chaguo-msingi ni leo" },
         },
         required: ["facility_name"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "facility_faq_answer",
+      description: "Jibu rasmi la taasisi kutoka kwenye FAQ zilizohifadhiwa (pamoja na chanzo na tarehe ya kusasishwa).",
+      parameters: {
+        type: "object",
+        properties: {
+          facility_name: { type: "string" },
+          question: { type: "string" },
+        },
+        required: ["facility_name", "question"],
       },
     },
   },
@@ -298,6 +314,63 @@ async function executeTool(name: string, args: any, supabase: any, adminClient: 
         });
         if (oErr) return { error: oErr.message };
         return { found: true, ...(overview as any) };
+      }
+
+      case "facility_faq_answer": {
+        const fname = String(args.facility_name || "").trim();
+        const question = String(args.question || "").trim();
+        const { data: matches } = await supabase.rpc("wizy_find_org", { _query: fname, _lim: 3 });
+        const top = (matches || [])[0];
+        if (!top) return { found: false, query: fname };
+
+        const { data: faqs } = await supabase
+          .from("org_faqs")
+          .select("question, answer, updated_at")
+          .eq("org_type", top.org_type)
+          .eq("org_id", top.org_id)
+          .eq("is_published", true)
+          .order("display_order", { ascending: true });
+
+        const list = (faqs || []) as any[];
+        const words = question.toLowerCase().split(/\s+/).filter((w) => w.length > 3);
+        const scored = list
+          .map((f) => ({
+            ...f,
+            score: words.reduce(
+              (n, w) => n + ((f.question + " " + f.answer).toLowerCase().includes(w) ? 1 : 0),
+              0,
+            ),
+          }))
+          .sort((a, b) => b.score - a.score);
+        const best = scored[0];
+
+        const { data: overview } = await supabase.rpc("wizy_org_overview", {
+          _org_type: top.org_type, _org_id: top.org_id, _date: null,
+        });
+        const website = (overview as any)?.org?.website || null;
+
+        if (!best || best.score === 0) {
+          return {
+            found: false,
+            org_name: top.name,
+            org_type: top.org_type,
+            org_id: top.org_id,
+            website,
+            faqs: list.slice(0, 6),
+          };
+        }
+        return {
+          found: true,
+          org_name: top.name,
+          org_type: top.org_type,
+          org_id: top.org_id,
+          question: best.question,
+          answer: best.answer,
+          updated_at: best.updated_at,
+          website,
+          source: `FAQ rasmi ya ${top.name}`,
+          other_faqs: scored.slice(1, 4).map((f) => ({ question: f.question })),
+        };
       }
 
       case "doctors_available_on_date": {
