@@ -144,6 +144,7 @@ export async function enableBiometric(displayName: string): Promise<{ error?: st
       { onConflict: 'user_id,credential_id' },
     );
 
+    clearSignedOutFlag();
     await logAudit('biometric_enrolled', { entityType: 'auth', description: 'Device biometric enrolled' });
     return {};
   } catch (e: any) {
@@ -189,6 +190,7 @@ export async function biometricLogin(): Promise<{ error?: string }> {
       return { error: 'Kipindi kimeisha. Tafadhali ingia kwa nenosiri kisha uwashe tena alama ya kidole.' };
     }
     syncBiometricTokens(data.session);
+    clearSignedOutFlag();
     await logAudit('login_biometric', { entityType: 'auth' });
     return {};
   } catch (e: any) {
