@@ -238,25 +238,47 @@ export function WizyAgent() {
               {messages.length === 0 && (
                 <div className="text-center text-xs text-muted-foreground py-6 space-y-3">
                   <img src={wizyAvatar} alt="Wizy" className="h-20 w-16 object-contain mx-auto" />
-                  <p>Karibu! Niambie unataka nini.</p>
-                  <div className="flex flex-wrap gap-1.5 justify-center">
-                    {[
-                      'Tafuta daktari wa moyo',
-                      'Onyesha miadi yangu',
-                      'Nataka kuagiza Panadol',
-                      'Nipeleke famasi za karibu',
-                    ].map(s => (
-                      <button
-                        key={s}
-                        onClick={() => sendMessage(s)}
-                        className="text-[11px] px-2.5 py-1 rounded-full bg-muted hover:bg-muted/70 transition"
-                      >
-                        {s}
-                      </button>
-                    ))}
+                  <p className="font-medium text-foreground">Karibu! Mimi ni mapokezi yako ya kidijitali.</p>
+                  <p>Niulize kuhusu hospitali yoyote, huduma, madaktari waliopo leo, au niweke miadi kwa niaba yako.</p>
+                  <div className="space-y-2 pt-1">
+                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground/70">Mapokezi</p>
+                    <div className="flex flex-wrap gap-1.5 justify-center">
+                      {[
+                        'Huduma za JK Hospital ni zipi?',
+                        'Madaktari waliopo leo',
+                        'Nipe namba ya simu ya hospitali',
+                        'Niwekee miadi kesho asubuhi',
+                      ].map(s => (
+                        <button
+                          key={s}
+                          onClick={() => sendMessage(s)}
+                          className="text-[11px] px-2.5 py-1 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition"
+                        >
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground/70 pt-1">Haraka</p>
+                    <div className="flex flex-wrap gap-1.5 justify-center">
+                      {[
+                        'Tafuta daktari wa moyo',
+                        'Onyesha miadi yangu',
+                        'Nataka kuagiza Panadol',
+                        'Nipeleke famasi za karibu',
+                      ].map(s => (
+                        <button
+                          key={s}
+                          onClick={() => sendMessage(s)}
+                          className="text-[11px] px-2.5 py-1 rounded-full bg-muted hover:bg-muted/70 transition"
+                        >
+                          {s}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}
+
               {messages.map((m, i) => (
                 <div key={i} className={`flex flex-col ${m.role === 'user' ? 'items-end' : 'items-start'} gap-2`}>
                   {m.content && (
