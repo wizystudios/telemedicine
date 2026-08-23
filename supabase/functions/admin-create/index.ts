@@ -109,14 +109,66 @@ serve(async (req) => {
       return data.publicUrl;
     }
 
+    // List existing organizations so the admin UI can attach users/doctors to a real org
+    if (action === "list_orgs") {
+      const wanted = String(payload.orgType || "").toLowerCase();
+      const types = wanted && ORG_TABLE[wanted] ? [wanted] : ["hospital", "polyclinic", "pharmacy", "lab"];
+      const out: any[] = [];
+      for (const t of types) {
+        const cfg = ORG_TABLE[t];
+        const { data, error } = await admin
+          .from(cfg.table)
+          .select("id, name, address, owner_id, org_approval_status")
+          .order("name");
+        if (error) throw error;
+        for (const row of data || []) out.push({ ...row, orgType: t, table: cfg.table, role: cfg.role });
+      }
+      return new Response(JSON.stringify({ ok: true, orgs: out }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     if (action === "create_user") {
       const role = String(payload.role || "patient");
+      const orgType = String(payload.orgType || "").toLowerCase();
+      const orgId = clean(payload.orgId) as string | undefined;
+
+      // Owner roles must be attached to an organization that already exists
+      const ownerRoles = new Set(["hospital_owner", "pharmacy_owner", "lab_owner", "polyclinic_owner"]);
+      let config = ORG_TABLE[orgType];
+      if (ownerRoles.has(role)) {
+        if (!orgId || !config) throw new Error("Chagua shirika lililopo kwa mmiliki huyu");
+        if (config.role !== role) throw new Error("Aina ya shirika hailingani na jukumu la mmiliki");
+        const { data: org, error: orgErr } = await admin.from(config.table).select("id").eq("id", orgId).maybeSingle();
+        if (orgErr) throw orgErr;
+        if (!org) throw new Error("Shirika halipo kwenye mfumo");
+      }
+
       const user = await createAuthUser(role);
-      return new Response(JSON.stringify({ ok: true, userId: user.id, role }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+      if (ownerRoles.has(role) && orgId && config) {
+        const { error: upErr } = await admin.from(config.table).update({ owner_id: user.id }).eq("id", orgId);
+        if (upErr) throw upErr;
+      }
+
+      return new Response(JSON.stringify({ ok: true, userId: user.id, role, orgId: orgId || null }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     if (action === "create_doctor") {
       const approveNow = Boolean(payload.autoApprove);
+      const orgType = String(payload.orgType || "").toLowerCase();
+      const orgId = clean(payload.orgId) as string | undefined;
+      let orgLink: Record<string, any> = { is_private: true };
+
+      if (orgId) {
+        if (orgType !== "hospital" && orgType !== "polyclinic") throw new Error("Daktari anaweza kuunganishwa na hospitali au polyclinic pekee");
+        const table = orgType === "hospital" ? "hospitals" : "polyclinics";
+        const { data: org, error: orgErr } = await admin.from(table).select("id, name").eq("id", orgId).maybeSingle();
+        if (orgErr) throw orgErr;
+        if (!org) throw new Error("Shirika ulilochagua halipo");
+        orgLink = orgType === "hospital"
+          ? { is_private: false, hospital_id: org.id, hospital_name: org.name }
+          : { is_private: false, polyclinic_id: org.id, polyclinic_name: org.name };
+      }
+
       const user = await createAuthUser("doctor");
       const { error } = await admin.from("doctor_profiles").insert({
         user_id: user.id,
@@ -125,14 +177,15 @@ serve(async (req) => {
         experience_years: Number(payload.experienceYears || 0),
         consultation_fee: Number(payload.consultationFee || 0),
         doctor_type: clean(payload.doctorType) || "general",
-        is_private: true,
+        ...orgLink,
         is_verified: approveNow,
         org_approval_status: approveNow ? "approved" : "pending_admin",
         admin_approved_at: approveNow ? new Date().toISOString() : null,
       });
       if (error) throw error;
-      return new Response(JSON.stringify({ ok: true, userId: user.id }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ ok: true, userId: user.id, orgId: orgId || null }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+
 
     if (action === "create_organization") {
       const orgType = String(payload.orgType || "").toLowerCase();
