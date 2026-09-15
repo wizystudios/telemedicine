@@ -1,90 +1,52 @@
-You listed five distinct problems. Doing them in one turn without a plan will produce shallow work — I want to fix them properly. Approve this and I ship it end to end without stopping.
+# Complete creation flows and end-to-end verification
 
-## 1. Fix "not found" after doctor signs up
+## Goal
+Make account and organization creation reliable, keep phone optional unless operationally required, consolidate every admin creation path into one adaptive form, and verify dashboards plus Wizy booking with real signed-in sessions.
 
-**Root cause:** In `src/pages/Auth.tsx` the flow calls `navigate('/dashboard')` immediately after `signUp`. When email confirmation is ON, `signUp` returns no session, so the user hits `/auth` again (looks like "not found"). When it succeeds, `user_roles.insert` runs from the browser but RLS blocks anon inserts, so the role never lands, and `RoleBasedDashboard` falls back to `patient` even for a doctor.
+## 1. Diagnose and fix the creation failure
+- Trace the live `admin-create` request and deploy/runtime logs to identify the exact source of the current “non-2xx” response.
+- Improve the shared request helper so Edge Function error bodies are surfaced as clear Swahili/English messages instead of a generic non-2xx error.
+- Harden `admin-create` input validation and return correct status codes for authentication, permission, validation, duplicate email, organization linkage, upload, and database failures.
+- Keep a user/doctor/owner phone number optional. Keep the organization contact phone optional too; clearly label optional fields and omit empty values rather than sending invalid data.
+- Preserve strong required fields: names, email, password, doctor license, organization name/address/BRELA/license document, and a valid existing organization when linking an owner or employed doctor.
+- Ensure partial failures do not leave broken records: if organization or doctor setup fails after creating an account, remove or roll back the newly created account where safely possible.
+- Deploy and directly test the corrected Edge Function as an authenticated admin.
 
-**Fix:**
-- Wait for `data.session` before navigating; if no session, show "Angalia email yako kuthibitisha akaunti".
-- Move the `user_roles` insert into a Postgres trigger on `auth.users` that reads `raw_user_meta_data.role` (so RLS can't block it and the role is guaranteed).
-- Backfill: for any existing user missing a `user_roles` row, insert one from `profiles.role`.
+## 2. Finish the single smart admin creation experience
+- Keep one adaptive creation form for patients, admins, private doctors, organization doctors, owners of existing organizations, and a new organization with its owner.
+- Load eligible organizations from live data and prevent linking to a missing or mismatched organization.
+- Show only fields relevant to the selected account type, with clear inline validation and success/error states.
+- Move CSV organization import into the unified wizard, including preview, row validation, per-row results, and a completion summary.
+- Remove unused imports and retire the three old registration forms after confirming no remaining references.
 
-## 2. Fix hospital / pharmacy / lab pages from the patient account
+## 3. Verify and correct every requested dashboard
+- Open signed-in hospital, pharmacy, laboratory, polyclinic, doctor, and admin dashboards.
+- Confirm each applicable dashboard loads its live charts with role-scoped appointments, messages, orders/bookings, and payment/revenue data.
+- Confirm organization dashboards expose Kumbukumbu and diagnostics, refresh after relevant live changes, and never show another organization’s data.
+- Confirm the doctor dashboard loads its guided patient journey and live charts without Not Found or blank states.
+- Fix any routing, loading, empty-state, subscription, or permissions issue found during the walkthrough.
 
-Investigation shows the profile pages themselves work — but the patient never reaches them because:
-- `PatientHome` "Hospitali" and "Maabara" tiles point to `/nearby?type=...`, and `NearbyPlaces` only lists rows where geolocation matches — with no verified rows nearby, the patient sees an empty screen and thinks it's broken.
-- "Famasi" points to `/marketplace`, which is medicines, not pharmacies.
+## 4. Verify Wizy booking end to end
+- Run the real sequence: find a facility, choose one of its doctors, load available slots, select a slot, and confirm the appointment.
+- Verify the saved appointment belongs to the signed-in patient, selected doctor, selected facility context, and exact selected date/time.
+- Confirm Wizy’s success state displays the exact doctor, facility, date, and time and opens the correct appointment details.
+- Fix any prompt/tool/UI mismatch discovered, then repeat the flow.
 
-**Fix:**
-- Retarget the tiles to real browse pages: `/hospitals`, `/pharmacies`, `/laboratories` (new lightweight list pages, same pattern as `DoctorsList`, showing every verified institution with a card that links into the existing profile page).
-- Keep `/nearby` reachable from a "Karibu nawe" chip on those list pages.
+## 5. Verify the Super Admin workflow
+- Confirm the unified wizard can create each supported account type and assign the intended role.
+- Confirm organization owners and employed doctors can only be linked to real, compatible organizations.
+- Confirm creating a new organization also creates and links its owner.
+- Open and exercise organization/doctor approval, Kumbukumbu, Muda wa Kuhifadhi, and Ripoti/Uchunguzi views.
+- Verify non-admin users cannot access admin-only creation, approval, retention, audit, or diagnostics data.
 
-## 3. Move the calendar off Patient Home, onto Doctors page (left side)
+## 6. Validation and completion criteria
+- Run the project’s normal automated checks and inspect the latest preview build/runtime/network logs.
+- Add focused Edge Function tests for optional phone handling, role validation, organization linkage, and malformed requests.
+- Use browser walkthroughs at desktop and mobile sizes for the creation wizard, each dashboard, and Wizy confirmation.
+- Record authenticated dashboard and Wizy results separately; do not claim a role is verified unless its signed-in flow was actually exercised.
+- Remove test records created during verification where safe; clearly identify any retained test account or appointment.
 
-- Remove the "Waliopo Leo" tile from `PatientHome`.
-- On `/doctors-list`, add a two-column layout on ≥md screens: left column is a date picker + hour filter; right column is the doctor grid filtered to doctors with `doctor_availability` slots on that date. On mobile it collapses to a compact date strip above the list.
-- Each doctor card shows the hospital/organization they work at, plus their available hours for the selected date.
-
-## 4. Simplify the Super Admin dashboard
-
-You said the admin is confusing. I will restructure `SuperAdminDashboard` so the first thing an admin sees is **Sajili** (register) actions, not tables of doctors and orgs:
-
-```text
-Tab 1: Sajili
-  - Sajili Mtumiaji (patient)
-  - Sajili Daktari
-  - Sajili Hospitali / Polyclinic / Famasi / Maabara
-Tab 2: Idhinisha (pending approvals only)
-Tab 3: Takwimu (stats)
-Tab 4: Angalia Data (the current tables, hidden behind one click)
-```
-
-No more landing on a wall of doctor cards.
-
-## 5. Wave C — Org owner live dashboard
-
-For `HospitalOwnerDashboard`, `PharmacyOwnerDashboard`, `LabOwnerDashboard`, `PolyclinicOwnerDashboard`:
-- Status filter chips: Zote / Inasubiri / Imekubaliwa / Imekamilika / Imesitishwa.
-- Time range toggle: Leo / Wiki 7 / Siku 30.
-- Supabase Realtime subscription on `appointments`, `pharmacy_orders`, `lab_bookings`, `org_ads` so counters and lists refresh live.
-- "Ads" section shows Active / Paused / Expired with one-tap pause/resume.
-
-## 6. Wave D — Guided doctor journey UI
-
-New `DoctorJourneyStepper` component embedded in `DoctorDashboard` for each in-progress patient:
-
-```text
-1 Ombi la miadi   →   Kubali / Kataa
-2 Mazungumzo      →   Fungua chat / simu
-3 Andika dawa     →   PrescriptionWriter
-4 Kamilisha       →   Mark complete + prompt review
-```
-
-Each step is a real button that advances `appointments.status` and opens the right existing component (chat, `PrescriptionWriter`, review dialog).
-
-## Technical details (database)
-
-- Trigger `handle_new_user_role`: on `auth.users` insert, `insert into public.user_roles(user_id, role) values (new.id, coalesce(new.raw_user_meta_data->>'role','patient')::app_role) on conflict do nothing`.
-- Backfill missing `user_roles` rows from `profiles.role`.
-- Enable realtime on `appointments`, `pharmacy_orders`, `lab_bookings`, `org_ads` if not already in the publication.
-- No new tables needed.
-
-## Files touched (approx)
-
-- New: `src/pages/HospitalsList.tsx`, `PharmaciesList.tsx`, `LaboratoriesList.tsx`, `src/components/AvailabilityCalendar.tsx`, `src/components/DoctorJourneyStepper.tsx`, `src/components/OrgLiveFilters.tsx`.
-- Edited: `Auth.tsx`, `PatientHome.tsx`, `DoctorsList.tsx`, `SuperAdminDashboard.tsx`, all four org owner dashboards, `DoctorDashboard.tsx`, `App.tsx` (routes).
-- One migration for the signup trigger + backfill + realtime publication.
-
-## Answer to your question
-
-> "Is the system perfect to be used right now?"
-
-**No — not yet, and here is the honest gap list from a real user's perspective:**
-- **Patient:** browsing works, but the discovery tiles above lead to empty screens. After the fixes in items 2 and 3 this becomes usable.
-- **Doctor:** dashboard works, but role assignment is fragile (item 1). After the trigger fix it's reliable.
-- **Org owner:** dashboards exist but are static — no realtime, no filters. Wave C fixes this.
-- **Super admin:** confusing landing page (item 4).
-- **Wizy / guest:** works.
-- **Payments and video/voice calls:** intentionally out of scope per your phase-one rule.
-
-After this plan ships, the system is investor-demo ready for the flows above. It is **not** production-ready until payments, calls, and a full security audit are done.
+## Technical notes
+- No new database table is expected. If a discovered schema/RLS mismatch requires a change, apply only the smallest migration needed and preserve existing role-table security.
+- The Edge Function will continue deriving the acting admin from the bearer token and will never trust caller-supplied ownership or admin identity.
+- Realtime subscriptions remain scoped by organization/user and are always cleaned up when the dashboard unmounts.
