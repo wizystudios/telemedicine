@@ -331,6 +331,10 @@ export default function SmartCreateWizard() {
         </Card>
       )}
 
+      {accountType === 'org_owner' && <BulkOrgImport onDone={() => loadOrgs(orgType)} />}
+
+
+
       {(accountType === 'doctor' || accountType === 'org_owner') && (
         <label className="flex items-start gap-3 rounded-2xl border border-border bg-muted/30 p-3 cursor-pointer">
           <input type="checkbox" className="mt-0.5 h-4 w-4 accent-primary" checked={autoApprove} onChange={(e) => setAutoApprove(e.target.checked)} />
