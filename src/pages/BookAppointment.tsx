@@ -29,7 +29,11 @@ export default function BookAppointment() {
     insurance_id: ''
   });
 
+  const [paymentMethod, setPaymentMethod] = useState('cash');
+  const [paymentRef, setPaymentRef] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const MOBILE_MONEY = ['mpesa', 'tigopesa', 'airtelmoney', 'halopesa'];
 
   // Fetch doctor info with specialization
   const { data: doctor } = useQuery({
@@ -93,6 +97,27 @@ export default function BookAppointment() {
         return;
       }
 
+      const usingInsurance = !!appointmentData.insurance_id && appointmentData.insurance_id !== 'none';
+      const fee = Number(doctor?.doctor_profiles?.[0]?.consultation_fee || 0);
+
+      if (!usingInsurance && fee > 0 && MOBILE_MONEY.includes(paymentMethod) && !paymentRef.trim()) {
+        throw new Error('Weka namba ya muamala kutoka kwenye ujumbe wa malipo.');
+      }
+
+      const paymentStatus = usingInsurance
+        ? 'insurance'
+        : fee <= 0
+          ? 'paid'
+          : MOBILE_MONEY.includes(paymentMethod)
+            ? 'paid'
+            : 'pending';
+
+      const paymentNote = usingInsurance
+        ? 'Malipo: bima'
+        : MOBILE_MONEY.includes(paymentMethod)
+          ? `Malipo: ${paymentMethod.toUpperCase()} • Kumbukumbu ${paymentRef.trim()}`
+          : 'Malipo: taslimu ukifika';
+
       const { error } = await supabase
         .from('appointments')
         .insert({
@@ -101,10 +126,11 @@ export default function BookAppointment() {
           appointment_date: appointmentDateTimeISO,
           consultation_type: appointmentData.consultation_type,
           symptoms: appointmentData.symptoms || 'General consultation',
-          notes: appointmentData.notes,
+          notes: [appointmentData.notes, paymentNote].filter(Boolean).join('\n'),
           status: 'scheduled',
-          fee: doctor?.doctor_profiles?.[0]?.consultation_fee || 0,
-          insurance_id: appointmentData.insurance_id && appointmentData.insurance_id !== 'none' ? appointmentData.insurance_id : null
+          fee,
+          payment_status: paymentStatus,
+          insurance_id: usingInsurance ? appointmentData.insurance_id : null
         });
 
       if (error) {
@@ -274,6 +300,45 @@ export default function BookAppointment() {
                 value={appointmentData.insurance_id}
                 onChange={(value) => setAppointmentData({...appointmentData, insurance_id: value})}
               />
+
+              {/* Payment */}
+              {(!appointmentData.insurance_id || appointmentData.insurance_id === 'none') && (
+                <div className="rounded-2xl border border-border p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label>Malipo</Label>
+                    <span className="text-sm font-semibold text-emerald-600">
+                      TSh {Number(doctor?.doctor_profiles?.[0]?.consultation_fee || 0).toLocaleString()}
+                    </span>
+                  </div>
+                  <select
+                    value={paymentMethod}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded-md dark:border-gray-600 dark:bg-gray-700"
+                  >
+                    <option value="cash">Taslimu ukifika</option>
+                    <option value="mpesa">M-Pesa</option>
+                    <option value="tigopesa">Mixx by Yas (Tigo Pesa)</option>
+                    <option value="airtelmoney">Airtel Money</option>
+                    <option value="halopesa">HaloPesa</option>
+                  </select>
+                  {MOBILE_MONEY.includes(paymentMethod) && (
+                    <div>
+                      <Label htmlFor="payment_ref">Namba ya muamala</Label>
+                      <Input
+                        id="payment_ref"
+                        placeholder="Mfano: 9XK7Y2LM4T"
+                        value={paymentRef}
+                        onChange={(e) => setPaymentRef(e.target.value)}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Lipa kwenye namba ya daktari/hospitali kisha weka namba ya muamala hapa.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+
 
               <Button
                 type="submit" 

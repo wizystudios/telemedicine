@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { adminCreate, fileToAdminUpload } from '@/lib/adminCreate';
+import BulkOrgImport from '@/components/super-admin/BulkOrgImport';
 import {
   Building2, Loader2, MapPin, RefreshCw, ShieldCheck, Upload, UserPlus,
 } from 'lucide-react';
@@ -329,6 +330,10 @@ export default function SmartCreateWizard() {
           )}
         </Card>
       )}
+
+      {accountType === 'org_owner' && <BulkOrgImport onDone={() => loadOrgs(orgType)} />}
+
+
 
       {(accountType === 'doctor' || accountType === 'org_owner') && (
         <label className="flex items-start gap-3 rounded-2xl border border-border bg-muted/30 p-3 cursor-pointer">

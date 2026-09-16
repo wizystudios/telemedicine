@@ -347,6 +347,17 @@ export function WizyAgent() {
           </div>
         </div>
       )}
+
+      {!open && (
+        <button
+          type="button"
+          aria-label="Fungua Wizy"
+          onClick={() => setOpen(true)}
+          className="hidden md:flex fixed bottom-6 right-6 z-50 h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xl hover:scale-105 transition-transform"
+        >
+          <img src={wizyAvatar} alt="" className="h-9 w-7 object-contain" />
+        </button>
+      )}
     </>,
     document.body
   );
