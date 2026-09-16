@@ -301,6 +301,45 @@ export default function BookAppointment() {
                 onChange={(value) => setAppointmentData({...appointmentData, insurance_id: value})}
               />
 
+              {/* Payment */}
+              {(!appointmentData.insurance_id || appointmentData.insurance_id === 'none') && (
+                <div className="rounded-2xl border border-border p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label>Malipo</Label>
+                    <span className="text-sm font-semibold text-emerald-600">
+                      TSh {Number(doctor?.doctor_profiles?.[0]?.consultation_fee || 0).toLocaleString()}
+                    </span>
+                  </div>
+                  <select
+                    value={paymentMethod}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded-md dark:border-gray-600 dark:bg-gray-700"
+                  >
+                    <option value="cash">Taslimu ukifika</option>
+                    <option value="mpesa">M-Pesa</option>
+                    <option value="tigopesa">Mixx by Yas (Tigo Pesa)</option>
+                    <option value="airtelmoney">Airtel Money</option>
+                    <option value="halopesa">HaloPesa</option>
+                  </select>
+                  {MOBILE_MONEY.includes(paymentMethod) && (
+                    <div>
+                      <Label htmlFor="payment_ref">Namba ya muamala</Label>
+                      <Input
+                        id="payment_ref"
+                        placeholder="Mfano: 9XK7Y2LM4T"
+                        value={paymentRef}
+                        onChange={(e) => setPaymentRef(e.target.value)}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Lipa kwenye namba ya daktari/hospitali kisha weka namba ya muamala hapa.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+
+
               <Button
                 type="submit" 
                 className="w-full h-12"
