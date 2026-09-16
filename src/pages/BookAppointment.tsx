@@ -29,7 +29,11 @@ export default function BookAppointment() {
     insurance_id: ''
   });
 
+  const [paymentMethod, setPaymentMethod] = useState('cash');
+  const [paymentRef, setPaymentRef] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const MOBILE_MONEY = ['mpesa', 'tigopesa', 'airtelmoney', 'halopesa'];
 
   // Fetch doctor info with specialization
   const { data: doctor } = useQuery({
