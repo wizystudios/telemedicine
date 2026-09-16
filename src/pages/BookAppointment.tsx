@@ -97,6 +97,27 @@ export default function BookAppointment() {
         return;
       }
 
+      const usingInsurance = !!appointmentData.insurance_id && appointmentData.insurance_id !== 'none';
+      const fee = Number(doctor?.doctor_profiles?.[0]?.consultation_fee || 0);
+
+      if (!usingInsurance && fee > 0 && MOBILE_MONEY.includes(paymentMethod) && !paymentRef.trim()) {
+        throw new Error('Weka namba ya muamala kutoka kwenye ujumbe wa malipo.');
+      }
+
+      const paymentStatus = usingInsurance
+        ? 'insurance'
+        : fee <= 0
+          ? 'paid'
+          : MOBILE_MONEY.includes(paymentMethod)
+            ? 'paid'
+            : 'pending';
+
+      const paymentNote = usingInsurance
+        ? 'Malipo: bima'
+        : MOBILE_MONEY.includes(paymentMethod)
+          ? `Malipo: ${paymentMethod.toUpperCase()} • Kumbukumbu ${paymentRef.trim()}`
+          : 'Malipo: taslimu ukifika';
+
       const { error } = await supabase
         .from('appointments')
         .insert({
@@ -105,10 +126,11 @@ export default function BookAppointment() {
           appointment_date: appointmentDateTimeISO,
           consultation_type: appointmentData.consultation_type,
           symptoms: appointmentData.symptoms || 'General consultation',
-          notes: appointmentData.notes,
+          notes: [appointmentData.notes, paymentNote].filter(Boolean).join('\n'),
           status: 'scheduled',
-          fee: doctor?.doctor_profiles?.[0]?.consultation_fee || 0,
-          insurance_id: appointmentData.insurance_id && appointmentData.insurance_id !== 'none' ? appointmentData.insurance_id : null
+          fee,
+          payment_status: paymentStatus,
+          insurance_id: usingInsurance ? appointmentData.insurance_id : null
         });
 
       if (error) {
