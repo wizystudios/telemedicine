@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { adminCreate, fileToAdminUpload } from '@/lib/adminCreate';
+import BulkOrgImport from '@/components/super-admin/BulkOrgImport';
 import {
   Building2, Loader2, MapPin, RefreshCw, ShieldCheck, Upload, UserPlus,
 } from 'lucide-react';
