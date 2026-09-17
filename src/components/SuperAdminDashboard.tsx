@@ -16,6 +16,7 @@ import {
   Award, TrendingUp, Hash, ShieldCheck,
 } from 'lucide-react';
 import SmartCreateWizard from '@/components/super-admin/SmartCreateWizard';
+import DemoSeeder from '@/components/super-admin/DemoSeeder';
 import AdminDoctorApprovals from '@/components/super-admin/AdminDoctorApprovals';
 import AdminLicenseApprovals from '@/components/super-admin/AdminLicenseApprovals';
 import AuditLogView from '@/components/super-admin/AuditLogView';
@@ -706,7 +707,10 @@ export default function SuperAdminDashboard() {
             {renderCards()}
           </TabsContent>
 
-          <TabsContent value="create" className="mt-2"><SmartCreateWizard /></TabsContent>
+          <TabsContent value="create" className="mt-2 space-y-4">
+            <SmartCreateWizard />
+            <DemoSeeder />
+          </TabsContent>
 
           <TabsContent value="approvals" className="mt-2">
             <Tabs defaultValue="doctors" className="space-y-4">
