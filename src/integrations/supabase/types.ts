@@ -3219,6 +3219,7 @@ export type Database = {
         Returns: undefined
       }
       admin_run_diagnostics: { Args: never; Returns: Json }
+      admin_seed_demo_data: { Args: never; Returns: Json }
       audit_retention_preview: { Args: { _days: number }; Returns: Json }
       can_access_chat_attachment: { Args: { _name: string }; Returns: boolean }
       check_username_available: {
