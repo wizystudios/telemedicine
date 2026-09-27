@@ -219,7 +219,8 @@ export default function BookAppointment() {
         <SuccessOverlay
           open
           title="Miadi imepangwa!"
-          message={`${name} · ${done}`}
+          subtitle={`${name} · ${done}`}
+          autoCloseMs={3000}
           onClose={() => navigate('/appointments')}
         />
       )}
