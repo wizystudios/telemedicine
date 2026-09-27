@@ -3167,6 +3167,16 @@ export type Database = {
       }
     }
     Functions: {
+      _demo_user: {
+        Args: {
+          _email: string
+          _first: string
+          _last: string
+          _phone: string
+          _role: string
+        }
+        Returns: string
+      }
       admin_approve_doctor: {
         Args: { p_approve: boolean; p_doctor_id: string; p_reason?: string }
         Returns: undefined
@@ -3220,6 +3230,7 @@ export type Database = {
       }
       admin_run_diagnostics: { Args: never; Returns: Json }
       admin_seed_demo_data: { Args: never; Returns: Json }
+      admin_seed_demo_facilities: { Args: never; Returns: Json }
       audit_retention_preview: { Args: { _days: number }; Returns: Json }
       can_access_chat_attachment: { Args: { _name: string }; Returns: boolean }
       check_username_available: {
