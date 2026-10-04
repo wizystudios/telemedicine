@@ -1,52 +1,41 @@
-# Complete creation flows and end-to-end verification
+# Finish patient, profile, admin, demo, and Wizy flows
 
 ## Goal
-Make account and organization creation reliable, keep phone optional unless operationally required, consolidate every admin creation path into one adaptive form, and verify dashboards plus Wizy booking with real signed-in sessions.
+Deliver the unfinished workflows as one complete, testable experience: friendly admin details, expanded demo facilities, cleaner public profiles, a practical patient portal, and verified Wizy booking/chart updates.
 
-## 1. Diagnose and fix the creation failure
-- Trace the live `admin-create` request and deploy/runtime logs to identify the exact source of the current “non-2xx” response.
-- Improve the shared request helper so Edge Function error bodies are surfaced as clear Swahili/English messages instead of a generic non-2xx error.
-- Harden `admin-create` input validation and return correct status codes for authentication, permission, validation, duplicate email, organization linkage, upload, and database failures.
-- Keep a user/doctor/owner phone number optional. Keep the organization contact phone optional too; clearly label optional fields and omit empty values rather than sending invalid data.
-- Preserve strong required fields: names, email, password, doctor license, organization name/address/BRELA/license document, and a valid existing organization when linking an owner or employed doctor.
-- Ensure partial failures do not leave broken records: if organization or doctor setup fails after creating an account, remove or roll back the newly created account where safely possible.
-- Deploy and directly test the corrected Edge Function as an authenticated admin.
+## Build
+1. **Patient portal**
+   - Turn the patient dashboard into a clear hub for hospitals, doctors, pharmacies, booking, payment, and the signed-in patient’s appointments.
+   - Add appointment cancellation and rescheduling with clear status, date, doctor, fee, and payment information.
+   - Link the portal and booking actions consistently from doctor and hospital pages.
 
-## 2. Finish the single smart admin creation experience
-- Keep one adaptive creation form for patients, admins, private doctors, organization doctors, owners of existing organizations, and a new organization with its owner.
-- Load eligible organizations from live data and prevent linking to a missing or mismatched organization.
-- Show only fields relevant to the selected account type, with clear inline validation and success/error states.
-- Move CSV organization import into the unified wizard, including preview, row validation, per-row results, and a completion summary.
-- Remove unused imports and retire the three old registration forms after confirming no remaining references.
+2. **Doctor and hospital pages**
+   - Replace stacked bordered boxes with open, section-based layouts matching the simplified booking page.
+   - Keep real profile, organization, schedule, service, pricing, insurance, review, chat, and booking data.
+   - Preserve useful actions while reducing visual clutter on mobile and desktop.
 
-## 3. Verify and correct every requested dashboard
-- Open signed-in hospital, pharmacy, laboratory, polyclinic, doctor, and admin dashboards.
-- Confirm each applicable dashboard loads its live charts with role-scoped appointments, messages, orders/bookings, and payment/revenue data.
-- Confirm organization dashboards expose Kumbukumbu and diagnostics, refresh after relevant live changes, and never show another organization’s data.
-- Confirm the doctor dashboard loads its guided patient journey and live charts without Not Found or blank states.
-- Fix any routing, loading, empty-state, subscription, or permissions issue found during the walkthrough.
+3. **Admin “Angalia” details**
+   - Open details from the right on larger screens and from the bottom only on phones.
+   - Replace raw database keys, IDs, JSON, internal timestamps, and technical fields with a curated friendly summary for each record type.
+   - Keep important identity, status, contact, service, price, booking, and verification information.
 
-## 4. Verify Wizy booking end to end
-- Run the real sequence: find a facility, choose one of its doctors, load available slots, select a slot, and confirm the appointment.
-- Verify the saved appointment belongs to the signed-in patient, selected doctor, selected facility context, and exact selected date/time.
-- Confirm Wizy’s success state displays the exact doctor, facility, date, and time and opens the correct appointment details.
-- Fix any prompt/tool/UI mismatch discovered, then repeat the flow.
+4. **Expanded one-click demo data**
+   - Extend the existing idempotent admin demo seed to create a verified pharmacy, laboratory, and polyclinic, their owner accounts, services/items with prices, and sample operational records for charts.
+   - Return the new facilities and credentials in the seed result so the admin sees what was created.
+   - Ensure repeated seeding updates/reuses the same demo records without duplicates.
 
-## 5. Verify the Super Admin workflow
-- Confirm the unified wizard can create each supported account type and assign the intended role.
-- Confirm organization owners and employed doctors can only be linked to real, compatible organizations.
-- Confirm creating a new organization also creates and links its owner.
-- Open and exercise organization/doctor approval, Kumbukumbu, Muda wa Kuhifadhi, and Ripoti/Uchunguzi views.
-- Verify non-admin users cannot access admin-only creation, approval, retention, audit, or diagnostics data.
+5. **Wizy and live verification**
+   - Run the full Wizy flow for JK Demo Hospital and Juma Kassim, select a real open slot, confirm the exact time, and verify the stored appointment linkage.
+   - Check hospital and doctor appointment/revenue charts before and after the booking and confirm their live data changes.
+   - Verify the seeded pharmacy, laboratory, and clinic appear in Wizy receptionist results and their public pages/dashboard data load.
 
-## 6. Validation and completion criteria
-- Run the project’s normal automated checks and inspect the latest preview build/runtime/network logs.
-- Add focused Edge Function tests for optional phone handling, role validation, organization linkage, and malformed requests.
-- Use browser walkthroughs at desktop and mobile sizes for the creation wizard, each dashboard, and Wizy confirmation.
-- Record authenticated dashboard and Wizy results separately; do not claim a role is verified unless its signed-in flow was actually exercised.
-- Remove test records created during verification where safe; clearly identify any retained test account or appointment.
+## Validation
+- Run focused database checks for all demo entities, prices, slots, and appointments.
+- Check the patient, doctor, hospital, admin, and Wizy screens at mobile and desktop sizes.
+- Confirm the preview build, runtime, console, and network logs are clean.
+- Report any browser-only limitation honestly; do not mark a walkthrough complete unless it was exercised.
 
 ## Technical notes
-- No new database table is expected. If a discovered schema/RLS mismatch requires a change, apply only the smallest migration needed and preserve existing role-table security.
-- The Edge Function will continue deriving the acting admin from the bearer token and will never trust caller-supplied ownership or admin identity.
-- Realtime subscriptions remain scoped by organization/user and are always cleaned up when the dashboard unmounts.
+- Reuse existing Supabase tables, role access rules, charts, and responsive Sheet component.
+- Appointment updates remain restricted to the signed-in patient’s own records.
+- Realtime chart subscriptions remain role/organization scoped and are cleaned up on unmount.
