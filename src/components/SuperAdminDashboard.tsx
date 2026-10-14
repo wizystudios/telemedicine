@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
@@ -52,6 +53,7 @@ export default function SuperAdminDashboard() {
   const [tableData, setTableData] = useState<any[]>([]);
   const [tableLoading, setTableLoading] = useState(false);
   const [viewingRow, setViewingRow] = useState<any>(null);
+  const isDesktop = !useIsMobile();
   const [adminTab, setAdminTab] = useState('create');
 
   useEffect(() => { fetchStats(); }, []);
@@ -502,7 +504,7 @@ export default function SuperAdminDashboard() {
   // ─── Beautiful Detail sheet ───
   const renderDetailSheet = () => {
     if (!viewingRow) return null;
-    const excludeKeys = ['user_roles', 'profiles', 'patient', 'doctor'];
+    const excludeKeys = ['user_roles', 'profiles', 'patient', 'doctor', 'id', 'owner_id', 'user_id', 'patient_id', 'doctor_id', 'specialty_id', 'insurance_id', 'hospital_id', 'polyclinic_id', 'meeting_room_id', 'logo_url', 'avatar_url', 'license_document_url', 'social_links', 'opening_hours', 'latitude', 'longitude', 'location_lat', 'location_lng', 'must_change_password', 'country_code'];
 
     const formatValue = (key: string, value: any): string => {
       if (value === null || value === undefined) return '—';
@@ -513,7 +515,8 @@ export default function SuperAdminDashboard() {
       if (key.includes('fee') || key === 'price' || key === 'payment_amount') {
         return `TZS ${Number(value).toLocaleString()}`;
       }
-      if (typeof value === 'object') return JSON.stringify(value, null, 2);
+      if (Array.isArray(value)) return value.length ? value.join(', ') : '—';
+      if (typeof value === 'object') return '—';
       return String(value);
     };
 
@@ -554,7 +557,7 @@ export default function SuperAdminDashboard() {
 
     return (
       <Sheet open={!!viewingRow} onOpenChange={() => setViewingRow(null)}>
-        <SheetContent side="bottom" className="max-h-[85vh] rounded-t-3xl border-t-2 border-primary/20">
+        <SheetContent side={isDesktop ? "right" : "bottom"} className={isDesktop ? "w-full sm:max-w-md" : "max-h-[85vh] rounded-t-3xl"}>
           <SheetHeader className="pb-4">
             <div className="flex items-center gap-3">
               <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center">
@@ -571,10 +574,10 @@ export default function SuperAdminDashboard() {
               </div>
             </div>
           </SheetHeader>
-          <ScrollArea className="h-[calc(85vh-100px)]">
+          <ScrollArea className={isDesktop ? "h-[calc(100vh-110px)]" : "h-[calc(85vh-100px)]"}>
             <div className="space-y-1 pr-4">
               {Object.entries(viewingRow)
-                .filter(([key]) => !excludeKeys.includes(key))
+                .filter(([key, v]) => !excludeKeys.includes(key) && !key.endsWith('_id') && v !== null && v !== '' && !(Array.isArray(v) && !v.length) && typeof v !== 'object' || (Array.isArray(v) && v.length && !excludeKeys.includes(key)))
                 .map(([key, value]) => {
                   const formattedValue = formatValue(key, value);
                   const isBool = typeof value === 'boolean';
@@ -587,7 +590,7 @@ export default function SuperAdminDashboard() {
                         <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">
                           {labelMap[key] || key.replace(/_/g, ' ')}
                         </p>
-                        <p className={`text-sm mt-0.5 break-all ${formattedValue === '—' ? 'text-muted-foreground/40 italic' : 'text-foreground'}`}>
+                        <p className={`text-sm mt-0.5 break-words ${formattedValue === '—' ? 'text-muted-foreground/40 italic' : 'text-foreground'}`}>
                           {isBool ? (
                             <Badge variant={value ? 'default' : 'secondary'} className={`text-[11px] ${value ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20' : 'bg-muted text-muted-foreground'}`}>
                               {value ? '✓ Ndio' : '✗ Hapana'}

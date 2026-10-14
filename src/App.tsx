@@ -49,6 +49,7 @@ import Cart from "./pages/Cart";
 import Marketplace from "./pages/Marketplace";
 import Availability from "./pages/Availability";
 import MyOrders from "./pages/MyOrders";
+import MyBookings from "./pages/MyBookings";
 import PendingActions from "./pages/PendingActions";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
