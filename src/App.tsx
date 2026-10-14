@@ -49,6 +49,7 @@ import Cart from "./pages/Cart";
 import Marketplace from "./pages/Marketplace";
 import Availability from "./pages/Availability";
 import MyOrders from "./pages/MyOrders";
+import MyBookings from "./pages/MyBookings";
 import PendingActions from "./pages/PendingActions";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
@@ -139,6 +140,7 @@ function AppContent() {
               <Route path="/prescriptions" element={<ProtectedRoute><Prescriptions /></ProtectedRoute>} />
               <Route path="/medical-records" element={<ProtectedRoute><MedicalRecords /></ProtectedRoute>} />
               <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
+              <Route path="/my-bookings" element={<ProtectedRoute><MyBookings /></ProtectedRoute>} />
               <Route path="/my-orders" element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />

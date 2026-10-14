@@ -12,13 +12,18 @@ export default function DemoSeeder() {
   const run = async () => {
     setBusy(true);
     const { data, error } = await supabase.rpc('admin_seed_demo_data' as any);
+    const fac = error ? null : await supabase.rpc('admin_seed_demo_facilities' as any);
+    if (!error && !fac?.error) await supabase.rpc('admin_backfill_directory' as any, { _dry_run: false });
     setBusy(false);
+    if (fac?.error) {
+      toast({ title: 'Famasi/maabara/kliniki hazikuundwa', description: fac.error.message, variant: 'destructive' });
+    }
     if (error) {
       toast({ title: 'Imeshindwa', description: error.message, variant: 'destructive' });
       return;
     }
     setResult(data);
-    toast({ title: 'Imekamilika', description: 'Hospitali, daktari na miadi ya mfano vimeundwa.' });
+    toast({ title: 'Imekamilika', description: 'Hospitali, kliniki, famasi, maabara, madaktari na miadi ya mfano viko tayari.' });
   };
 
   const creds = result?.credentials;
@@ -33,8 +38,8 @@ export default function DemoSeeder() {
           <div className="min-w-0">
             <p className="font-semibold text-sm">Jaza data ya mfano</p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Huunda hospitali moja, mmiliki wake, daktari aliyethibitishwa mwenye ratiba ya wiki,
-              mgonjwa wa mfano na miadi miwili ili chati na orodha zionekane mara moja.
+              Huunda hospitali, kliniki, famasi, maabara, madaktari waliothibitishwa wenye ratiba,
+              mgonjwa wa mfano na miadi ili chati na orodha zionekane mara moja.
             </p>
           </div>
         </div>

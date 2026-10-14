@@ -81,7 +81,7 @@ export default function PatientHome() {
         <div>
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Miadi Ijayo</h2>
-            <button onClick={() => navigate('/appointments')} className="text-xs text-primary font-medium flex items-center gap-0.5">
+            <button onClick={() => navigate('/my-bookings')} className="text-xs text-primary font-medium flex items-center gap-0.5">
               Zote <ChevronRight className="h-3 w-3" />
             </button>
           </div>
@@ -116,6 +116,12 @@ export default function PatientHome() {
           </div>
         </div>
       )}
+
+      <button onClick={() => navigate('/my-bookings')} className="w-full flex items-center gap-3 py-2">
+        <CalendarIcon className="h-5 w-5 text-foreground" strokeWidth={1.6} />
+        <p className="text-sm font-medium flex-1 text-left">Miadi yangu — hamisha au ghairi</p>
+        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+      </button>
 
       {/* Nearby */}
       <button onClick={() => navigate('/nearby')} className="w-full flex items-center gap-3 py-2">
