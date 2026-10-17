@@ -45,44 +45,39 @@ export function CookieConsent() {
   if (!show) return null;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-[100] p-3 md:p-4 pointer-events-none">
-      <div className="mx-auto max-w-2xl pointer-events-auto rounded-3xl bg-card border border-border shadow-2xl overflow-hidden">
-        <div className="p-4 md:p-5">
-          <div className="flex items-start gap-3">
-            <div className="h-10 w-10 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-              <Cookie className="h-5 w-5 text-primary" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-sm">Tunathamini faragha yako 🍪</h3>
-              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                Tunatumia cookies muhimu ili programu ifanye kazi na cookies za hiari kuboresha huduma. Chagua unayoruhusu.{' '}
-                <Link to="/privacy" className="underline text-primary">Sera ya Faragha</Link>
-              </p>
-            </div>
-            <button onClick={() => save({ necessary: true, analytics: false, marketing: false })} className="p-1 -m-1 rounded-lg hover:bg-muted flex-shrink-0" aria-label="Funga">
-              <X className="h-4 w-4 text-muted-foreground" />
-            </button>
+    <div className="fixed inset-0 z-[100] flex items-end justify-center bg-background/60 backdrop-blur-sm sm:items-center sm:p-6">
+      <div className="w-full max-w-md rounded-t-3xl sm:rounded-3xl bg-card shadow-2xl">
+        <div className="px-6 pb-6 pt-7">
+          <div className="mx-auto mb-5 h-1 w-10 rounded-full bg-muted sm:hidden" />
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-3xl bg-primary/10">
+            <Cookie className="h-7 w-7 text-primary" />
           </div>
+          <h3 className="text-center text-lg font-semibold">Tunathamini faragha yako</h3>
+          <p className="mt-2 text-center text-sm leading-relaxed text-muted-foreground">
+            Tunatumia cookies muhimu ili programu ifanye kazi, na za hiari kuboresha huduma. Wewe ndiye unachagua.
+          </p>
+          <Link to="/privacy" className="mt-1 block text-center text-sm font-medium text-primary">Soma Sera ya Faragha</Link>
 
           {details && (
-            <div className="mt-4 space-y-3 border-t border-border pt-4">
+            <div className="mt-5 space-y-4 rounded-3xl bg-muted/50 p-4">
               <Row title="Muhimu (lazima)" desc="Uthibitishaji, usalama, kikao chako." checked disabled />
               <Row title="Uchambuzi" desc="Kutusaidia kuelewa matumizi ya programu." checked={analytics} onChange={setAnalytics} />
               <Row title="Masoko" desc="Kuonyesha maudhui yanayokufaa." checked={marketing} onChange={setMarketing} />
             </div>
           )}
 
-          <div className="mt-4 flex flex-col-reverse sm:flex-row gap-2">
-            <Button variant="ghost" size="sm" className="rounded-2xl" onClick={() => setDetails(d => !d)}>
-              <Shield className="h-3.5 w-3.5 mr-1.5" />
-              {details ? 'Ficha' : 'Chagua'}
-            </Button>
-            <Button variant="outline" size="sm" className="rounded-2xl flex-1 sm:flex-none" onClick={() => save({ necessary: true, analytics: false, marketing: false })}>
-              Muhimu tu
-            </Button>
-            <Button size="sm" className="rounded-2xl flex-1" onClick={() => save({ necessary: true, analytics: details ? analytics : true, marketing: details ? marketing : false })}>
+          <div className="mt-6 space-y-2">
+            <Button className="h-12 w-full rounded-2xl text-base" onClick={() => save({ necessary: true, analytics: details ? analytics : true, marketing: details ? marketing : false })}>
               Kubali {details ? 'chaguzi' : 'zote'}
             </Button>
+            <div className="grid grid-cols-2 gap-2">
+              <Button variant="outline" className="h-11 rounded-2xl" onClick={() => save({ necessary: true, analytics: false, marketing: false })}>
+                Muhimu tu
+              </Button>
+              <Button variant="ghost" className="h-11 rounded-2xl" onClick={() => setDetails(d => !d)}>
+                <Shield className="mr-1.5 h-4 w-4" />{details ? 'Ficha' : 'Chagua'}
+              </Button>
+            </div>
           </div>
         </div>
       </div>
