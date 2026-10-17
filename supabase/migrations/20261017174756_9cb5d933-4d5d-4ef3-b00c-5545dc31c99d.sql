@@ -1,0 +1,1 @@
+UPDATE public.profiles SET must_change_password=false WHERE email LIKE 'demo.%@telemed.test';
