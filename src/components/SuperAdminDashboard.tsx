@@ -576,8 +576,9 @@ export default function SuperAdminDashboard() {
           </SheetHeader>
           <ScrollArea className={isDesktop ? "h-[calc(100vh-110px)]" : "h-[calc(85vh-100px)]"}>
             <div className="space-y-1 pr-4">
-              {Object.entries(viewingRow)
-                .filter(([key, v]) => !excludeKeys.includes(key) && !key.endsWith('_id') && v !== null && v !== '' && !(Array.isArray(v) && !v.length) && typeof v !== 'object' || (Array.isArray(v) && v.length && !excludeKeys.includes(key)))
+              {['first_name','last_name','name','role','email','phone','address','country','description','bio','hospital_name','polyclinic_name','experience_years','consultation_fee','license_number','services','is_verified','is_available','rating','total_reviews','website','appointment_date','consultation_type','status','fee','payment_status','symptoms','created_at']
+                .filter(k => !excludeKeys.includes(k) && viewingRow[k] !== null && viewingRow[k] !== undefined && viewingRow[k] !== '' && !(Array.isArray(viewingRow[k]) && !viewingRow[k].length) && (typeof viewingRow[k] !== 'object' || Array.isArray(viewingRow[k])))
+                .map(k => [k, viewingRow[k]] as [string, any])
                 .map(([key, value]) => {
                   const formattedValue = formatValue(key, value);
                   const isBool = typeof value === 'boolean';
