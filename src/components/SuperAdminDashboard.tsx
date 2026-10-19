@@ -61,18 +61,18 @@ export default function SuperAdminDashboard() {
   useEffect(() => {
     const tab = new URLSearchParams(location.search).get('tab');
     const mapped: Record<string, string> = {
-      users: 'register-user',
-      doctors: 'register-doctor',
-      orgs: 'register-org',
-      hospitals: 'register-org',
-      pharmacies: 'register-org',
-      labs: 'register-org',
+      users: 'create',
+      doctors: 'create',
+      orgs: 'create',
+      hospitals: 'create',
+      pharmacies: 'create',
+      labs: 'create',
       approvals: 'approvals',
-      retention: 'retention',
+      retention: 'reports',
       reports: 'reports',
       database: 'database',
     };
-    setAdminTab(mapped[tab || ''] || 'register-user');
+    setAdminTab(mapped[tab || ''] || 'create');
   }, [location.search]);
 
   const fetchStats = async () => {
@@ -134,7 +134,9 @@ export default function SuperAdminDashboard() {
       }
       const { data, error } = await query.order('created_at', { ascending: false }).limit(100);
       if (error) throw error;
-      setTableData(data || []);
+      setTableData((data || []).map((row: any) => tableName === 'doctor_profiles'
+        ? { ...row, first_name: row.profiles?.first_name, last_name: row.profiles?.last_name, email: row.profiles?.email }
+        : row));
     } catch (error: any) {
       toast({ title: 'Kosa', description: error.message, variant: 'destructive' });
     } finally { setTableLoading(false); }

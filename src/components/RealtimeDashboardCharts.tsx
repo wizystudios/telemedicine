@@ -7,6 +7,7 @@ import {
   XAxis, YAxis, Tooltip, CartesianGrid,
 } from 'recharts';
 import { Activity, Loader2, Radio } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export type ChartScope = 'hospital' | 'polyclinic' | 'pharmacy' | 'laboratory' | 'doctor' | 'patient' | 'admin';
 
@@ -36,6 +37,7 @@ const money = (n: number) =>
 export default function RealtimeDashboardCharts({ scope, orgId, days = 14 }: Props) {
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [live, setLive] = useState(false);
   const [pulse, setPulse] = useState(0);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -46,6 +48,7 @@ export default function RealtimeDashboardCharts({ scope, orgId, days = 14 }: Pro
       _org_id: orgId ?? null,
       _days: days,
     } as any);
+    setError(error?.message ?? null);
     if (!error && data) {
       setRows(
         (data as any[]).map((r) => ({
@@ -96,6 +99,12 @@ export default function RealtimeDashboardCharts({ scope, orgId, days = 14 }: Pro
   }
 
   const total = (k: keyof Row) => rows.reduce((s, r) => s + (Number(r[k]) || 0), 0);
+  if (error) return (
+    <div role="alert" className="space-y-2 py-4 text-sm">
+      <p className="text-destructive">Takwimu hazijapakia. Jaribu tena.</p>
+      <Button variant="outline" onClick={load}>Pakia upya</Button>
+    </div>
+  );
   const showOrders = scope === 'pharmacy' || scope === 'laboratory' || scope === 'admin' || scope === 'patient';
   const showRevenue = scope !== 'patient';
 
