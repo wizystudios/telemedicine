@@ -17,7 +17,6 @@ import {
   FileText, Settings, Video, Bell, MessageCircle, Calendar
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
 import { LogoUpload } from '@/components/LogoUpload';
 import { SettingsDrawer } from '@/components/SettingsDrawer';
 import { ContentUploadSection } from '@/components/ContentUploadSection';
@@ -46,7 +45,6 @@ export default function PolyclinicOwnerDashboard() {
   const [isTimetableOpen, setIsTimetableOpen] = useState(false);
   const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
   const [timetable, setTimetable] = useState<any[]>([]);
-  const [chartData, setChartData] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState('overview');
   const [showSettings, setShowSettings] = useState(false);
 
@@ -138,10 +136,6 @@ export default function PolyclinicOwnerDashboard() {
         appointments: monthlyAppts, 
         services: servicesData?.length || 0
       });
-
-      // Chart data
-      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-      setChartData(months.map(name => ({ name, value: Math.floor(Math.random() * 20) + 3 })));
 
     } catch (error) {
       console.error(error);
@@ -403,22 +397,6 @@ export default function PolyclinicOwnerDashboard() {
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm">Miadi kwa Mwezi</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={120}>
-                <BarChart data={chartData}>
-                  <XAxis dataKey="name" tick={{ fontSize: 10 }} />
-                  <YAxis tick={{ fontSize: 10 }} />
-                  <Tooltip />
-                  <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-
           <Card>
             <CardContent className="p-3">
               <h3 className="text-sm font-semibold mb-2">Mawasiliano</h3>
