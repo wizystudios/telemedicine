@@ -29,10 +29,12 @@ export default function MyBookings() {
   const { data: list = [], isLoading } = useQuery({
     queryKey: ['my-bookings', user?.id],
     queryFn: async () => {
-      const { data } = await supabase.from('appointments')
+      if (!user) return [];
+      const { data, error } = await supabase.from('appointments')
         .select('*, doctor:profiles!appointments_doctor_id_fkey(first_name,last_name,avatar_url)')
-        .eq('patient_id', user!.id).neq('consultation_type', 'chat')
+        .eq('patient_id', user.id).neq('consultation_type', 'chat')
         .order('appointment_date', { ascending: false });
+      if (error) throw error;
       return data || [];
     },
     enabled: !!user,

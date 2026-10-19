@@ -11,19 +11,21 @@ export default function DemoSeeder() {
 
   const run = async () => {
     setBusy(true);
+    setResult(null);
+    try {
     const { data, error } = await supabase.rpc('admin_seed_demo_data' as any);
-    const fac = error ? null : await supabase.rpc('admin_seed_demo_facilities' as any);
-    if (!error && !fac?.error) await supabase.rpc('admin_backfill_directory' as any, { _dry_run: false });
-    setBusy(false);
-    if (fac?.error) {
-      toast({ title: 'Famasi/maabara/kliniki hazikuundwa', description: fac.error.message, variant: 'destructive' });
-    }
-    if (error) {
-      toast({ title: 'Imeshindwa', description: error.message, variant: 'destructive' });
-      return;
-    }
+    if (error) throw error;
+    const fac = await supabase.rpc('admin_seed_demo_facilities' as any);
+    if (fac.error) throw fac.error;
+    const directory = await supabase.rpc('admin_backfill_directory' as any, { _dry_run: false });
+    if (directory.error) throw directory.error;
     setResult(data);
     toast({ title: 'Imekamilika', description: 'Hospitali, kliniki, famasi, maabara, madaktari na miadi ya mfano viko tayari.' });
+    } catch (error) {
+      toast({ title: 'Imeshindwa', description: error instanceof Error ? error.message : (error as { message?: string })?.message || 'Jaribu tena.', variant: 'destructive' });
+    } finally {
+      setBusy(false);
+    }
   };
 
   const creds = result?.credentials;
@@ -50,6 +52,8 @@ export default function DemoSeeder() {
           Ukibonyeza tena haitarudia — data ileile itatumika.
         </p>
       </Card>
+
+      {result && <p role="status" className="text-sm text-primary">Hospitali, kliniki, famasi, maabara na madaktari wa mfano wako tayari.</p>}
 
       {creds && (
         <Card className="rounded-3xl p-4 border-0 shadow-sm space-y-2">
